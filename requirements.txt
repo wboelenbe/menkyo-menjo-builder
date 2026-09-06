@@ -1,0 +1,5 @@
+# Python packages. Also needed, as system binaries: inkscape, ghostscript.
+# Python 3.11 or newer (tomllib).
+pillow>=9.0
+numpy>=1.22
+scipy>=1.8

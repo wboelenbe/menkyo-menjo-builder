@@ -1,0 +1,26 @@
+This repository is MIT-licensed (see LICENSE), with two exceptions.
+
+## fonts/ — Yuji Boku
+
+    Copyright 2021 The Yuji Project Authors
+    https://github.com/Kinutafontfactory/Yuji
+
+Licensed under the SIL Open Font License, Version 1.1, reproduced in full at
+fonts/OFL.txt. The MIT licence above does not apply to it.
+
+The OFL permits redistribution, bundled or standalone, provided the licence
+travels with the font and the font is not sold on its own. There is no
+Reserved Font Name, so the family may be renamed, though there is no reason
+to. A modified version of the font must itself stay under the OFL; nothing
+here modifies it, and documents *set* in it carry no licence obligation of
+any kind — the OFL governs the font file, not what you print with it.
+
+## Crests, school names and marks
+
+A crest, the name of a school, the name of an art and the name of a teacher
+are identity, not software. Nothing in this repository grants any right to
+use anyone's.
+
+The generator ships with placeholders and draws its default crest from the
+yotsume-bishi, a traditional Japanese kamon in the public domain. Whatever
+you configure in its place is your own affair and your own responsibility.

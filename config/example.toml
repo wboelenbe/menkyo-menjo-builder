@@ -1,0 +1,126 @@
+# Example certificate configuration.
+#
+# Everything here is a placeholder.  Copy this file to dojo.toml in the
+# repository root, edit it, and the build will pick it up automatically --
+# or keep several files and choose between them with --config.
+#
+# 〇〇 is the ordinary Japanese placeholder, "maru-maru".  Left as it is,
+# the build produces a correctly typeset certificate that names no school
+# and grants nothing, which is what you want from an unconfigured tool.
+#
+# Every slot is filled in all the same, with stand-ins -- a grade, a
+# recipient, a date, a signatory, a precept -- so that a first build shows a
+# finished sheet rather than a mostly empty one.  Everything below is meant
+# to be replaced; the [sample] section at the end is meant to be deleted.
+
+schema = 1
+
+[art]
+# The art, printed in its own column and around the upper arc of the crest.
+# Four or five characters sit best on the arc.
+name = "〇〇流柔術"
+
+[dojo]
+# The dōjō issuing the document, printed below the art.
+name = "〇〇道場"
+
+# Four characters laid along the lower arc of the crest, read right to left.
+# Usually the dōjō's name without 道場.  Leave empty for a bare crest.
+crest_ring = "〇〇道場"
+
+# Use your own traced crest lettering from crest/<character>.svg instead of
+# the font.  Off by default, and worth comparing before turning on: display
+# lettering is usually drawn already distorted to fit its arc, and tracing it
+# puts a second arc on top of the first.
+traced_glyphs = false
+
+[signer]
+# The rank or office of the person who signs, then their name -- kanji for a
+# Japanese name, katakana for a Western one.  An empty name leaves the column
+# blank, which is useful if the signatory varies, or while you are still
+# deciding how a Western name should be transcribed.
+#
+# 山田太郎 is the Japanese stand-in name, the John Doe of forms.
+title = "師範"
+name = "山田太郎"
+
+[recipient]
+# Appended to a printed recipient's name.  殿 (dono) is the formal address a
+# 賞状 uses; "" leaves it off.
+honorific = "殿"
+
+[motto]
+# An optional quiet column on the left, outside the ceremonial reading order
+# of heading -> formula -> date -> authority.  A school precept, or nothing.
+#
+# The stand-in is 柔能制剛, "the soft controls the hard" -- a classical maxim
+# old enough to belong to nobody, not any school's own words.  Put yours here
+# or clear the line, and the column simply is not drawn.
+text = "柔能制剛"
+
+[paper]
+# Millimetres.  If you print onto bought Japanese 賞状用紙, measure the width
+# of its printed border and set `border` to match: nothing may print inside
+# that band.  `safe_inset` is where our own text is allowed to begin.
+# These two are the numbers most worth checking against a real sheet.
+border = 22.0
+safe_inset = 38.0
+
+# ---------------------------------------------------------------------------
+# The documents this dōjō issues.  Each becomes one --awards slug.
+#
+#   heading       names the document, in the manner of a letterhead
+#   formula       the operative sentence: 右 "the above" + verb + ス
+#   grade_column  true if the body states a grade as well as the heading
+#   colour        the drawn border's colour (--variants full / full-cream)
+# ---------------------------------------------------------------------------
+
+[[awards]]
+slug = "dan"
+heading = "段位免状"      # Dan Rank Certificate
+formula = "右授与ス"      # the above is hereby awarded
+grade_column = true       # 初段 / 二段 / 三段 …
+colour = "#8a6a33"
+
+[[awards]]
+slug = "shihan"
+heading = "師範免許状"    # Shihan Teaching Licence
+formula = "右免許ス"      # the above is hereby licensed
+grade_column = false      # the heading already names the award
+colour = "#8a336f"
+
+[[awards]]
+slug = "renshi"
+heading = "錬士免許状"    # Renshi Teaching Licence
+formula = "右免許ス"
+grade_column = false
+colour = "#8a336f"
+
+# ---------------------------------------------------------------------------
+# Stand-ins for the three slots a calligrapher would normally fill by hand.
+#
+# These are what --name, --rank and --date fall back to when the flag is not
+# given, so that `python3 src/build_diploma.py` with no arguments produces a
+# complete sheet you can look at.  They are the one part of this file that is
+# there to be *deleted* rather than edited: clear the section and the grade,
+# the recipient and the date go back to being empty, which is what a dōjō
+# printing onto real stock actually wants.
+#
+# A flag passed as '' clears one for a single run: -n '' -r '' -d ''.
+# ---------------------------------------------------------------------------
+
+[sample]
+# The recipient, in katakana.  ジョン・ドウ is John Doe.
+name = "ジョン・ドウ"
+
+# The grade.  A number or romaji becomes kanji (5 -> 五段, 1 -> 初段); it is
+# printed only on awards with grade_column = true, since a licence has
+# already named its award in the heading.
+rank = "5"
+
+# "today", or an ISO date like 2026-09-06.
+date = "today"
+
+# Filename tag, so a first build is obviously a set of specimens:
+# dan-overlay-sample.pdf rather than dan-overlay.pdf.
+suffix = "sample"

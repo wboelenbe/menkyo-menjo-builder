@@ -1,0 +1,14 @@
+# Generated output. Certificates carry real people's names — never commit them.
+build/
+
+# Your dōjō's own identity: names, crest lettering, measured paper sizes.
+# Keep a copy somewhere outside this repository.
+dojo.toml
+crest/
+
+# Reference photographs of other schools' documents. These are third parties'
+# credentials and third parties' personal data; they stay on your machine.
+ref/
+
+__pycache__/
+*.pyc
