@@ -66,6 +66,18 @@ text = "柔能制剛"
 border = 22.0
 safe_inset = 38.0
 
+# Fraction of the page height added to every printed column's starting point,
+# moving the whole reading order down and giving it more air above. 0.05 (a
+# twentieth of the page) is the shipped taste; 0 reproduces the original
+# layout, where the columns begin right under the crest.
+#
+# It shifts everything by the same amount rather than resizing anything, so a
+# large value can push the *blank* date column -- fourteen slots, the tallest
+# column when the date is left for the calligrapher -- past `safe_inset`. At
+# 0.05 that column still clears it by a few mm; check
+# `python3 src/build_diploma.py -v proof -d ''` if you raise this further.
+text_drop = 0.05
+
 # ---------------------------------------------------------------------------
 # The documents this dōjō issues.  Each becomes one --awards slug.
 #

@@ -325,6 +325,47 @@ exists once something is in those columns.
   part of the example config a real `dojo.toml` should not have. With it gone
   the three flags behave exactly as before and the slots are blank again.
 
+## 2026-09-06 — A configurable start point for the columns
+
+Asked to move the printed columns down for a more generous top margin, and to
+make that adjustable rather than hand-picking new constants once.
+
+- **`[paper] text_drop`**, a fraction of the page height added to every
+  column's starting point (`Y_HEADING`, `Y_RANK`, `Y_VERB`, `Y_BLOCK`) at
+  render time. A fraction of page height rather than an absolute mm figure,
+  matching how the request was framed ("a tenth of the page") and keeping the
+  knob meaningful if the page size ever stops being a hardcoded A3 constant.
+  Applied uniformly so the columns move as one rigid group and keep their
+  hand-tuned relative spacing — not scaled per-column, which would have
+  reopened every proportion this log already settled.
+- **The Config dataclass itself defaults to `0.0`**, so a `dojo.toml`
+  predating this feature is unaffected until its owner opts in; `0`
+  reproduces the original layout exactly, columns starting right under the
+  crest.
+- **Checked against every column, not just the one that was asked about.**
+  `vcol` centres glyph *i* at `y0 + i*size`, so a column's rendered extent is
+  `(n - 0.5) * size`, not `n * size` — worth remembering before estimating any
+  of these by hand. The one column worth checking is the date **left blank**:
+  its fourteen slots are the tallest thing on the sheet, so it is the first to
+  reach `safe_inset` as the drop grows. A *printed* date is over 30 mm shorter
+  and is never close.
+- **Shipped at `0.05`, not the `0.10` first asked for.** At `0.10`, every
+  column but the blank date gains 15–60 mm of spare room before `safe_inset`
+  — but that one column's last slot lands about 18 mm past it, some 2 mm into
+  where a bought sheet's own printed border would sit, at the shipped
+  `border` / `safe_inset` (22 mm / 38 mm). At `0.05` the same column clears
+  `safe_inset` by a few mm instead of missing it, while still giving the top
+  of the sheet visibly more air than `0` did. Halving the request cost
+  noticeably less visible effect than it bought back in headroom.
+- **Caught while testing: this machine's own `dojo.toml` exists and is picked
+  up by default.** A build run without `-c` during this work used it instead
+  of `config/example.toml`, rendering real names into `build/`. `dojo.toml`
+  being git-ignored means it was never at risk of being committed, but the
+  render still happened and was shown before being caught and deleted. Every
+  render for this log and its images now pins `-c config/example.toml`
+  explicitly; worth remembering whenever this repository is used as its own
+  test fixture.
+
 ## Open
 
 - **Source the 賞状用紙.** Still the preferred route: `border` and

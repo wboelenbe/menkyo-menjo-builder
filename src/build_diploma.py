@@ -352,6 +352,17 @@ def document(verb, heading, crest_kind="full", guides=False,
              honorific="殿", rank=None, date=None, rank_column=True,
              border_colour=SEPIA):
     """One certificate. `verb` is the four-character award formula."""
+    # `[paper] text_drop` (a fraction of the page height) shifts every printed
+    # column's starting point down by the same amount, giving the whole
+    # reading order more air above it without re-tuning each Y_* constant by
+    # hand. It leaves the crest and the seal where they are -- those are not
+    # text lines -- and it does not resize anything, so a large value can push
+    # a tall column (the blank date grid is the tallest) past `safe_inset`.
+    # Check `-v proof` after changing it.
+    drop = CFG.text_drop * PAGE_H
+    y_heading, y_rank, y_verb, y_block = (
+        Y_HEADING + drop, Y_RANK + drop, Y_VERB + drop, Y_BLOCK + drop)
+
     o = []
     o.append(
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{PAGE_W}mm" height="{PAGE_H}mm" '
@@ -380,7 +391,7 @@ def document(verb, heading, crest_kind="full", guides=False,
         zones = []
         if rank_column and not rank:
             x_rank_guide = (right_columns(True)[1] if name else X_RANK)
-            zones.append((x_rank_guide - 16, Y_RANK - 14, 32, 66, "rank"))
+            zones.append((x_rank_guide - 16, y_rank - 14, 32, 66, "rank"))
         if not name:
             zones.append((X_NAME_2 - 13, 130, 50, 95, "name"))
         for x, y, w, h, lab in zones:
@@ -390,7 +401,7 @@ def document(verb, heading, crest_kind="full", guides=False,
             )
         for i, ch in enumerate([] if date else DATE_SLOTS):
             if ch is None:
-                cy = Y_BLOCK + i * SZ_DATE
+                cy = y_block + i * SZ_DATE
                 o.append(
                     f'<rect x="{X_DATE-SZ_DATE*0.42:.2f}" y="{cy-SZ_DATE*0.42:.2f}" '
                     f'width="{SZ_DATE*0.84:.2f}" height="{SZ_DATE*0.84:.2f}" fill="none" '
@@ -419,26 +430,26 @@ def document(verb, heading, crest_kind="full", guides=False,
         return "\n".join(o)
 
     # printed columns
-    o.append(vcol(list(heading), X_HEADING, Y_HEADING, SZ_HEADING, W_BOLD)[0])
+    o.append(vcol(list(heading), X_HEADING, y_heading, SZ_HEADING, W_BOLD)[0])
     x_awardee, x_rank = right_columns(rank_column)
     if name:
         chars = list(name) + list(honorific or "")
         size = min(SZ_AWARDEE, AWARDEE_MAX_H / max(1, len(chars)))
-        o.append(vcol(chars, x_awardee, Y_RANK, size, W_BOLD)[0])
+        o.append(vcol(chars, x_awardee, y_rank, size, W_BOLD)[0])
     if rank:
         o.append(vcol(list(rank), (x_rank if name else X_RANK),
-                      Y_RANK, SZ_RANK, W_BOLD)[0])
-    o.append(vcol(list(verb), X_VERB, Y_VERB, SZ_VERB, W_BOLD)[0])
+                      y_rank, SZ_RANK, W_BOLD)[0])
+    o.append(vcol(list(verb), X_VERB, y_verb, SZ_VERB, W_BOLD)[0])
     # A printed date is set solid; a blank one keeps its slots spaced out so
     # the calligrapher has a grid to write into.
-    o.append(vcol(date or DATE_SLOTS, X_DATE, Y_BLOCK, SZ_DATE, W_MED)[0])
+    o.append(vcol(date or DATE_SLOTS, X_DATE, y_block, SZ_DATE, W_MED)[0])
     # Any of these may be empty in the config, in which case vcol draws
     # nothing and the column is simply absent.
-    o.append(vcol(list(CFG.art), X_STYLE, Y_BLOCK, SZ_BLOCK, W_MED)[0])
-    o.append(vcol(list(CFG.dojo), X_DOJO, Y_BLOCK, SZ_BLOCK, W_MED)[0])
-    o.append(vcol(list(CFG.signer_title), X_TITLE, Y_BLOCK, SZ_TITLE, W_MED)[0])
-    o.append(vcol(list(CFG.signer_name), X_SIGNER, Y_BLOCK, SZ_SIGNER, W_MED)[0])
-    o.append(vcol(list(CFG.motto), X_MOTTO, Y_BLOCK, SZ_MOTTO, W_MED)[0])
+    o.append(vcol(list(CFG.art), X_STYLE, y_block, SZ_BLOCK, W_MED)[0])
+    o.append(vcol(list(CFG.dojo), X_DOJO, y_block, SZ_BLOCK, W_MED)[0])
+    o.append(vcol(list(CFG.signer_title), X_TITLE, y_block, SZ_TITLE, W_MED)[0])
+    o.append(vcol(list(CFG.signer_name), X_SIGNER, y_block, SZ_SIGNER, W_MED)[0])
+    o.append(vcol(list(CFG.motto), X_MOTTO, y_block, SZ_MOTTO, W_MED)[0])
 
     o.append("</svg>")
     return "\n".join(o)

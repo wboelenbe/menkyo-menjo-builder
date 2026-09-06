@@ -54,6 +54,11 @@ class Config:
     motto: str = ""
     stock_border: float = 22.0
     safe_inset: float = 38.0
+    # Fraction of the page height added to every printed column's starting
+    # point -- 0.0 reproduces the original, hand-tuned layout exactly. A large
+    # value can push the blank date grid (the tallest column, when the date is
+    # left for the calligrapher) past `safe_inset`; check `-v proof`.
+    text_drop: float = 0.0
     awards: list = field(default_factory=list)
     source: str = "<defaults>"
 
@@ -119,6 +124,7 @@ def load(path=None):
         motto=motto.get("text", Config.motto),
         stock_border=float(paper.get("border", Config.stock_border)),
         safe_inset=float(paper.get("safe_inset", Config.safe_inset)),
+        text_drop=float(paper.get("text_drop", Config.text_drop)),
         sample_name=str(sample.get("name", Config.sample_name)),
         sample_rank=str(sample.get("rank", Config.sample_rank)),
         sample_date=str(sample.get("date", Config.sample_date)),
