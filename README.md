@@ -38,55 +38,42 @@ Needs Python 3.11+ (for `tomllib`), Inkscape, Ghostscript, and Pillow / NumPy
 and then plain `menkyo`. From a checkout, files land in `build/` as
 `<award>-<variant>.<ext>`.
 
-## Installing on a Mac
+## As a package
 
-Three routes, from least to most technical.
+This repository is the generator and its `menkyo` command, and nothing else.
+The front end is dojo-portal, a
+separate Django application that runs the command in a subprocess.
 
-**The app (for dōjō staff).** Open `Menkyo-<version>.dmg`, drag Menkyo to
-Applications, and install [Inkscape](https://inkscape.org/release/), which
-draws the certificates. On first launch the app asks for your school's
-details once, then it is one form: pick the document, type the recipient in
-katakana, choose the grade and date, press *Create certificate*. The PDF
-lands in `~/Documents/Menkyo`. Your details are kept in
-`~/Library/Application Support/Menkyo/dojo.toml`.
-
-**Homebrew.** `brew install <tap>/menkyo` gives you `menkyo` (the command
-line described below) and `menkyo-gui` (the window).
-
-**From a checkout.** As in *Quick start*. `uv run python src/gui.py` opens the
-window; it needs a Python whose Tk is 8.6 (`brew install python-tk@3.13`).
-
-### Building the app yourself
+Build the wheel from a checkout:
 
 ```
-packaging/build_app.sh                    # unsigned: fine on your own Mac
-CODESIGN_IDENTITY="Developer ID Application: …" NOTARY_PROFILE=… \
-    packaging/build_app.sh                # signed and notarized, for others
+uv build --wheel                     # dist/menkyo-<version>-py3-none-any.whl
 ```
 
-Signing and notarizing need a paid Apple Developer account; without them,
-other Macs refuse to open the app until the user right-clicks it and chooses
-Open. The script's header explains the one-time `notarytool` setup.
-`packaging/homebrew/menkyo.rb` is the formula template for a tap.
-
-### As a web page
-
-`web/` is the same generator behind a small form (FastAPI), so nobody needs to
-install anything: they open a URL, fill in the recipient, and download the PDF.
-Nothing but the dōjō's settings is stored on the server. `deploy/` has the
-Docker setup (Inkscape and Ghostscript included, Caddy for HTTPS and a
-password) and `deploy/README.md` walks through putting it on a VPS.
-
-### As a package, inside another application
-
-Every release is a wheel on the repository's GitHub Releases page, holding the
-generator, its font and the example configuration, and the `menkyo` command.
-The desktop window, `web/` and the packaging stay in this repository. Another
-Python project depends on a release by its URL; with uv:
+It holds the generator, its font, the example configuration and the `menkyo`
+command. The consumer installs that file, for example as a uv path source or
+with pip:
 
 ```
-uv add "menkyo @ https://github.com/wboelenbe/menkyo-menjo-builder/releases/download/v0.1.0/menkyo-0.1.0-py3-none-any.whl"
+# from the consumer's project, next to this checkout
+uv add ../menkyo-menjo-builder/dist/menkyo-<version>-py3-none-any.whl
+pip install --force-reinstall ../menkyo-menjo-builder/dist/menkyo-<version>-py3-none-any.whl
 ```
+
+The file name carries the version, so after a bump point the path source at
+the new wheel. A rebuilt wheel of the same version needs a nudge: with uv,
+run `uv lock --upgrade-package menkyo && uv sync`, because `uv.lock` pins the
+wheel's hash (a plain `uv sync` stops on a hash mismatch); with pip,
+`--force-reinstall` replaces it, which pip would otherwise skip. Or bump the
+version for every build the consumer takes.
+
+The version lives in `pyproject.toml` and nowhere else: bump it, commit, and
+build the wheel again. `menkyo --version` reports which one is installed.
+
+An installed copy has no checkout to sit in, so it writes to
+`~/Documents/Menkyo` unless given `--out`, and reads a dōjō's settings from
+`~/Library/Application Support/Menkyo/dojo.toml` (`~/.config/Menkyo/` on
+Linux) when no `--config` is given.
 
 Inkscape must be on the host as well, and Ghostscript for `--press`. On
 Debian: `apt-get install inkscape ghostscript fontconfig fonts-noto-cjk`
@@ -115,6 +102,17 @@ stdout is one JSON object, written as it happens:
 | `error` | `message`, optionally `detail` | the run failed; the exit code is 1 |
 | `planned` | `file` | with `--list`: what would be written |
 
+The command above writes, in part:
+
+```
+{"event": "progress", "step": 1, "total": 3, "award": "dan", "variant": "overlay", "stage": "text", "label": "dan overlay: rendering the text"}
+{"event": "file", "path": "/tmp/xyz/dan-overlay-二段-ヤン-ヤンセン.pdf"}
+{"event": "done", "out": "/tmp/xyz", "files": ["/tmp/xyz/dan-overlay-二段-ヤン-ヤンセン.pdf"]}
+```
+
+and a failure ends in one line such as
+`{"event": "error", "message": "inkscape failed.", "detail": "…"}`.
+
 `stage` is one of `text`, `ink`, `pdf`, `press` or `png`, for a caller that
 wants its own wording; `label` says the same in English. `total` is known from
 the first event, so `step / total` is a progress bar. A certificate takes
@@ -128,21 +126,6 @@ unwritable `--out` included, and never a `done`. `--list --json` writes one
 `--version` and `--example-config` print plain text even with `--json`: they
 are for a person, and stop before anything runs.
 
-### Making a release
-
-The version lives in `pyproject.toml` and nowhere else. Bump it, commit, then
-tag and push:
-
-```
-git tag v0.2.0 && git push origin main v0.2.0
-```
-
-`.github/workflows/package.yml` builds the wheel on every push. On a tag it
-also refuses a tag that disagrees with `pyproject.toml`, renders a certificate
-with the installed wheel (so a file missing from the package fails the
-release), and publishes the wheel and sdist as a GitHub Release.
-`menkyo --version` reports which one is installed.
-
 ## Configuring it for your dōjō
 
 Copy the example and edit it:
@@ -153,7 +136,8 @@ uv run menkyo --example-config > dojo.toml
 
 `dojo.toml` in the repository root is picked up automatically and is
 git-ignored, so your school's identity never lands in a fork. `--config PATH`
-chooses between several.
+chooses between several. A per-user `dojo.toml` (see "As a package") takes
+precedence over the repository root's when it exists, in a checkout too.
 
 ```toml
 [art]
@@ -343,14 +327,11 @@ src/menkyo/             the package: everything the wheel ships
   build_diploma.py      generator and CLI; typography constants at the top
   config.py             the TOML configuration
   paths.py              where things live: checkout or installed, tools
-  service.py            form values to flags, a build in-process (GUI, web)
   border.py             the engraved phoenix-plume border
   ink.py                the sumi grading
   example.toml          placeholder configuration, the shipped default
   fonts/                Yuji Boku + its OFL licence, used without installing
-src/gui.py              the desktop window (not in the wheel)
-web/                    the web front end (not in the wheel)
-packaging/, deploy/     the Mac app, Homebrew, Docker
+tests/                  the suite; tests/docker/ runs it with real renders
 docs/                   templates explaining each document to the person
                         who receives it, plus the image above
 build/                  generated; git-ignored

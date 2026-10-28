@@ -464,7 +464,8 @@ def document(verb, heading, crest_kind="full", guides=False,
 # A certificate takes tens of seconds, nearly all of it in a handful of slow
 # steps: Inkscape rendering the text, the sumi grading, each export.  Those
 # are counted and reported as each one starts, so whoever is waiting -- a
-# terminal, a window, a web page -- can show "step 3 of 8" instead of nothing.
+# terminal, or the portal reading --json -- can show "step 3 of 8" instead of
+# nothing.
 STAGES = {
     "text": "rendering the text",
     "ink": "grading the ink",

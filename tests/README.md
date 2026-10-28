@@ -22,7 +22,7 @@ Markers:
 
 - `render`: needs Inkscape, plus Ghostscript and poppler. These tests skip
   when Inkscape is missing. Under `REQUIRE_RENDER=1` (the Docker image and
-  the release workflow) they **fail** instead, so a broken image cannot pass
+  the CI workflow) they **fail** instead, so a broken image cannot pass
   by skipping.
 - `slow`: builds the wheel with `uv build` and installs it into a throwaway
   virtualenv.

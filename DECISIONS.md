@@ -421,6 +421,38 @@ chrome layer's root `<svg>` declares `xmlns:xlink`. Flat, proof and
 text-layer SVGs are byte-for-byte as before; requiring Inkscape 1.3 was the
 alternative, and neither of those distributions packages it.
 
+## 2026-10-28 — The command is the product: no app, no web page, no releases
+
+dojo-portal is the only front end there will be, and it runs
+`menkyo … --json` in a subprocess. Everything else that built on the package
+went.
+
+- **No Mac app, no web front end, no deploy.** The Tk window, the PyInstaller
+  `.app`, the Homebrew formula, the FastAPI page and its Docker/Caddy
+  deploy, and `service.py`, which turned form values into flags for the
+  window and the web page, are deleted. One consumer does not justify four
+  ways to install, each with its own paths and tests. The CLI and its
+  `--json` events are untouched; what `service.py` checked before calling
+  the generator (a 40-character name cap, the grade whitelist, a blank rank
+  on licences, always passing `--name= --rank= --date=` so `[sample]` never
+  reaches a real certificate) is now the portal's to do.
+- **No release flow.** No tag, no GitHub Release, no published wheel. The
+  portal is built on the same Mac as this checkout and builds its wheel from
+  it with `uv build --wheel`; the version in `pyproject.toml` still says
+  which one it has. Publishing would add a step and a place to go stale for
+  nobody else to download from.
+- **Testing stays as strict.** `origin` is the NAS, so GitHub CI does not run
+  on a normal push: the check is the local `uv run pytest` plus
+  `scripts/test-docker.sh`, with real renders. The workflow runs the same
+  suite and the installed-wheel smoke test when `main` is pushed to the
+  `github` remote (and on pull requests there), and publishes nothing.
+- **Installed-copy behaviour is kept.** `paths.py` lost only its frozen-app
+  branch. An installed wheel still writes to `~/Documents/Menkyo` and reads
+  the per-user `dojo.toml`, and Homebrew, MacPorts and `Inkscape.app` are
+  still searched for the tools, since a subprocess may not inherit a login
+  shell's PATH. `config.save()` stays as the helper for writing a
+  `dojo.toml`.
+
 ## Open
 
 - **Source the 賞状用紙.** Still the preferred route: `border` and
@@ -448,3 +480,7 @@ alternative, and neither of those distributions packages it.
   flat `-K` files are pure K. Found by the test suite on 2026-10-28; it has
   been so since `--press` existed. Related: `-dPDFSETTINGS=/prepress`
   downsamples the 600 dpi text raster to 300 ppi in the press files.
+- **Plain white only (decided 2026-10-28).** Drop the coloured variants
+  (`full`, `full-cream`, `full-flat`), the drawn border, the award colours and
+  `--press`; keep `overlay`, `overlay-flat` and `proof` on plain white paper.
+  This also retires the inked `-K` defect above.

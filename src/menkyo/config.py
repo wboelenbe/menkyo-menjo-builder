@@ -8,7 +8,8 @@ matter of editing text and never of editing Python.
 Search order, first hit wins:
 
     1. --config PATH
-    2. dojo.toml in the per-user data directory  (written by the GUI)
+    2. dojo.toml in the per-user data directory  (any copy, checkout included;
+                                                  written by config.save())
     3. dojo.toml beside this repository's root   (a checkout only; git-ignored)
     4. example.toml inside the package           (shipped placeholders)
 
@@ -182,7 +183,7 @@ def save(cfg, path=USER_CONFIG):
     out: a saved configuration is a real dōjō's, whose blank slots stay blank.
     """
     out = [
-        "# Written by the Menkyo app.  Safe to edit by hand.",
+        "# Written by menkyo.  Safe to edit by hand.",
         f"schema = {SCHEMA}",
         "",
         "[art]", f"name = {_q(cfg.art)}", "",

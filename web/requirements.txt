@@ -1,3 +1,0 @@
-# On top of the menkyo package itself (pip install . from the repository root).
-fastapi>=0.110
-uvicorn>=0.29

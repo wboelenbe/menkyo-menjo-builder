@@ -12,8 +12,9 @@ import support
 
 pytestmark = pytest.mark.slow
 
+# The front ends' form helper went with them (cli-only item).
 MODULES = ["__init__", "__main__", "border", "build_diploma", "config", "ink",
-           "paths", "service"]
+           "paths"]
 
 
 def _names(dist):
@@ -54,9 +55,9 @@ def test_ac2_wheel_holds_nothing_else(dist):
     for n in names:
         assert "__pycache__" not in n and not n.endswith(".pyc"), n
         leaf = n.rsplit("/", 1)[-1]
-        assert leaf not in ("gui.py", "app.py", "dojo.toml", "index.html"), n
+        assert leaf != "dojo.toml", n
         assert not any(part in n.split("/") for part in
-                       ("web", "packaging", "deploy", "tests", "crest", "ref", "build")), n
+                       ("tests", "crest", "ref", "build")), n
 
 
 def test_ac2_metadata(dist):
@@ -81,8 +82,7 @@ def test_ac2_sdist_holds_no_personal_data(dist):
     assert "src/menkyo/fonts/YujiBoku-Regular.ttf" in names
     for n in names:
         top = n.split("/")[0]
-        assert top not in ("dojo.toml", "crest", "ref", "build", "dist", ".venv",
-                           "web", "deploy", "packaging"), n
+        assert top not in ("dojo.toml", "crest", "ref", "build", "dist", ".venv"), n
         assert not n.endswith("dojo.toml"), n
 
 
@@ -130,7 +130,7 @@ def test_ac3_runs_from_outside_the_checkout(installed, fake_tools, home, tmp_pat
 @pytest.mark.render
 def test_ac3_installed_wheel_renders_with_the_font(installed, inkscape, ghostscript,
                                                    home, tmp_path):
-    """The release workflow's smoke test: a font missing from the wheel fails here."""
+    """Like the CI workflow's smoke test: a font missing from the wheel fails here."""
     from conftest import require_program
     pdffonts = require_program("pdffonts")
     exe = [str(installed["menkyo"])]

@@ -4,12 +4,9 @@ dojo.toml
 crest
 ref
 build
-build-app
 dist
 # nor anything machine-local
 .venv
 .git
 **/__pycache__
 **/*.pyc
-deploy/.env
-packaging/.venv

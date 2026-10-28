@@ -36,8 +36,8 @@ Check, in order of importance:
    `[sample]` stand-in reach a real certificate? Can a real name land in a
    committed file?
 3. **Packaging**: does the wheel contain every file the code opens? Does the
-   code behave right from a checkout, an installed wheel, a frozen .app and
-   Homebrew? Are paths resolved from the right root?
+   code behave right from a checkout and an installed wheel? Are paths
+   resolved from the right root?
 4. **Contract**: are the CLI flags and the `--json` events (README, "As a
    package") unchanged or changed only as acceptance.md allows?
 5. **Security**: subprocess argument handling, values starting with `-`,

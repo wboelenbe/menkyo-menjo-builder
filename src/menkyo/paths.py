@@ -1,9 +1,9 @@
 """Where things live: bundled resources, the user's files, external tools.
 
-The same code has to run four ways -- from a checkout, installed as a wheel
-(pip, uv, Homebrew), and frozen inside a .app -- and a Finder-launched app
-inherits none of the shell's PATH.  Everything that depends on which of those
-it is happens here, so the rest of the code can ask for a path and not care.
+The same code runs from a checkout and installed as a wheel (pip, uv), and
+a caller's subprocess may not inherit the shell's PATH.  Everything that
+depends on which of those it is happens here, so the rest of the code can ask
+for a path and not care.
 """
 
 import os
@@ -14,8 +14,7 @@ import tomllib
 APP_NAME = "Menkyo"
 
 # The package directory.  fonts/ and example.toml travel inside it, so they
-# sit beside this file however the package was installed -- PyInstaller too,
-# which places the package's data files under sys._MEIPASS/menkyo.
+# sit beside this file however the package was installed.
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -23,12 +22,10 @@ def checkout_root():
     """The repository root when running from a checkout, else None.
 
     Only a checkout has a dojo.toml beside the code and a ./build to write
-    into; an installed or frozen copy must never look next to itself.  The
+    into; an installed copy must never look next to itself.  The
     pyproject.toml has to be this project's own: a copy vendored inside some
     other project sits under that project's pyproject.toml, and is no checkout.
     """
-    if getattr(sys, "frozen", False):
-        return None
     root = os.path.normpath(os.path.join(HERE, "..", ".."))
     try:
         with open(os.path.join(root, "pyproject.toml"), "rb") as fh:
@@ -55,8 +52,8 @@ def user_data_dir():
 def default_output_dir():
     """Where certificates go unless told otherwise.
 
-    A checkout keeps its historical ./build; anything installed or frozen
-    writes where a non-technical user will look for it.
+    A checkout keeps its historical ./build; an installed copy writes where
+    a non-technical user will look for it.
     """
     root = checkout_root()
     if root:
@@ -64,8 +61,8 @@ def default_output_dir():
     return os.path.join(os.path.expanduser("~/Documents"), APP_NAME)
 
 
-# Where Homebrew, the Inkscape disk image and MacPorts put things.  A GUI app
-# started from Finder sees only /usr/bin:/bin:/usr/sbin:/sbin.
+# Where Homebrew, the Inkscape disk image and MacPorts put things.  A process
+# started by launchd or a service manager may see only /usr/bin:/bin.
 _EXTRA_BIN = [
     "/opt/homebrew/bin",
     "/usr/local/bin",

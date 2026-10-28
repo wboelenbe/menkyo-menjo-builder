@@ -1,16 +1,16 @@
-# Build the wheel on every push; on a v* tag, also publish it as a GitHub
-# Release, which is where dojo-portal fetches it from.
+# Build the wheel and test it on every push and pull request.  Nothing is
+# published: dojo-portal builds its own wheel from a checkout with
+# `uv build --wheel`.
 #
 # The test suite (tests/, with real renders) and the smoke test, which
-# renders with the installed wheel from outside the checkout, both have to
-# pass before anything is released: a file left out of the package fails
-# here rather than in the portal.
+# renders with the installed wheel from outside the checkout, run the same
+# checks as `uv run pytest` and scripts/test-docker.sh do locally: a file left
+# out of the package fails here rather than in the portal.
 name: package
 
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   pull_request:
 
 permissions:
@@ -22,15 +22,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
-
-      - name: Tag matches the version in pyproject.toml
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          version=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "::error::tag $GITHUB_REF_NAME, but pyproject.toml says $version"
-            exit 1
-          fi
 
       - run: uv build
 
@@ -61,26 +52,3 @@ jobs:
           # The flat overlay keeps its text as vectors, so the vendored font
           # must have reached Inkscape and been embedded.
           pdffonts out/dan-overlay-flat-sample.pdf | grep -qi yuji
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-  release:
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist
-      - name: Create the GitHub Release with the wheel and sdist
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "$GITHUB_REF_NAME" dist/* \
-            --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes

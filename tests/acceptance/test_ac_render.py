@@ -1,7 +1,7 @@
 """AC-13: real renders with Inkscape and Ghostscript.
 
 Skipped where Inkscape is missing (a Mac without it); failed instead under
-REQUIRE_RENDER=1, which the Docker test image and the release workflow set.
+REQUIRE_RENDER=1, which the Docker test image and the CI workflow set.
 One run renders every variant of the dan certificate, with --press, as PDF
 and PNG; the tests look at what it wrote.
 """

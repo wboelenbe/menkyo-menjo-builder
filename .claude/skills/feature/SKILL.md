@@ -16,8 +16,7 @@ Run the subagents in the foreground: each step depends on the one before.
 **Commits.** Only you may commit, and exactly twice per run: a snapshot
 before the run (Phase 0) and the validated result after the hand-off
 (Phase 5). No subagent ever changes git state, and you never push, tag,
-amend, stash, reset, rebase, check out or switch branches. The user pushes
-and tags releases.
+amend, stash, reset, rebase, check out or switch branches. The user pushes.
 
 Pick a short kebab-case `<slug>` for the work item. All the paperwork lives
 in `docs/work/<slug>/`.
@@ -72,7 +71,10 @@ in `docs/work/<slug>/`.
     review and validation rounds, anything disputed or deferred, links to
     acceptance.md, review.md and validation.md, and the commit.
 12. **Post-run commit**, only after `VERDICT: PASS` (or the user's explicit
-    go-ahead): check `git status`, `git add -A`, `git commit` with an English
+    go-ahead) **and** a final local run of the full suite by you, both
+    `uv run pytest` and `scripts/test-docker.sh` (real renders), green
+    apart from agreed xfails. GitHub CI does not run (pushes go to the NAS),
+    so this is the gate. Then check `git status`, `git add -A`, `git commit` with an English
     summary line, a short body (ACs, rounds, deferred items) and the
     attribution trailer from the session's reminder. Show the hash. If the
     item touches DECISIONS.md's Open list, the developer has updated it.

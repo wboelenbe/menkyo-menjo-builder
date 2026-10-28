@@ -30,9 +30,10 @@ instead of expanding the scope.
 - Follow the existing structure and idiom: comment density, docstring tone,
   naming. Record a design decision in DECISIONS.md the way earlier entries
   are written when the item makes one.
-- Before you report back, run `uv run pytest` and make it green. When the
-  change touches rendering, also run the suite with real renders in Docker
-  (see `tests/README.md` or ask the orchestrator how) and report the result.
+- Before you report back, run the full suite locally, both ways, and make
+  it green: `uv run pytest` and `scripts/test-docker.sh` (real Inkscape
+  renders, `REQUIRE_RENDER=1`). The pushes go to the NAS, so GitHub CI does
+  not run; these local runs are the only check.
 
 **FIX** (with review or validation findings): address each finding. Per
 finding, report `fixed` (with how), or `disputed` (with your reasoning). Do
