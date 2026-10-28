@@ -1,0 +1,1786 @@
+{
+ "source": "working tree",
+ "cases": {
+  "sample": {
+   "argv": [
+    "--all",
+    "--no-ink",
+    "-f",
+    "svg",
+    "-d",
+    "2026-09-05"
+   ],
+   "config": "example",
+   "stdout": "wrote <OUT>/dan-overlay-sample.svg\nwrote <OUT>/dan-full-sample.svg\nwrote <OUT>/dan-full-cream-sample.svg\nwrote <OUT>/dan-overlay-flat-sample.svg\nwrote <OUT>/dan-full-flat-sample.svg\nwrote <OUT>/dan-proof-sample.svg\nwrote <OUT>/shihan-overlay-sample.svg\nwrote <OUT>/shihan-full-sample.svg\nwrote <OUT>/shihan-full-cream-sample.svg\nwrote <OUT>/shihan-overlay-flat-sample.svg\nwrote <OUT>/shihan-full-flat-sample.svg\nwrote <OUT>/shihan-proof-sample.svg\nwrote <OUT>/renshi-overlay-sample.svg\nwrote <OUT>/renshi-full-sample.svg\nwrote <OUT>/renshi-full-cream-sample.svg\nwrote <OUT>/renshi-overlay-flat-sample.svg\nwrote <OUT>/renshi-full-flat-sample.svg\nwrote <OUT>/renshi-proof-sample.svg\n\n18 file(s) in <OUT>/\n",
+   "exit": 0,
+   "files": {
+    "dan-full-cream-sample.svg": "014ce973e52d4362333dbfbbe72ff45bfd697ee3375d4cb726fac6d14d22b6a1",
+    "dan-full-flat-sample.svg": "1c30c9a4930ff33f9d79fd263ad8718bf7ce734779159bbd271719404b067ca3",
+    "dan-full-sample.svg": "1c30c9a4930ff33f9d79fd263ad8718bf7ce734779159bbd271719404b067ca3",
+    "dan-overlay-flat-sample.svg": "9f6d176f68b943dc2fddc3fa1a2d438088cfebda927a52409413f58b8933fcfc",
+    "dan-overlay-sample.svg": "9f6d176f68b943dc2fddc3fa1a2d438088cfebda927a52409413f58b8933fcfc",
+    "dan-proof-sample.svg": "64d631aa65d7f80ad82e105305bb06b236df28bbb91736c689b598f4c656f96c",
+    "renshi-full-cream-sample.svg": "6ad0572107ca0074cf5594f44c1133807a8d87e08ec7b99ef08ab27a233f3668",
+    "renshi-full-flat-sample.svg": "c5bd585de59e9bb055fce633e0bdb7d735c31dec089ff8dfb9284f3f60a5bc6b",
+    "renshi-full-sample.svg": "c5bd585de59e9bb055fce633e0bdb7d735c31dec089ff8dfb9284f3f60a5bc6b",
+    "renshi-overlay-flat-sample.svg": "2128f6cfc37dff5d97078aac165e1e79288ab262dea47e2d281172796e051eaf",
+    "renshi-overlay-sample.svg": "2128f6cfc37dff5d97078aac165e1e79288ab262dea47e2d281172796e051eaf",
+    "renshi-proof-sample.svg": "6f723952c87eb2f27f50abd3116694988c232c31bb89e2b828c540ef28fbd9da",
+    "shihan-full-cream-sample.svg": "51e7184d8914f891761e0b7e375cf68889104dc09b71434166d97a41974c8ada",
+    "shihan-full-flat-sample.svg": "baeb0bc565dcbf46eed905b7d6c2a21e8494419ade89ee9d263e8d7c4aae0628",
+    "shihan-full-sample.svg": "baeb0bc565dcbf46eed905b7d6c2a21e8494419ade89ee9d263e8d7c4aae0628",
+    "shihan-overlay-flat-sample.svg": "e3397c5ed9eea9269f169a9084dfab195f2e77f634e6afe474a4c6a6a3dc5731",
+    "shihan-overlay-sample.svg": "e3397c5ed9eea9269f169a9084dfab195f2e77f634e6afe474a4c6a6a3dc5731",
+    "shihan-proof-sample.svg": "02f136efd4af17b71bf3f0e8cdb955a5277e8c19f12428f8601ada0eb084c811"
+   },
+   "textlayers": {},
+   "tools": []
+  },
+  "blank": {
+   "argv": [
+    "--all",
+    "--no-ink",
+    "-f",
+    "svg",
+    "-n",
+    "",
+    "-r",
+    "",
+    "-d",
+    ""
+   ],
+   "config": "example",
+   "stdout": "wrote <OUT>/dan-overlay.svg\nwrote <OUT>/dan-full.svg\nwrote <OUT>/dan-full-cream.svg\nwrote <OUT>/dan-overlay-flat.svg\nwrote <OUT>/dan-full-flat.svg\nwrote <OUT>/dan-proof.svg\nwrote <OUT>/shihan-overlay.svg\nwrote <OUT>/shihan-full.svg\nwrote <OUT>/shihan-full-cream.svg\nwrote <OUT>/shihan-overlay-flat.svg\nwrote <OUT>/shihan-full-flat.svg\nwrote <OUT>/shihan-proof.svg\nwrote <OUT>/renshi-overlay.svg\nwrote <OUT>/renshi-full.svg\nwrote <OUT>/renshi-full-cream.svg\nwrote <OUT>/renshi-overlay-flat.svg\nwrote <OUT>/renshi-full-flat.svg\nwrote <OUT>/renshi-proof.svg\n\n18 file(s) in <OUT>/\n",
+   "exit": 0,
+   "files": {
+    "dan-full-cream.svg": "c42d0222731d1849ffa2a9c347ef512d6764bff2d22ac1c057c25febe6de0b28",
+    "dan-full-flat.svg": "6b199c532e524d3f0155ba794632f3ea5f154a11d07590abc4544964d47e784a",
+    "dan-full.svg": "6b199c532e524d3f0155ba794632f3ea5f154a11d07590abc4544964d47e784a",
+    "dan-overlay-flat.svg": "33d895085c33b17fa99b9d1619f4a0c01e340da2a03c110283d19b7ccd60f552",
+    "dan-overlay.svg": "33d895085c33b17fa99b9d1619f4a0c01e340da2a03c110283d19b7ccd60f552",
+    "dan-proof.svg": "ddca60883b7363a4eaed0b9127d5330502495dc681f0ee1175b235e6818910aa",
+    "renshi-full-cream.svg": "ff0ea0bee7ba4afcbcc9328f7e911850fab89dd4e78b551fa185706138be037a",
+    "renshi-full-flat.svg": "fc85f6469bae920dbfa9b1f37db8677151397c6c8a3b300264ed9d74bf87190a",
+    "renshi-full.svg": "fc85f6469bae920dbfa9b1f37db8677151397c6c8a3b300264ed9d74bf87190a",
+    "renshi-overlay-flat.svg": "7477a1e842ee1f99e28401c710b18eabfe5c1edbf3ba3f0e747d9f500c045925",
+    "renshi-overlay.svg": "7477a1e842ee1f99e28401c710b18eabfe5c1edbf3ba3f0e747d9f500c045925",
+    "renshi-proof.svg": "7a3c4e8c87e76a217a0124d8f55bfebbd8957fe84669bc4f838618dcf96fdb5e",
+    "shihan-full-cream.svg": "59545ad9b54c63ca044dde3fb18ed06af1c93ff3d4921144180c330de4462222",
+    "shihan-full-flat.svg": "d4f21db487419a598fc3963249aba1507515862a54f9a7a0cf7f68ece887ec93",
+    "shihan-full.svg": "d4f21db487419a598fc3963249aba1507515862a54f9a7a0cf7f68ece887ec93",
+    "shihan-overlay-flat.svg": "d839c3ac10a2561cb4c1d17614696d5f02098326c97b722bec6287c4ec9c0bd5",
+    "shihan-overlay.svg": "d839c3ac10a2561cb4c1d17614696d5f02098326c97b722bec6287c4ec9c0bd5",
+    "shihan-proof.svg": "a4080d6272d9366c4fc8b7d2110ae033ac5225323b7c184efebc9ff803d632a3"
+   },
+   "textlayers": {},
+   "tools": []
+  },
+  "filled": {
+   "argv": [
+    "--all",
+    "--no-ink",
+    "-f",
+    "svg",
+    "-n",
+    "ヤン・ヤンセン",
+    "-r",
+    "2",
+    "-d",
+    "2024-07-01"
+   ],
+   "config": "example",
+   "stdout": "wrote <OUT>/dan-overlay-2-ヤン-ヤンセン.svg\nwrote <OUT>/dan-full-2-ヤン-ヤンセン.svg\nwrote <OUT>/dan-full-cream-2-ヤン-ヤンセン.svg\nwrote <OUT>/dan-overlay-flat-2-ヤン-ヤンセン.svg\nwrote <OUT>/dan-full-flat-2-ヤン-ヤンセン.svg\nwrote <OUT>/dan-proof-2-ヤン-ヤンセン.svg\nwrote <OUT>/shihan-overlay-2-ヤン-ヤンセン.svg\nwrote <OUT>/shihan-full-2-ヤン-ヤンセン.svg\nwrote <OUT>/shihan-full-cream-2-ヤン-ヤンセン.svg\nwrote <OUT>/shihan-overlay-flat-2-ヤン-ヤンセン.svg\nwrote <OUT>/shihan-full-flat-2-ヤン-ヤンセン.svg\nwrote <OUT>/shihan-proof-2-ヤン-ヤンセン.svg\nwrote <OUT>/renshi-overlay-2-ヤン-ヤンセン.svg\nwrote <OUT>/renshi-full-2-ヤン-ヤンセン.svg\nwrote <OUT>/renshi-full-cream-2-ヤン-ヤンセン.svg\nwrote <OUT>/renshi-overlay-flat-2-ヤン-ヤンセン.svg\nwrote <OUT>/renshi-full-flat-2-ヤン-ヤンセン.svg\nwrote <OUT>/renshi-proof-2-ヤン-ヤンセン.svg\n\n18 file(s) in <OUT>/\n",
+   "exit": 0,
+   "files": {
+    "dan-full-2-ヤン-ヤンセン.svg": "a9e3d45270fd31503b62f314376374f96ef2c7d1e722f93310aa17e92f9227a1",
+    "dan-full-cream-2-ヤン-ヤンセン.svg": "402bc88d9c1643bc0215681389ee50d283bdd867445d8f36c58f70a70b2daf9c",
+    "dan-full-flat-2-ヤン-ヤンセン.svg": "a9e3d45270fd31503b62f314376374f96ef2c7d1e722f93310aa17e92f9227a1",
+    "dan-overlay-2-ヤン-ヤンセン.svg": "23eb14ef01c740ecdc2bb89aa8f284ba400aed98d9c1c4390300bd90d629dc41",
+    "dan-overlay-flat-2-ヤン-ヤンセン.svg": "23eb14ef01c740ecdc2bb89aa8f284ba400aed98d9c1c4390300bd90d629dc41",
+    "dan-proof-2-ヤン-ヤンセン.svg": "9eb802d2d95fd6bfc202385221ca88e85371535c146d48918f3fb9c4fb7d2e77",
+    "renshi-full-2-ヤン-ヤンセン.svg": "4f849641b3d56e85fa1bbe1458a0c92dd4a62c8270bbdfc19302f03ed9761d31",
+    "renshi-full-cream-2-ヤン-ヤンセン.svg": "409faf36cd30f2acf73b50dae615df6aaf10454301726082363ceea50811340c",
+    "renshi-full-flat-2-ヤン-ヤンセン.svg": "4f849641b3d56e85fa1bbe1458a0c92dd4a62c8270bbdfc19302f03ed9761d31",
+    "renshi-overlay-2-ヤン-ヤンセン.svg": "543fcb491d5b104f8ed160d7d29e6f87db2d2151792e356c22a283928b320188",
+    "renshi-overlay-flat-2-ヤン-ヤンセン.svg": "543fcb491d5b104f8ed160d7d29e6f87db2d2151792e356c22a283928b320188",
+    "renshi-proof-2-ヤン-ヤンセン.svg": "5b850cb36ca6dd6bab9d2d540e2a083a297d00d436f8bf91bf12aabc49e805d7",
+    "shihan-full-2-ヤン-ヤンセン.svg": "729aae28943158125e394926b7dc05be521c141e6ca6c49dba58ed128f988256",
+    "shihan-full-cream-2-ヤン-ヤンセン.svg": "b0e0c01b069a83cd528e1c3d3332795231924f4a8b7ee28eb76f1656238978f3",
+    "shihan-full-flat-2-ヤン-ヤンセン.svg": "729aae28943158125e394926b7dc05be521c141e6ca6c49dba58ed128f988256",
+    "shihan-overlay-2-ヤン-ヤンセン.svg": "78ab39276b24e30e25235382e62bf8e09c88fbbcb10d2b7e8198f8ecf64b4dc6",
+    "shihan-overlay-flat-2-ヤン-ヤンセン.svg": "78ab39276b24e30e25235382e62bf8e09c88fbbcb10d2b7e8198f8ecf64b4dc6",
+    "shihan-proof-2-ヤン-ヤンセン.svg": "31cc4256d652c45b37e8c7316203a75311ef0df0547c13b987ed77e5a80bc085"
+   },
+   "textlayers": {},
+   "tools": []
+  },
+  "no-honorific": {
+   "argv": [
+    "--all",
+    "--no-ink",
+    "-f",
+    "svg",
+    "-n",
+    "ヤン・ヤンセン",
+    "-r",
+    "shodan",
+    "-d",
+    "2026-12-31",
+    "--honorific",
+    ""
+   ],
+   "config": "example",
+   "stdout": "wrote <OUT>/dan-overlay-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/dan-full-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/dan-full-cream-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/dan-overlay-flat-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/dan-full-flat-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/dan-proof-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/shihan-overlay-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/shihan-full-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/shihan-full-cream-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/shihan-overlay-flat-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/shihan-full-flat-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/shihan-proof-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/renshi-overlay-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/renshi-full-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/renshi-full-cream-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/renshi-overlay-flat-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/renshi-full-flat-shodan-ヤン-ヤンセン.svg\nwrote <OUT>/renshi-proof-shodan-ヤン-ヤンセン.svg\n\n18 file(s) in <OUT>/\n",
+   "exit": 0,
+   "files": {
+    "dan-full-cream-shodan-ヤン-ヤンセン.svg": "ad3db7c3292eaa414f83bd4b962e1033ed4f79bd766d5d4b2f6dcb62e8d33661",
+    "dan-full-flat-shodan-ヤン-ヤンセン.svg": "82b914ecdd0c0081a01044e60e660349e41e2c852021943ea5c151770bd8d738",
+    "dan-full-shodan-ヤン-ヤンセン.svg": "82b914ecdd0c0081a01044e60e660349e41e2c852021943ea5c151770bd8d738",
+    "dan-overlay-flat-shodan-ヤン-ヤンセン.svg": "c3810bf265ea0dc9590cff29f35b316f8f616c41c859ad1f960448bdc605e5f0",
+    "dan-overlay-shodan-ヤン-ヤンセン.svg": "c3810bf265ea0dc9590cff29f35b316f8f616c41c859ad1f960448bdc605e5f0",
+    "dan-proof-shodan-ヤン-ヤンセン.svg": "d5cca48b38633636651c4c30510c875dcea85367bd1bd9675cedc8dc06020142",
+    "renshi-full-cream-shodan-ヤン-ヤンセン.svg": "a997f2fe34f6b22bf132c7c34a8a0de6560507b8a663575c52286c5b29f567db",
+    "renshi-full-flat-shodan-ヤン-ヤンセン.svg": "fe88ed47f25b449ec517fa9e7fd7bbca3b15923009b3b15ffd454a29d30b95de",
+    "renshi-full-shodan-ヤン-ヤンセン.svg": "fe88ed47f25b449ec517fa9e7fd7bbca3b15923009b3b15ffd454a29d30b95de",
+    "renshi-overlay-flat-shodan-ヤン-ヤンセン.svg": "e3c4174c6ea82fec39f14a98062f0df5884178ae0ba72d414350147d59f1008e",
+    "renshi-overlay-shodan-ヤン-ヤンセン.svg": "e3c4174c6ea82fec39f14a98062f0df5884178ae0ba72d414350147d59f1008e",
+    "renshi-proof-shodan-ヤン-ヤンセン.svg": "9c882d952a6efb4fcc11aa4937b7cab422a4c95d07e068b958735f553d947123",
+    "shihan-full-cream-shodan-ヤン-ヤンセン.svg": "862362f8b062eb589fe0c35dde743191fc3a55d51f9a7e5270b9421524fac466",
+    "shihan-full-flat-shodan-ヤン-ヤンセン.svg": "a469d8c223813e5a5c869c2a8644da632056f11bfdbeb4ac599033815af42628",
+    "shihan-full-shodan-ヤン-ヤンセン.svg": "a469d8c223813e5a5c869c2a8644da632056f11bfdbeb4ac599033815af42628",
+    "shihan-overlay-flat-shodan-ヤン-ヤンセン.svg": "5293d55e9373d52bac52bf9eb80130cb81152d1c809a0a5b9e32219cb864284a",
+    "shihan-overlay-shodan-ヤン-ヤンセン.svg": "5293d55e9373d52bac52bf9eb80130cb81152d1c809a0a5b9e32219cb864284a",
+    "shihan-proof-shodan-ヤン-ヤンセン.svg": "812d716eace40a36b16d2a8d0c8d26590292a4a056db5d5a2f7739efafc6e43a"
+   },
+   "textlayers": {},
+   "tools": []
+  },
+  "licence-rank": {
+   "argv": [
+    "-a",
+    "shihan,renshi",
+    "-v",
+    "all",
+    "--no-ink",
+    "-f",
+    "svg",
+    "-r",
+    "師範",
+    "-n",
+    "",
+    "-d",
+    ""
+   ],
+   "config": "example",
+   "stdout": "wrote <OUT>/shihan-overlay-師範.svg\nwrote <OUT>/shihan-full-師範.svg\nwrote <OUT>/shihan-full-cream-師範.svg\nwrote <OUT>/shihan-overlay-flat-師範.svg\nwrote <OUT>/shihan-full-flat-師範.svg\nwrote <OUT>/shihan-proof-師範.svg\nwrote <OUT>/renshi-overlay-師範.svg\nwrote <OUT>/renshi-full-師範.svg\nwrote <OUT>/renshi-full-cream-師範.svg\nwrote <OUT>/renshi-overlay-flat-師範.svg\nwrote <OUT>/renshi-full-flat-師範.svg\nwrote <OUT>/renshi-proof-師範.svg\n\n12 file(s) in <OUT>/\n",
+   "exit": 0,
+   "files": {
+    "renshi-full-cream-師範.svg": "cfca6b03602ec543beaa0faab9f6f6a1fd73029a93104fc8cfd5a17ab0503165",
+    "renshi-full-flat-師範.svg": "23627df98f674e95efa25a55fcbe3468173e149241d02c9c23df8dd92c5c86c4",
+    "renshi-full-師範.svg": "23627df98f674e95efa25a55fcbe3468173e149241d02c9c23df8dd92c5c86c4",
+    "renshi-overlay-flat-師範.svg": "2bbd85cd5b904f74bd065c4f0454f34781f5d85165f85f09d06271a181f12298",
+    "renshi-overlay-師範.svg": "2bbd85cd5b904f74bd065c4f0454f34781f5d85165f85f09d06271a181f12298",
+    "renshi-proof-師範.svg": "b1a8f57fcae33982ee91210156d93aca5cc12abddf3be447ea164435d4525852",
+    "shihan-full-cream-師範.svg": "a35c2ed37c775bb88161bafd3af43701167f84cd87f4eda3d8a4106b2e921ecb",
+    "shihan-full-flat-師範.svg": "8f222ff1f7423eb4d56bc8352a17aacb75941e9f0eb31cf9957d5c7b8ca1e2e2",
+    "shihan-full-師範.svg": "8f222ff1f7423eb4d56bc8352a17aacb75941e9f0eb31cf9957d5c7b8ca1e2e2",
+    "shihan-overlay-flat-師範.svg": "7aa0e27c0a71799aa0dd8781ad56d0f98ed7dd2e0ebe7d850388b862a7264adf",
+    "shihan-overlay-師範.svg": "7aa0e27c0a71799aa0dd8781ad56d0f98ed7dd2e0ebe7d850388b862a7264adf",
+    "shihan-proof-師範.svg": "2c3c6b6c0d47b855484bbe29db413e7d535c4b79d13af7ea7a36ee320ea6a921"
+   },
+   "textlayers": {},
+   "tools": []
+  },
+  "long-name": {
+   "argv": [
+    "-a",
+    "dan",
+    "-v",
+    "overlay-flat,proof",
+    "-f",
+    "svg",
+    "-n",
+    "アレクサンドル・ファン・デル・フェルデン",
+    "-r",
+    "10",
+    "-d",
+    "2020-10-20"
+   ],
+   "config": "example",
+   "stdout": "wrote <OUT>/dan-overlay-flat-10-アレクサンドル-ファン-デル-フェルデン.svg\nwrote <OUT>/dan-proof-10-アレクサンドル-ファン-デル-フェルデン.svg\n\n2 file(s) in <OUT>/\n",
+   "exit": 0,
+   "files": {
+    "dan-overlay-flat-10-アレクサンドル-ファン-デル-フェルデン.svg": "8170722f54264cafe8baf0b1584e3900450648e1e07a7df5abed821ffc4ec6cf",
+    "dan-proof-10-アレクサンドル-ファン-デル-フェルデン.svg": "f8260a355fb57fe0ac83ecc5f22807a2823707873939f0bd3d15bf82734c65e1"
+   },
+   "textlayers": {},
+   "tools": []
+  },
+  "minimal-config": {
+   "argv": [
+    "--all",
+    "--no-ink",
+    "-f",
+    "svg"
+   ],
+   "config": "minimal.toml",
+   "stdout": "wrote <OUT>/dan-overlay.svg\nwrote <OUT>/dan-full.svg\nwrote <OUT>/dan-full-cream.svg\nwrote <OUT>/dan-overlay-flat.svg\nwrote <OUT>/dan-full-flat.svg\nwrote <OUT>/dan-proof.svg\nwrote <OUT>/menkyo-overlay.svg\nwrote <OUT>/menkyo-full.svg\nwrote <OUT>/menkyo-full-cream.svg\nwrote <OUT>/menkyo-overlay-flat.svg\nwrote <OUT>/menkyo-full-flat.svg\nwrote <OUT>/menkyo-proof.svg\n\n12 file(s) in <OUT>/\n",
+   "exit": 0,
+   "files": {
+    "dan-full-cream.svg": "145e915c3aeffd6009b10ce927c7ec221b5119fc0965d47bec6c30445a990b0e",
+    "dan-full-flat.svg": "443fe60e200a547a35a5fb9c4386cb1c4007bc0ba342b944330883a240903a0b",
+    "dan-full.svg": "443fe60e200a547a35a5fb9c4386cb1c4007bc0ba342b944330883a240903a0b",
+    "dan-overlay-flat.svg": "997dc398fbe89c6817e43b798a275d3adc9f70083f8be679d4de97812f32bced",
+    "dan-overlay.svg": "997dc398fbe89c6817e43b798a275d3adc9f70083f8be679d4de97812f32bced",
+    "dan-proof.svg": "c60dd39d4782aa4031cad1191a2d9da7b2a3e0a1e8360fda69f110202c29051d",
+    "menkyo-full-cream.svg": "8c42de20e22763e31ced4c8aa7120b1fc591948755168234daa1c14cb2dbe8c5",
+    "menkyo-full-flat.svg": "570336b8610de68b6ae09accf2769cf4794d0e7f8eca7ab232797650551989b7",
+    "menkyo-full.svg": "570336b8610de68b6ae09accf2769cf4794d0e7f8eca7ab232797650551989b7",
+    "menkyo-overlay-flat.svg": "11cbc0a1e27fe0f41b2dbdf9dac7da52d75b4ed7e3755b7afa507189f42afaac",
+    "menkyo-overlay.svg": "11cbc0a1e27fe0f41b2dbdf9dac7da52d75b4ed7e3755b7afa507189f42afaac",
+    "menkyo-proof.svg": "9195cde9313eaf87236ac2cee4504e1064a98eaf2ef305afc93de7acffb904e0"
+   },
+   "textlayers": {},
+   "tools": []
+  },
+  "dropped-config": {
+   "argv": [
+    "--all",
+    "--no-ink",
+    "-f",
+    "svg"
+   ],
+   "config": "dropped.toml",
+   "stdout": "wrote <OUT>/kyoshi-overlay-specimen.svg\nwrote <OUT>/kyoshi-full-specimen.svg\nwrote <OUT>/kyoshi-full-cream-specimen.svg\nwrote <OUT>/kyoshi-overlay-flat-specimen.svg\nwrote <OUT>/kyoshi-full-flat-specimen.svg\nwrote <OUT>/kyoshi-proof-specimen.svg\n\n6 file(s) in <OUT>/\n",
+   "exit": 0,
+   "files": {
+    "kyoshi-full-cream-specimen.svg": "377a8ab9968c4de445130f6f35a4d00d1f367668c43d2f226c2e59593ca68b9d",
+    "kyoshi-full-flat-specimen.svg": "2b4e4d2424240f39bd21317d1d6054baa4be107ade61878cc1e0097f8c9a0746",
+    "kyoshi-full-specimen.svg": "2b4e4d2424240f39bd21317d1d6054baa4be107ade61878cc1e0097f8c9a0746",
+    "kyoshi-overlay-flat-specimen.svg": "6db04653916b916be75207628a56d2018095480c62844f5d37a9947edfc6e17b",
+    "kyoshi-overlay-specimen.svg": "6db04653916b916be75207628a56d2018095480c62844f5d37a9947edfc6e17b",
+    "kyoshi-proof-specimen.svg": "6368f31924f6c7e5e516699ab07cd3b3ad84c3133a0de0c0d805030e4ef86034"
+   },
+   "textlayers": {},
+   "tools": []
+  },
+  "dropped-config-rank": {
+   "argv": [
+    "-v",
+    "overlay-flat,proof",
+    "-f",
+    "svg",
+    "-r",
+    "4",
+    "-d",
+    ""
+   ],
+   "config": "dropped.toml",
+   "stdout": "wrote <OUT>/kyoshi-overlay-flat-4.svg\nwrote <OUT>/kyoshi-proof-4.svg\n\n2 file(s) in <OUT>/\n",
+   "exit": 0,
+   "files": {
+    "kyoshi-overlay-flat-4.svg": "eec9fc15915df2d2aa83c2f585e2e7934407f38cfe5160d24c0c24a9d3b7181e",
+    "kyoshi-proof-4.svg": "52f07f931540c91e03e691f60b70fc127995d0f06b60432103e961742c72bc70"
+   },
+   "textlayers": {},
+   "tools": []
+  },
+  "inked": {
+   "argv": [
+    "--all",
+    "-f",
+    "pdf,png,svg",
+    "--press",
+    "-n",
+    "",
+    "-r",
+    "",
+    "-d",
+    "2026-09-05"
+   ],
+   "config": "example",
+   "stdout": "wrote <OUT>/dan-overlay.pdf\nwrote <OUT>/dan-overlay-K.pdf\nwrote <OUT>/dan-overlay.png\nwrote <OUT>/dan-overlay.svg\nwrote <OUT>/dan-overlay-textlayer.png\nwrote <OUT>/dan-full.pdf\nwrote <OUT>/dan-full-CMYK.pdf\nwrote <OUT>/dan-full.png\nwrote <OUT>/dan-full.svg\nwrote <OUT>/dan-full-textlayer.png\nwrote <OUT>/dan-full-cream.pdf\nwrote <OUT>/dan-full-cream-CMYK.pdf\nwrote <OUT>/dan-full-cream.png\nwrote <OUT>/dan-full-cream.svg\nwrote <OUT>/dan-full-cream-textlayer.png\nwrote <OUT>/dan-overlay-flat.pdf\nwrote <OUT>/dan-overlay-flat-K.pdf\nwrote <OUT>/dan-overlay-flat.png\nwrote <OUT>/dan-overlay-flat.svg\nwrote <OUT>/dan-full-flat.pdf\nwrote <OUT>/dan-full-flat-CMYK.pdf\nwrote <OUT>/dan-full-flat.png\nwrote <OUT>/dan-full-flat.svg\nwrote <OUT>/dan-proof.pdf\nwrote <OUT>/dan-proof.png\nwrote <OUT>/dan-proof.svg\nwrote <OUT>/shihan-overlay.pdf\nwrote <OUT>/shihan-overlay-K.pdf\nwrote <OUT>/shihan-overlay.png\nwrote <OUT>/shihan-overlay.svg\nwrote <OUT>/shihan-overlay-textlayer.png\nwrote <OUT>/shihan-full.pdf\nwrote <OUT>/shihan-full-CMYK.pdf\nwrote <OUT>/shihan-full.png\nwrote <OUT>/shihan-full.svg\nwrote <OUT>/shihan-full-textlayer.png\nwrote <OUT>/shihan-full-cream.pdf\nwrote <OUT>/shihan-full-cream-CMYK.pdf\nwrote <OUT>/shihan-full-cream.png\nwrote <OUT>/shihan-full-cream.svg\nwrote <OUT>/shihan-full-cream-textlayer.png\nwrote <OUT>/shihan-overlay-flat.pdf\nwrote <OUT>/shihan-overlay-flat-K.pdf\nwrote <OUT>/shihan-overlay-flat.png\nwrote <OUT>/shihan-overlay-flat.svg\nwrote <OUT>/shihan-full-flat.pdf\nwrote <OUT>/shihan-full-flat-CMYK.pdf\nwrote <OUT>/shihan-full-flat.png\nwrote <OUT>/shihan-full-flat.svg\nwrote <OUT>/shihan-proof.pdf\nwrote <OUT>/shihan-proof.png\nwrote <OUT>/shihan-proof.svg\nwrote <OUT>/renshi-overlay.pdf\nwrote <OUT>/renshi-overlay-K.pdf\nwrote <OUT>/renshi-overlay.png\nwrote <OUT>/renshi-overlay.svg\nwrote <OUT>/renshi-overlay-textlayer.png\nwrote <OUT>/renshi-full.pdf\nwrote <OUT>/renshi-full-CMYK.pdf\nwrote <OUT>/renshi-full.png\nwrote <OUT>/renshi-full.svg\nwrote <OUT>/renshi-full-textlayer.png\nwrote <OUT>/renshi-full-cream.pdf\nwrote <OUT>/renshi-full-cream-CMYK.pdf\nwrote <OUT>/renshi-full-cream.png\nwrote <OUT>/renshi-full-cream.svg\nwrote <OUT>/renshi-full-cream-textlayer.png\nwrote <OUT>/renshi-overlay-flat.pdf\nwrote <OUT>/renshi-overlay-flat-K.pdf\nwrote <OUT>/renshi-overlay-flat.png\nwrote <OUT>/renshi-overlay-flat.svg\nwrote <OUT>/renshi-full-flat.pdf\nwrote <OUT>/renshi-full-flat-CMYK.pdf\nwrote <OUT>/renshi-full-flat.png\nwrote <OUT>/renshi-full-flat.svg\nwrote <OUT>/renshi-proof.pdf\nwrote <OUT>/renshi-proof.png\nwrote <OUT>/renshi-proof.svg\n\n78 file(s) in <OUT>/\n",
+   "exit": 0,
+   "files": {
+    "dan-full-CMYK.pdf": null,
+    "dan-full-cream-CMYK.pdf": null,
+    "dan-full-cream-textlayer.png": null,
+    "dan-full-cream.pdf": null,
+    "dan-full-cream.png": null,
+    "dan-full-cream.svg": "d333666d5cb24017a5fd48ac18113cba17e431fc0426310ada63609d9cbd72e0",
+    "dan-full-flat-CMYK.pdf": null,
+    "dan-full-flat.pdf": null,
+    "dan-full-flat.png": null,
+    "dan-full-flat.svg": "050ea4a832cf2e15830b20ae03ca4b18094f8e85201afbbf774718f735bd8abd",
+    "dan-full-textlayer.png": null,
+    "dan-full.pdf": null,
+    "dan-full.png": null,
+    "dan-full.svg": "c401db4424be2798d5c332d1322450286ba2be45f1c9e714e2c84a14e9f7776d",
+    "dan-overlay-K.pdf": null,
+    "dan-overlay-flat-K.pdf": null,
+    "dan-overlay-flat.pdf": null,
+    "dan-overlay-flat.png": null,
+    "dan-overlay-flat.svg": "a11100288a20547556c7f66fe2ddb47f17e1d1c3dad122d7077cd4c1894c4556",
+    "dan-overlay-textlayer.png": null,
+    "dan-overlay.pdf": null,
+    "dan-overlay.png": null,
+    "dan-overlay.svg": "1b08d3a21722298c056fc2dbbbe35a03e15c476ef8dc037586171db52b02a49a",
+    "dan-proof.pdf": null,
+    "dan-proof.png": null,
+    "dan-proof.svg": "6d99c071cd1baf7739cd6080d205ccf5305cd7f62b08e88caef42c95c8130b48",
+    "renshi-full-CMYK.pdf": null,
+    "renshi-full-cream-CMYK.pdf": null,
+    "renshi-full-cream-textlayer.png": null,
+    "renshi-full-cream.pdf": null,
+    "renshi-full-cream.png": null,
+    "renshi-full-cream.svg": "53ba306adabd8d6eb752ef53180959f9c8dfbcc056ca123b2860fc4fee5a4fe7",
+    "renshi-full-flat-CMYK.pdf": null,
+    "renshi-full-flat.pdf": null,
+    "renshi-full-flat.png": null,
+    "renshi-full-flat.svg": "a06054cbfac07c90042e08fa8043864d67d25dc17877e599965c0ba999269c90",
+    "renshi-full-textlayer.png": null,
+    "renshi-full.pdf": null,
+    "renshi-full.png": null,
+    "renshi-full.svg": "5d33f99472d9383a02573b4266a860a29ef0ce5b769b959e749dce9f0325ebd4",
+    "renshi-overlay-K.pdf": null,
+    "renshi-overlay-flat-K.pdf": null,
+    "renshi-overlay-flat.pdf": null,
+    "renshi-overlay-flat.png": null,
+    "renshi-overlay-flat.svg": "91d186a1bcc291254d94c0edb4888fc6b6b706719cb5f6292a52ef730e1a5ea3",
+    "renshi-overlay-textlayer.png": null,
+    "renshi-overlay.pdf": null,
+    "renshi-overlay.png": null,
+    "renshi-overlay.svg": "978380d6c2a93edafa51592e3454d5478615cc60deeb50acc512e58f35c98a51",
+    "renshi-proof.pdf": null,
+    "renshi-proof.png": null,
+    "renshi-proof.svg": "baf21b50c8a4266ba96762bb2b9f0a75415c89bf0b6d13401d757d2c8181241a",
+    "shihan-full-CMYK.pdf": null,
+    "shihan-full-cream-CMYK.pdf": null,
+    "shihan-full-cream-textlayer.png": null,
+    "shihan-full-cream.pdf": null,
+    "shihan-full-cream.png": null,
+    "shihan-full-cream.svg": "4891c20ae880e10d76fc77aa1c47a84c390315d46e127ee6cfe5bb64e55ca780",
+    "shihan-full-flat-CMYK.pdf": null,
+    "shihan-full-flat.pdf": null,
+    "shihan-full-flat.png": null,
+    "shihan-full-flat.svg": "62653ef49972b0d60bb442b45838daad08947d9f1571c297237bcf61e38b3304",
+    "shihan-full-textlayer.png": null,
+    "shihan-full.pdf": null,
+    "shihan-full.png": null,
+    "shihan-full.svg": "23b739ef6d397aabcd7b85fe3b480e8321f1b2552fe4431a4271c6cbaf37f206",
+    "shihan-overlay-K.pdf": null,
+    "shihan-overlay-flat-K.pdf": null,
+    "shihan-overlay-flat.pdf": null,
+    "shihan-overlay-flat.png": null,
+    "shihan-overlay-flat.svg": "3ebda7bb1d53ddaad994ed1093ce40a0f93c1c4565a8e1aa451a45914ec90de2",
+    "shihan-overlay-textlayer.png": null,
+    "shihan-overlay.pdf": null,
+    "shihan-overlay.png": null,
+    "shihan-overlay.svg": "8f239f480614e89fcabffc8e7621500c748fc0f7c5546253e29651e8f819e07b",
+    "shihan-proof.pdf": null,
+    "shihan-proof.png": null,
+    "shihan-proof.svg": "67b32873bbc180bf73496e969400ed53e92a883b6688ea3cbf040706e520058c"
+   },
+   "textlayers": {
+    "dan-full-cream-textlayer.svg": "8cbf750cad05153356a2e89d0bffbe7bf3837c2d78243d50245ac1306fd9bca2",
+    "dan-full-textlayer.svg": "8cbf750cad05153356a2e89d0bffbe7bf3837c2d78243d50245ac1306fd9bca2",
+    "dan-overlay-textlayer.svg": "8cbf750cad05153356a2e89d0bffbe7bf3837c2d78243d50245ac1306fd9bca2",
+    "renshi-full-cream-textlayer.svg": "91facbe196c57e19c85b1968b6ed2f06834661df95f823b1c438dbd5a841d525",
+    "renshi-full-textlayer.svg": "91facbe196c57e19c85b1968b6ed2f06834661df95f823b1c438dbd5a841d525",
+    "renshi-overlay-textlayer.svg": "91facbe196c57e19c85b1968b6ed2f06834661df95f823b1c438dbd5a841d525",
+    "shihan-full-cream-textlayer.svg": "1e8ef86f05780f6f18716c3a53a7cb95d5535d42119937cc4419dffc6dac57bc",
+    "shihan-full-textlayer.svg": "1e8ef86f05780f6f18716c3a53a7cb95d5535d42119937cc4419dffc6dac57bc",
+    "shihan-overlay-textlayer.svg": "1e8ef86f05780f6f18716c3a53a7cb95d5535d42119937cc4419dffc6dac57bc"
+   },
+   "tools": [
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-overlay-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-overlay-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=600",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/dan-overlay-textlayer.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-overlay.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/dan-overlay.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/Gray",
+      "-dProcessColorModel=/DeviceGray",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/dan-overlay-K.pdf",
+      "<OUT>/dan-overlay.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-overlay.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/dan-overlay.png",
+      "--export-background-opacity=0"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-full-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-full-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=600",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/dan-full-textlayer.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-full.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/dan-full.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/CMYK",
+      "-dProcessColorModel=/DeviceCMYK",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/dan-full-CMYK.pdf",
+      "<OUT>/dan-full.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-full.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/dan-full.png",
+      "--export-background-opacity=0"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-full-cream-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-full-cream-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=600",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/dan-full-cream-textlayer.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-full-cream.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/dan-full-cream.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/CMYK",
+      "-dProcessColorModel=/DeviceCMYK",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/dan-full-cream-CMYK.pdf",
+      "<OUT>/dan-full-cream.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-full-cream.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/dan-full-cream.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-overlay-flat.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/dan-overlay-flat.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/Gray",
+      "-dProcessColorModel=/DeviceGray",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/dan-overlay-flat-K.pdf",
+      "<OUT>/dan-overlay-flat.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-overlay-flat.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/dan-overlay-flat.png",
+      "--export-background-opacity=0"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-full-flat.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/dan-full-flat.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/CMYK",
+      "-dProcessColorModel=/DeviceCMYK",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/dan-full-flat-CMYK.pdf",
+      "<OUT>/dan-full-flat.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-full-flat.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/dan-full-flat.png",
+      "--export-background-opacity=0"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-proof.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/dan-proof.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-proof.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/dan-proof.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-overlay-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-overlay-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=600",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/shihan-overlay-textlayer.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-overlay.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/shihan-overlay.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/Gray",
+      "-dProcessColorModel=/DeviceGray",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/shihan-overlay-K.pdf",
+      "<OUT>/shihan-overlay.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-overlay.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/shihan-overlay.png",
+      "--export-background-opacity=0"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-full-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-full-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=600",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/shihan-full-textlayer.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-full.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/shihan-full.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/CMYK",
+      "-dProcessColorModel=/DeviceCMYK",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/shihan-full-CMYK.pdf",
+      "<OUT>/shihan-full.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-full.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/shihan-full.png",
+      "--export-background-opacity=0"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-full-cream-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-full-cream-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=600",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/shihan-full-cream-textlayer.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-full-cream.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/shihan-full-cream.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/CMYK",
+      "-dProcessColorModel=/DeviceCMYK",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/shihan-full-cream-CMYK.pdf",
+      "<OUT>/shihan-full-cream.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-full-cream.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/shihan-full-cream.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-overlay-flat.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/shihan-overlay-flat.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/Gray",
+      "-dProcessColorModel=/DeviceGray",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/shihan-overlay-flat-K.pdf",
+      "<OUT>/shihan-overlay-flat.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-overlay-flat.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/shihan-overlay-flat.png",
+      "--export-background-opacity=0"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-full-flat.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/shihan-full-flat.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/CMYK",
+      "-dProcessColorModel=/DeviceCMYK",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/shihan-full-flat-CMYK.pdf",
+      "<OUT>/shihan-full-flat.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-full-flat.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/shihan-full-flat.png",
+      "--export-background-opacity=0"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-proof.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/shihan-proof.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-proof.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/shihan-proof.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-overlay-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-overlay-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=600",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/renshi-overlay-textlayer.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-overlay.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/renshi-overlay.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/Gray",
+      "-dProcessColorModel=/DeviceGray",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/renshi-overlay-K.pdf",
+      "<OUT>/renshi-overlay.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-overlay.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/renshi-overlay.png",
+      "--export-background-opacity=0"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-full-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-full-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=600",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/renshi-full-textlayer.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-full.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/renshi-full.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/CMYK",
+      "-dProcessColorModel=/DeviceCMYK",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/renshi-full-CMYK.pdf",
+      "<OUT>/renshi-full.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-full.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/renshi-full.png",
+      "--export-background-opacity=0"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-full-cream-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-full-cream-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=600",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/renshi-full-cream-textlayer.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-full-cream.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/renshi-full-cream.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/CMYK",
+      "-dProcessColorModel=/DeviceCMYK",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/renshi-full-cream-CMYK.pdf",
+      "<OUT>/renshi-full-cream.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-full-cream.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/renshi-full-cream.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-overlay-flat.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/renshi-overlay-flat.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/Gray",
+      "-dProcessColorModel=/DeviceGray",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/renshi-overlay-flat-K.pdf",
+      "<OUT>/renshi-overlay-flat.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-overlay-flat.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/renshi-overlay-flat.png",
+      "--export-background-opacity=0"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-full-flat.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/renshi-full-flat.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/CMYK",
+      "-dProcessColorModel=/DeviceCMYK",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/renshi-full-flat-CMYK.pdf",
+      "<OUT>/renshi-full-flat.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-full-flat.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/renshi-full-flat.png",
+      "--export-background-opacity=0"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-proof.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/renshi-proof.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-proof.svg",
+      "--export-type=png",
+      "--export-dpi=300",
+      "--export-filename=<OUT>/renshi-proof.png"
+     ],
+     "fontconfig": true
+    }
+   ]
+  },
+  "inked-default": {
+   "argv": [
+    "-d",
+    "2026-09-05"
+   ],
+   "config": "example",
+   "stdout": "wrote <OUT>/dan-overlay-sample.pdf\nwrote <OUT>/dan-full-cream-sample.pdf\nwrote <OUT>/shihan-overlay-sample.pdf\nwrote <OUT>/shihan-full-cream-sample.pdf\nwrote <OUT>/renshi-overlay-sample.pdf\nwrote <OUT>/renshi-full-cream-sample.pdf\n\n6 file(s) in <OUT>/\n",
+   "exit": 0,
+   "files": {
+    "dan-full-cream-sample.pdf": null,
+    "dan-overlay-sample.pdf": null,
+    "renshi-full-cream-sample.pdf": null,
+    "renshi-overlay-sample.pdf": null,
+    "shihan-full-cream-sample.pdf": null,
+    "shihan-overlay-sample.pdf": null
+   },
+   "textlayers": {
+    "dan-full-cream-sample-textlayer.svg": "8265b744465b5a992753cef2e84ba69bb974f7a60fae65c73e81d34508c4d663",
+    "dan-overlay-sample-textlayer.svg": "8265b744465b5a992753cef2e84ba69bb974f7a60fae65c73e81d34508c4d663",
+    "renshi-full-cream-sample-textlayer.svg": "49aa76214dfdb332172595b37fc7de935aacb3eaeae29d3d5337ee78fefd8bd4",
+    "renshi-overlay-sample-textlayer.svg": "49aa76214dfdb332172595b37fc7de935aacb3eaeae29d3d5337ee78fefd8bd4",
+    "shihan-full-cream-sample-textlayer.svg": "257500eda7741be262aaec989c7f2e7e4218a561e44e657f2b700956ce8dc6e0",
+    "shihan-overlay-sample-textlayer.svg": "257500eda7741be262aaec989c7f2e7e4218a561e44e657f2b700956ce8dc6e0"
+   },
+   "tools": [
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-overlay-sample-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-overlay-sample-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=600",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/dan-overlay-sample-textlayer.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-overlay-sample.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/dan-overlay-sample.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-full-cream-sample-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-full-cream-sample-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=600",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/dan-full-cream-sample-textlayer.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-full-cream-sample.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/dan-full-cream-sample.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-overlay-sample-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-overlay-sample-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=600",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/shihan-overlay-sample-textlayer.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-overlay-sample.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/shihan-overlay-sample.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-full-cream-sample-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-full-cream-sample-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=600",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/shihan-full-cream-sample-textlayer.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/shihan-full-cream-sample.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/shihan-full-cream-sample.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-overlay-sample-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-overlay-sample-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=600",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/renshi-overlay-sample-textlayer.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-overlay-sample.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/renshi-overlay-sample.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-full-cream-sample-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-full-cream-sample-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=600",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/renshi-full-cream-sample-textlayer.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-full-cream-sample.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/renshi-full-cream-sample.pdf"
+     ],
+     "fontconfig": true
+    }
+   ]
+  },
+  "supersample": {
+   "argv": [
+    "-a",
+    "dan",
+    "-v",
+    "overlay",
+    "-f",
+    "svg",
+    "--supersample",
+    "2",
+    "-d",
+    ""
+   ],
+   "config": "example",
+   "stdout": "wrote <OUT>/dan-overlay-sample.svg\nwrote <OUT>/dan-overlay-sample-textlayer.png\n\n2 file(s) in <OUT>/\n",
+   "exit": 0,
+   "files": {
+    "dan-overlay-sample-textlayer.png": null,
+    "dan-overlay-sample.svg": "ccfc51622a51d07f3faa1bf7106ab513eb1d5c2df34f1890016b98877c860afc"
+   },
+   "textlayers": {
+    "dan-overlay-sample-textlayer.svg": "97caf31f9d3178728aa186ed41bfef46980b97a43a8ff6d34d4248f938397edc"
+   },
+   "tools": [
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-overlay-sample-textlayer.svg",
+      "--query-x",
+      "--query-y",
+      "--query-width",
+      "--query-height"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-overlay-sample-textlayer.svg",
+      "--export-type=png",
+      "--export-area-drawing",
+      "--export-dpi=1200",
+      "--export-background-opacity=0",
+      "--export-filename=<OUT>/.work/dan-overlay-sample-textlayer.png"
+     ],
+     "fontconfig": true
+    }
+   ]
+  },
+  "png-dpi": {
+   "argv": [
+    "-a",
+    "renshi",
+    "-v",
+    "proof,full-flat,overlay-flat",
+    "-f",
+    "png",
+    "--dpi",
+    "150",
+    "-d",
+    ""
+   ],
+   "config": "example",
+   "stdout": "wrote <OUT>/renshi-proof-sample.png\nwrote <OUT>/renshi-full-flat-sample.png\nwrote <OUT>/renshi-overlay-flat-sample.png\n\n3 file(s) in <OUT>/\n",
+   "exit": 0,
+   "files": {
+    "renshi-full-flat-sample.png": null,
+    "renshi-overlay-flat-sample.png": null,
+    "renshi-proof-sample.png": null
+   },
+   "textlayers": {},
+   "tools": [
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-proof-sample.svg",
+      "--export-type=png",
+      "--export-dpi=150",
+      "--export-filename=<OUT>/renshi-proof-sample.png"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-full-flat-sample.svg",
+      "--export-type=png",
+      "--export-dpi=150",
+      "--export-filename=<OUT>/renshi-full-flat-sample.png",
+      "--export-background-opacity=0"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/renshi-overlay-flat-sample.svg",
+      "--export-type=png",
+      "--export-dpi=150",
+      "--export-filename=<OUT>/renshi-overlay-flat-sample.png",
+      "--export-background-opacity=0"
+     ],
+     "fontconfig": true
+    }
+   ]
+  },
+  "flat-press": {
+   "argv": [
+    "-a",
+    "dan",
+    "-v",
+    "overlay-flat,full-flat,proof",
+    "-f",
+    "pdf",
+    "--press",
+    "-d",
+    ""
+   ],
+   "config": "example",
+   "stdout": "wrote <OUT>/dan-overlay-flat-sample.pdf\nwrote <OUT>/dan-overlay-flat-sample-K.pdf\nwrote <OUT>/dan-full-flat-sample.pdf\nwrote <OUT>/dan-full-flat-sample-CMYK.pdf\nwrote <OUT>/dan-proof-sample.pdf\n\n5 file(s) in <OUT>/\n",
+   "exit": 0,
+   "files": {
+    "dan-full-flat-sample-CMYK.pdf": null,
+    "dan-full-flat-sample.pdf": null,
+    "dan-overlay-flat-sample-K.pdf": null,
+    "dan-overlay-flat-sample.pdf": null,
+    "dan-proof-sample.pdf": null
+   },
+   "textlayers": {},
+   "tools": [
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-overlay-flat-sample.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/dan-overlay-flat-sample.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/Gray",
+      "-dProcessColorModel=/DeviceGray",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/dan-overlay-flat-sample-K.pdf",
+      "<OUT>/dan-overlay-flat-sample.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-full-flat-sample.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/dan-full-flat-sample.pdf"
+     ],
+     "fontconfig": true
+    },
+    {
+     "tool": "gs",
+     "argv": [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      "-sDEVICE=pdfwrite",
+      "-dColorConversionStrategy=/CMYK",
+      "-dProcessColorModel=/DeviceCMYK",
+      "-dPDFSETTINGS=/prepress",
+      "-dEmbedAllFonts=true",
+      "-o",
+      "<OUT>/dan-full-flat-sample-CMYK.pdf",
+      "<OUT>/dan-full-flat-sample.pdf"
+     ],
+     "fontconfig": false
+    },
+    {
+     "tool": "inkscape",
+     "argv": [
+      "<OUT>/.work/dan-proof-sample.svg",
+      "--export-type=pdf",
+      "--export-filename=<OUT>/dan-proof-sample.pdf"
+     ],
+     "fontconfig": true
+    }
+   ]
+  }
+ },
+ "lists": {
+  "default": {
+   "argv": [],
+   "config": "example",
+   "stdout": "dan-overlay-sample.pdf\ndan-full-cream-sample.pdf\nshihan-overlay-sample.pdf\nshihan-full-cream-sample.pdf\nrenshi-overlay-sample.pdf\nrenshi-full-cream-sample.pdf\n",
+   "exit": 0
+  },
+  "all": {
+   "argv": [
+    "--all"
+   ],
+   "config": "example",
+   "stdout": "dan-overlay-sample.pdf\ndan-full-sample.pdf\ndan-full-cream-sample.pdf\ndan-overlay-flat-sample.pdf\ndan-full-flat-sample.pdf\ndan-proof-sample.pdf\nshihan-overlay-sample.pdf\nshihan-full-sample.pdf\nshihan-full-cream-sample.pdf\nshihan-overlay-flat-sample.pdf\nshihan-full-flat-sample.pdf\nshihan-proof-sample.pdf\nrenshi-overlay-sample.pdf\nrenshi-full-sample.pdf\nrenshi-full-cream-sample.pdf\nrenshi-overlay-flat-sample.pdf\nrenshi-full-flat-sample.pdf\nrenshi-proof-sample.pdf\n",
+   "exit": 0
+  },
+  "all-press-formats": {
+   "argv": [
+    "--all",
+    "--press",
+    "-f",
+    "pdf,png,svg"
+   ],
+   "config": "example",
+   "stdout": "dan-overlay-sample.pdf\ndan-overlay-sample-K.pdf\ndan-overlay-sample.png\ndan-overlay-sample.svg\ndan-full-sample.pdf\ndan-full-sample-CMYK.pdf\ndan-full-sample.png\ndan-full-sample.svg\ndan-full-cream-sample.pdf\ndan-full-cream-sample-CMYK.pdf\ndan-full-cream-sample.png\ndan-full-cream-sample.svg\ndan-overlay-flat-sample.pdf\ndan-overlay-flat-sample-K.pdf\ndan-overlay-flat-sample.png\ndan-overlay-flat-sample.svg\ndan-full-flat-sample.pdf\ndan-full-flat-sample-CMYK.pdf\ndan-full-flat-sample.png\ndan-full-flat-sample.svg\ndan-proof-sample.pdf\ndan-proof-sample.png\ndan-proof-sample.svg\nshihan-overlay-sample.pdf\nshihan-overlay-sample-K.pdf\nshihan-overlay-sample.png\nshihan-overlay-sample.svg\nshihan-full-sample.pdf\nshihan-full-sample-CMYK.pdf\nshihan-full-sample.png\nshihan-full-sample.svg\nshihan-full-cream-sample.pdf\nshihan-full-cream-sample-CMYK.pdf\nshihan-full-cream-sample.png\nshihan-full-cream-sample.svg\nshihan-overlay-flat-sample.pdf\nshihan-overlay-flat-sample-K.pdf\nshihan-overlay-flat-sample.png\nshihan-overlay-flat-sample.svg\nshihan-full-flat-sample.pdf\nshihan-full-flat-sample-CMYK.pdf\nshihan-full-flat-sample.png\nshihan-full-flat-sample.svg\nshihan-proof-sample.pdf\nshihan-proof-sample.png\nshihan-proof-sample.svg\nrenshi-overlay-sample.pdf\nrenshi-overlay-sample-K.pdf\nrenshi-overlay-sample.png\nrenshi-overlay-sample.svg\nrenshi-full-sample.pdf\nrenshi-full-sample-CMYK.pdf\nrenshi-full-sample.png\nrenshi-full-sample.svg\nrenshi-full-cream-sample.pdf\nrenshi-full-cream-sample-CMYK.pdf\nrenshi-full-cream-sample.png\nrenshi-full-cream-sample.svg\nrenshi-overlay-flat-sample.pdf\nrenshi-overlay-flat-sample-K.pdf\nrenshi-overlay-flat-sample.png\nrenshi-overlay-flat-sample.svg\nrenshi-full-flat-sample.pdf\nrenshi-full-flat-sample-CMYK.pdf\nrenshi-full-flat-sample.png\nrenshi-full-flat-sample.svg\nrenshi-proof-sample.pdf\nrenshi-proof-sample.png\nrenshi-proof-sample.svg\n",
+   "exit": 0
+  },
+  "name": {
+   "argv": [
+    "-n",
+    "ヤン・ヤンセン"
+   ],
+   "config": "example",
+   "stdout": "dan-overlay-ヤン-ヤンセン.pdf\ndan-full-cream-ヤン-ヤンセン.pdf\nshihan-overlay-ヤン-ヤンセン.pdf\nshihan-full-cream-ヤン-ヤンセン.pdf\nrenshi-overlay-ヤン-ヤンセン.pdf\nrenshi-full-cream-ヤン-ヤンセン.pdf\n",
+   "exit": 0
+  },
+  "rank": {
+   "argv": [
+    "-r",
+    "2"
+   ],
+   "config": "example",
+   "stdout": "dan-overlay-2.pdf\ndan-full-cream-2.pdf\nshihan-overlay-2.pdf\nshihan-full-cream-2.pdf\nrenshi-overlay-2.pdf\nrenshi-full-cream-2.pdf\n",
+   "exit": 0
+  },
+  "rank-name": {
+   "argv": [
+    "-r",
+    "nidan",
+    "-n",
+    "ヤン・ヤンセン"
+   ],
+   "config": "example",
+   "stdout": "dan-overlay-nidan-ヤン-ヤンセン.pdf\ndan-full-cream-nidan-ヤン-ヤンセン.pdf\nshihan-overlay-nidan-ヤン-ヤンセン.pdf\nshihan-full-cream-nidan-ヤン-ヤンセン.pdf\nrenshi-overlay-nidan-ヤン-ヤンセン.pdf\nrenshi-full-cream-nidan-ヤン-ヤンセン.pdf\n",
+   "exit": 0
+  },
+  "name-odd-chars": {
+   "argv": [
+    "-n",
+    "ヤン　ヤンセン/x:y"
+   ],
+   "config": "example",
+   "stdout": "dan-overlay-ヤン-ヤンセンxy.pdf\ndan-full-cream-ヤン-ヤンセンxy.pdf\nshihan-overlay-ヤン-ヤンセンxy.pdf\nshihan-full-cream-ヤン-ヤンセンxy.pdf\nrenshi-overlay-ヤン-ヤンセンxy.pdf\nrenshi-full-cream-ヤン-ヤンセンxy.pdf\n",
+   "exit": 0
+  },
+  "name-spaces": {
+   "argv": [
+    "-n",
+    "ヤン  ヤンセン"
+   ],
+   "config": "example",
+   "stdout": "dan-overlay-ヤン-ヤンセン.pdf\ndan-full-cream-ヤン-ヤンセン.pdf\nshihan-overlay-ヤン-ヤンセン.pdf\nshihan-full-cream-ヤン-ヤンセン.pdf\nrenshi-overlay-ヤン-ヤンセン.pdf\nrenshi-full-cream-ヤン-ヤンセン.pdf\n",
+   "exit": 0
+  },
+  "suffix-empty": {
+   "argv": [
+    "--suffix",
+    ""
+   ],
+   "config": "example",
+   "stdout": "dan-overlay.pdf\ndan-full-cream.pdf\nshihan-overlay.pdf\nshihan-full-cream.pdf\nrenshi-overlay.pdf\nrenshi-full-cream.pdf\n",
+   "exit": 0
+  },
+  "suffix-given": {
+   "argv": [
+    "--suffix",
+    "archive",
+    "-n",
+    "ヤン・ヤンセン"
+   ],
+   "config": "example",
+   "stdout": "dan-overlay-archive.pdf\ndan-full-cream-archive.pdf\nshihan-overlay-archive.pdf\nshihan-full-cream-archive.pdf\nrenshi-overlay-archive.pdf\nrenshi-full-cream-archive.pdf\n",
+   "exit": 0
+  },
+  "all-cleared": {
+   "argv": [
+    "-n",
+    "",
+    "-r",
+    "",
+    "-d",
+    ""
+   ],
+   "config": "example",
+   "stdout": "dan-overlay.pdf\ndan-full-cream.pdf\nshihan-overlay.pdf\nshihan-full-cream.pdf\nrenshi-overlay.pdf\nrenshi-full-cream.pdf\n",
+   "exit": 0
+  },
+  "date-only": {
+   "argv": [
+    "-d",
+    "2026-09-05"
+   ],
+   "config": "example",
+   "stdout": "dan-overlay-sample.pdf\ndan-full-cream-sample.pdf\nshihan-overlay-sample.pdf\nshihan-full-cream-sample.pdf\nrenshi-overlay-sample.pdf\nrenshi-full-cream-sample.pdf\n",
+   "exit": 0
+  },
+  "shihan-press": {
+   "argv": [
+    "-a",
+    "shihan",
+    "-v",
+    "proof,full,overlay-flat",
+    "--press"
+   ],
+   "config": "example",
+   "stdout": "shihan-proof-sample.pdf\nshihan-full-sample.pdf\nshihan-full-sample-CMYK.pdf\nshihan-overlay-flat-sample.pdf\nshihan-overlay-flat-sample-K.pdf\n",
+   "exit": 0
+  },
+  "licence-rank": {
+   "argv": [
+    "-r",
+    "師範",
+    "-a",
+    "renshi"
+   ],
+   "config": "example",
+   "stdout": "renshi-overlay-師範.pdf\nrenshi-full-cream-師範.pdf\n",
+   "exit": 0
+  },
+  "minimal-press": {
+   "argv": [
+    "--all",
+    "--press"
+   ],
+   "config": "minimal.toml",
+   "stdout": "dan-overlay.pdf\ndan-overlay-K.pdf\ndan-full.pdf\ndan-full-CMYK.pdf\ndan-full-cream.pdf\ndan-full-cream-CMYK.pdf\ndan-overlay-flat.pdf\ndan-overlay-flat-K.pdf\ndan-full-flat.pdf\ndan-full-flat-CMYK.pdf\ndan-proof.pdf\nmenkyo-overlay.pdf\nmenkyo-overlay-K.pdf\nmenkyo-full.pdf\nmenkyo-full-CMYK.pdf\nmenkyo-full-cream.pdf\nmenkyo-full-cream-CMYK.pdf\nmenkyo-overlay-flat.pdf\nmenkyo-overlay-flat-K.pdf\nmenkyo-full-flat.pdf\nmenkyo-full-flat-CMYK.pdf\nmenkyo-proof.pdf\n",
+   "exit": 0
+  },
+  "dropped": {
+   "argv": [
+    "-v",
+    "all",
+    "-f",
+    "png,pdf"
+   ],
+   "config": "dropped.toml",
+   "stdout": "kyoshi-overlay-specimen.png\nkyoshi-overlay-specimen.pdf\nkyoshi-full-specimen.png\nkyoshi-full-specimen.pdf\nkyoshi-full-cream-specimen.png\nkyoshi-full-cream-specimen.pdf\nkyoshi-overlay-flat-specimen.png\nkyoshi-overlay-flat-specimen.pdf\nkyoshi-full-flat-specimen.png\nkyoshi-full-flat-specimen.pdf\nkyoshi-proof-specimen.png\nkyoshi-proof-specimen.pdf\n",
+   "exit": 0
+  }
+ }
+}

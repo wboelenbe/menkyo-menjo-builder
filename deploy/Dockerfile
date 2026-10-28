@@ -10,16 +10,17 @@ RUN apt-get update \
  && (fc-list | grep -qi "Noto Serif CJK JP" \
      || echo "WARNING: Noto Serif CJK JP not found - crest lettering will fall back")
 
+# The package is installed from a scratch copy that is then removed, so /app
+# holds only the web front end and the app imports the installed menkyo:
+# this is no checkout (paths.checkout_root() is None), and /data is the only
+# place it reads settings from.
 WORKDIR /app
-COPY requirements.txt /app/requirements.txt
-COPY web/requirements.txt /app/web/requirements.txt
-RUN pip install --no-cache-dir -r web/requirements.txt
-
-COPY src /app/src
-COPY fonts /app/fonts
-COPY config /app/config
+COPY pyproject.toml README.md LICENSE NOTICE /tmp/menkyo/
+COPY src/menkyo /tmp/menkyo/src/menkyo
 COPY web /app/web
 COPY LICENSE NOTICE /app/
+RUN pip install --no-cache-dir /tmp/menkyo -r web/requirements.txt \
+ && rm -rf /tmp/menkyo
 
 # Unprivileged user. Inkscape wants a writable HOME; the dojo's settings live
 # in /data (paths.user_data_dir() honours XDG_CONFIG_HOME), which is a volume.

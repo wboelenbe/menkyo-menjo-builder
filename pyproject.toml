@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "menkyo"
+# The one place the version lives. A release is the tag v<this>; the release
+# workflow refuses a tag that disagrees.
+version = "0.1.0"
+description = "Japanese dan-grade and menkyo certificates: A3, vertical, print-ready"
+readme = "README.md"
+license = "MIT AND OFL-1.1"
+license-files = ["LICENSE", "NOTICE", "src/menkyo/fonts/OFL.txt"]
+requires-python = ">=3.11"
+# Also needed, as system programs: inkscape, and ghostscript for --press.
+dependencies = [
+    "pillow>=9.0",
+    "numpy>=1.22",
+    "scipy>=1.8",
+]
+
+[project.scripts]
+menkyo = "menkyo.build_diploma:cli"
+
+[project.urls]
+Homepage = "https://github.com/wboelenbe/menkyo-menjo-builder"
+
+# The wheel is the generator and its command only. gui.py, web/, packaging/
+# and deploy/ build on it from this repository and do not ship in it.
+[tool.hatch.build.targets.wheel]
+packages = ["src/menkyo"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src/menkyo", "/README.md", "/LICENSE", "/NOTICE", "/pyproject.toml"]
+
+# Tests: `uv run pytest`. fastapi and httpx are only there so the web front
+# end can be tested; neither ships in the wheel.
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "fastapi>=0.110",
+    "httpx>=0.27",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]
+addopts = "-ra"
+filterwarnings = [
+    # starlette's TestClient nags about httpx; nothing here to act on.
+    "ignore:Using `httpx` with `starlette.testclient`",
+]
+markers = [
+    "render: needs Inkscape (and Ghostscript for --press); skipped without it, failed instead when REQUIRE_RENDER=1",
+    "slow: builds the wheel and installs it into a throwaway virtualenv",
+]

@@ -2,16 +2,21 @@
 # Run via packaging/build_app.sh, not directly.
 import os
 
+from PyInstaller.utils.hooks import copy_metadata
+
 ROOT = os.path.abspath(os.path.join(SPECPATH, ".."))
 
 a = Analysis(
     [os.path.join(ROOT, "src", "gui.py")],
     pathex=[os.path.join(ROOT, "src")],
     datas=[
-        (os.path.join(ROOT, "fonts"), "fonts"),
-        (os.path.join(ROOT, "config", "example.toml"), "config"),
+        # Beside the package's modules, where paths.resource() looks.
+        (os.path.join(ROOT, "src", "menkyo", "fonts"), "menkyo/fonts"),
+        (os.path.join(ROOT, "src", "menkyo", "example.toml"), "menkyo"),
         (os.path.join(ROOT, "LICENSE"), "."),
         (os.path.join(ROOT, "NOTICE"), "."),
+        # menkyo.__version__ reads the installed package's metadata.
+        *copy_metadata("menkyo"),
     ],
     excludes=["matplotlib", "pandas", "IPython", "pytest"],
 )

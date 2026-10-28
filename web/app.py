@@ -20,15 +20,19 @@ from typing import Optional
 from urllib.parse import quote
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "..", "src"))
+# An installed menkyo (the deploy image) is used as installed; a bare checkout
+# without one finds the package in ../src.
+try:
+    import menkyo  # noqa: F401
+except ImportError:
+    sys.path.insert(0, os.path.join(HERE, "..", "src"))
 
 from fastapi import FastAPI, HTTPException  # noqa: E402
 from fastapi.responses import FileResponse, Response  # noqa: E402
 from pydantic import BaseModel  # noqa: E402
 
-import config as config_mod  # noqa: E402
-import paths  # noqa: E402
-from service import GRADES, OUTPUTS, FormError, make_argv, run_build  # noqa: E402
+from menkyo import config as config_mod  # noqa: E402
+from menkyo.service import GRADES, OUTPUTS, FormError, make_argv, run_build  # noqa: E402
 
 app = FastAPI(title="Menkyo", docs_url=None, redoc_url=None, openapi_url=None)
 

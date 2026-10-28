@@ -1,0 +1,33 @@
+# Test configuration: placeholders only, every optional column empty, no
+# [sample] section, and the original layout (text_drop = 0).
+schema = 1
+
+[art]
+name = "〇〇流柔術"
+
+[dojo]
+name = "〇〇道場"
+crest_ring = ""
+
+[signer]
+title = "師範"
+name = ""
+
+[motto]
+text = ""
+
+[paper]
+border = 22.0
+safe_inset = 38.0
+text_drop = 0
+
+[[awards]]
+slug = "dan"
+heading = "段位免状"
+formula = "右授与ス"
+grade_column = true
+
+[[awards]]
+slug = "menkyo"
+heading = "免許状"
+formula = "右免許ス"

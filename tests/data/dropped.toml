@@ -1,0 +1,38 @@
+# Test configuration: placeholders only; a deeper text_drop, a five-character
+# crest ring, a different honorific and its own [sample].
+schema = 1
+
+[art]
+name = "〇〇流"
+
+[dojo]
+name = "〇〇館"
+crest_ring = "〇〇〇〇館"
+
+[signer]
+title = "宗家"
+name = "山田花子"
+
+[recipient]
+honorific = "様"
+
+[motto]
+text = "〇〇〇〇"
+
+[paper]
+border = 18.5
+safe_inset = 30.0
+text_drop = 0.12
+
+[[awards]]
+slug = "kyoshi"
+heading = "教士免許状"
+formula = "右免許ス"
+grade_column = false
+colour = "#335a8a"
+
+[sample]
+name = "タロウ・ヤマダ"
+rank = "sandan"
+date = "2025-03-01"
+suffix = "specimen"

@@ -1,12 +1,12 @@
 This repository is MIT-licensed (see LICENSE), with two exceptions.
 
-## fonts/ — Yuji Boku
+## src/menkyo/fonts/ — Yuji Boku
 
     Copyright 2021 The Yuji Project Authors
     https://github.com/Kinutafontfactory/Yuji
 
 Licensed under the SIL Open Font License, Version 1.1, reproduced in full at
-fonts/OFL.txt. The MIT licence above does not apply to it.
+src/menkyo/fonts/OFL.txt. The MIT licence above does not apply to it.
 
 The OFL permits redistribution, bundled or standalone, provided the licence
 travels with the font and the font is not sold on its own. There is no

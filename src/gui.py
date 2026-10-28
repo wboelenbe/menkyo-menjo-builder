@@ -19,9 +19,9 @@ import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-import config as config_mod
-import paths
-from service import GRADES, OUTPUTS, FormError, make_argv, run_build
+from menkyo import config as config_mod
+from menkyo import paths
+from menkyo.service import GRADES, OUTPUTS, FormError, make_argv, run_build
 
 PAD = 8
 

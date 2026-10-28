@@ -366,6 +366,61 @@ make that adjustable rather than hand-picking new constants once.
   explicitly; worth remembering whenever this repository is used as its own
   test fixture.
 
+## 2026-10-28 — A package, for the dojo portal
+
+The generator is to become one page of a Django site (dojo-portal) for a few
+chosen users. The portal pins a release; it does not vendor this repository.
+
+- **A wheel on GitHub Releases.** `src/` became the package `menkyo`, with
+  the font and `example.toml` inside it as package data. Tagging `v<version>`
+  publishes the wheel; the portal names its URL and `uv.lock` pins the hash.
+  The repository is public, so no credentials are involved, and the portal's
+  image needs no git.
+- **Why a package at all, and not top-level modules.** The old flat modules
+  were importable as `config`, `paths`, `service` — and the portal has its
+  own `config` package. Under one name, nothing collides.
+- **The wheel is the generator and its command only.** The Tk window, the
+  FastAPI front end, PyInstaller and Docker build on it from this repository;
+  the portal wants none of FastAPI or Tk.
+- **A command, not an API.** The portal runs `menkyo … --json` in a
+  subprocess. The generator keeps its state in module globals and a render
+  can take a couple of GB; a process per certificate keeps both out of the
+  web server's workers, and the flags were already the documented contract.
+- **Progress, as JSON lines.** A certificate takes tens of seconds, so
+  `--json` reports each slow step (`text`, `ink`, `pdf`, `press`, `png`) with
+  its number and the total, then the files, then `done` or `error`. The
+  stage keys let the portal say it in Dutch; the English label is for
+  everyone else. Without `--json` nothing changes on stdout, which
+  `service.run_build` parses. The portal reads only stdout, so under
+  `--json` every failure ends in one `error` event and exit code 1: a
+  rejected flag, a broken TOML and an unwritable `--out` as much as a
+  failing Inkscape.
+- **A checkout behaves as before; an installed copy looks only at itself.**
+  The repository-root `dojo.toml` and `./build` apply only when the package
+  sits in a checkout — a `pyproject.toml` naming `menkyo` two levels up, so
+  a copy vendored inside another project is not one; installed or frozen,
+  it is the per-user folder and `~/Documents/Menkyo`. Traced crest glyphs
+  moved from the repository root to a `crest/` beside the configuration that
+  switches them on, which is the same place in a checkout and a sensible one
+  everywhere else.
+- **Packaging is tested by rendering.** The release workflow installs the
+  wheel outside the checkout, renders, and checks the PDF embeds Yuji Boku,
+  so a font left out of the package fails the release and not the portal.
+
+## 2026-10-28 — `xlink:href` for the inked text, for Inkscape 1.2
+
+The inked variants (`overlay`, `full`, `full-cream`) are a chrome SVG with
+the graded text placed on it as an `<image>` raster. That element used SVG
+2's plain `href`, which Inkscape 1.3 reads and 1.2 silently ignores: on
+Debian bookworm and Ubuntu 24.04 — the deploy image, the release runner,
+likely the portal — the defaults printed with the crest and no text. The
+real renders in the Docker test image caught it; it predates the package.
+
+The image now uses `xlink:href`, which every Inkscape reads, and only the
+chrome layer's root `<svg>` declares `xmlns:xlink`. Flat, proof and
+text-layer SVGs are byte-for-byte as before; requiring Inkscape 1.3 was the
+alternative, and neither of those distributions packages it.
+
 ## Open
 
 - **Source the 賞状用紙.** Still the preferred route: `border` and
@@ -379,3 +434,17 @@ make that adjustable rather than hand-picking new constants once.
   `density` — wider spacing — rather than thinning the strokes.
 - **Confirm the katakana transcription of any recipient's name** with the
   recipient before printing.
+- **Paper format: A4 as well as A3.** Let the user choose the sheet size;
+  today everything is laid out for A3 landscape (420 × 297 mm).
+- **Kyū grades.** Certificates for the coloured-belt grades below shodan,
+  alongside the dan grades.
+- **A smaller package without Inkscape?** Inkscape is most of the install
+  (and of the portal's image). Find out whether the SVG can be rendered
+  without it. The output need not be byte-identical, as long as it looks good.
+- **The `-K` press files of the inked variants are not K-only.** Cairo wraps
+  the page in a transparency group with an RGB colour space, which survives
+  Ghostscript's `/Gray` conversion, so the graded text (a grey image with a
+  soft mask) is composited in RGB and a RIP prints it with some C/M/Y. The
+  flat `-K` files are pure K. Found by the test suite on 2026-10-28; it has
+  been so since `--press` existed. Related: `-dPDFSETTINGS=/prepress`
+  downsamples the 600 dpi text raster to 300 ppi in the press files.

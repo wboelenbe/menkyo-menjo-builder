@@ -22,7 +22,6 @@ class Menkyo < Formula
 
   def install
     python = Formula["python@3.13"].opt_bin/"python3.13"
-    libexec.install "src", "fonts", "config", "LICENSE", "NOTICE"
 
     # numpy, pillow and scipy come from their own formulae rather than being
     # rebuilt from PyPI; the venv just has to be able to see them.
@@ -35,19 +34,22 @@ class Menkyo < Formula
       #{Formula["scipy"].opt_prefix/site}
       #{Formula["python-tk@3.13"].opt_prefix/site}
     EOS
+    # The package itself goes into the venv like any wheel, metadata and all
+    # (menkyo --version), with its console script; --no-deps, as the .pth
+    # above already supplies them.  pip fetches the build backend (hatchling)
+    # into an isolated build environment.
+    system venv/"bin/python", "-m", "pip", "install", "--no-deps", buildpath
+    libexec.install "src/gui.py", "LICENSE", "NOTICE"
 
-    {
-      "menkyo"     => "build_diploma.py",
-      "menkyo-gui" => "gui.py",
-    }.each do |cmd, script|
-      (bin/cmd).write <<~SH
-        #!/bin/bash
-        exec "#{venv}/bin/python" "#{libexec}/src/#{script}" "$@"
-      SH
-    end
+    bin.install_symlink venv/"bin/menkyo"
+    (bin/"menkyo-gui").write <<~SH
+      #!/bin/bash
+      exec "#{venv}/bin/python" "#{libexec}/gui.py" "$@"
+    SH
   end
 
   test do
+    assert_match "menkyo #{version}", shell_output("#{bin}/menkyo --version")
     assert_match "dan-overlay", shell_output("#{bin}/menkyo --list")
   end
 end

@@ -29,13 +29,14 @@ certificate that grants nothing.
 ## Quick start
 
 ```
-pip install -r requirements.txt      # plus inkscape and ghostscript
-python3 src/build_diploma.py --list  # what a default build would write
-python3 src/build_diploma.py         # write it
+uv run menkyo --list                 # what a default build would write
+uv run menkyo                        # write it
 ```
 
 Needs Python 3.11+ (for `tomllib`), Inkscape, Ghostscript, and Pillow / NumPy
-/ SciPy. Files land in `build/` as `<award>-<variant>.<ext>`.
+/ SciPy; `uv run` installs the Python side. Without uv, `pip install -e .`
+and then plain `menkyo`. From a checkout, files land in `build/` as
+`<award>-<variant>.<ext>`.
 
 ## Installing on a Mac
 
@@ -52,7 +53,7 @@ lands in `~/Documents/Menkyo`. Your details are kept in
 **Homebrew.** `brew install <tap>/menkyo` gives you `menkyo` (the command
 line described below) and `menkyo-gui` (the window).
 
-**From a checkout.** As in *Quick start*. `python3 src/gui.py` opens the
+**From a checkout.** As in *Quick start*. `uv run python src/gui.py` opens the
 window; it needs a Python whose Tk is 8.6 (`brew install python-tk@3.13`).
 
 ### Building the app yourself
@@ -76,12 +77,78 @@ Nothing but the dōjō's settings is stored on the server. `deploy/` has the
 Docker setup (Inkscape and Ghostscript included, Caddy for HTTPS and a
 password) and `deploy/README.md` walks through putting it on a VPS.
 
+### As a package, inside another application
+
+Every release is a wheel on the repository's GitHub Releases page, holding the
+generator, its font and the example configuration, and the `menkyo` command.
+The desktop window, `web/` and the packaging stay in this repository. Another
+Python project depends on a release by its URL; with uv:
+
+```
+uv add "menkyo @ https://github.com/wboelenbe/menkyo-menjo-builder/releases/download/v0.1.0/menkyo-0.1.0-py3-none-any.whl"
+```
+
+Inkscape must be on the host as well, and Ghostscript for `--press`. On
+Debian: `apt-get install inkscape ghostscript fontconfig fonts-noto-cjk`
+(the Noto fonts set the crest ring).
+
+Run it as a command, not as a library: the generator keeps its state in module
+globals, and a render can take a couple of GB, which a separate process gives
+back when it ends. Write the dōjō's settings to a TOML file
+(`menkyo --example-config` prints the template), then:
+
+```
+menkyo --config=dojo.toml --awards=dan --variants=overlay --formats=pdf \
+       --name=ヤン・ヤンセン --rank=二段 --date=2026-09-05 --out=/tmp/xyz --json
+```
+
+Pass every fill-in flag, `''` included, so a `[sample]` in the configuration
+can never reach a real certificate, and use the `--flag=value` form so a value
+that starts with `-` is not read as a flag. With `--json`, every line on
+stdout is one JSON object, written as it happens:
+
+| event | fields | when |
+|---|---|---|
+| `progress` | `step`, `total`, `award`, `variant`, `stage`, `label` | a slow step starts; `step` counts from 1 |
+| `file` | `path` | a file has been written |
+| `done` | `out`, `files` | the run finished; the exit code is 0 |
+| `error` | `message`, optionally `detail` | the run failed; the exit code is 1 |
+| `planned` | `file` | with `--list`: what would be written |
+
+`stage` is one of `text`, `ink`, `pdf`, `press` or `png`, for a caller that
+wants its own wording; `label` says the same in English. `total` is known from
+the first event, so `step / total` is a progress bar. A certificate takes
+tens of seconds, most of it in `text` and `ink`. Without `--json`, the same
+progress goes to stderr when that is a terminal, and stdout keeps its `wrote`
+lines.
+
+Every failure ends the output with exactly one `error`, a rejected flag or an
+unwritable `--out` included, and never a `done`. `--list --json` writes one
+`planned` per file and no `done`; its exit code says it worked. `--help`,
+`--version` and `--example-config` print plain text even with `--json`: they
+are for a person, and stop before anything runs.
+
+### Making a release
+
+The version lives in `pyproject.toml` and nowhere else. Bump it, commit, then
+tag and push:
+
+```
+git tag v0.2.0 && git push origin main v0.2.0
+```
+
+`.github/workflows/package.yml` builds the wheel on every push. On a tag it
+also refuses a tag that disagrees with `pyproject.toml`, renders a certificate
+with the installed wheel (so a file missing from the package fails the
+release), and publishes the wheel and sdist as a GitHub Release.
+`menkyo --version` reports which one is installed.
+
 ## Configuring it for your dōjō
 
 Copy the example and edit it:
 
 ```
-cp config/example.toml dojo.toml
+uv run menkyo --example-config > dojo.toml
 ```
 
 `dojo.toml` in the repository root is picked up automatically and is
@@ -138,14 +205,14 @@ It moves every column by the same amount, so a large value can push a tall
 column past `safe_inset`. The one that matters is the date **left blank**:
 its fourteen slots are the tallest column on the sheet, and at `0.05` it
 still clears `safe_inset` by a few mm. Check with
-`python3 src/build_diploma.py -v proof -d ''` before raising it further.
+`menkyo -v proof -d ''` before raising it further.
 
 ### An optional traced crest
 
 The crest ring is set in a font by default, which is fine at 5 mm. If you have
 your own crest and want its actual lettering, potrace each character to SVG,
-drop them in `crest/` named `安.svg`, `心.svg` and so on, and set
-`traced_glyphs = true` under `[dojo]`.
+drop them in a `crest/` folder beside your `dojo.toml`, named `安.svg`,
+`心.svg` and so on, and set `traced_glyphs = true` under `[dojo]`.
 
 Compare the two before you commit to it. Display lettering is usually drawn
 already distorted to fit its arc, and tracing it puts a second arc on top of
@@ -153,13 +220,14 @@ the first — which is why this is off by default. `crest/` is git-ignored for
 the same reason `dojo.toml` is.
 
 The default mon is the yotsume-bishi, a traditional kamon; its proportions are
-constants at the top of `src/build_diploma.py`.
+constants at the top of `src/menkyo/build_diploma.py`.
 
 ## Options
 
 | flag | meaning |
 |---|---|
-| `-c`, `--config PATH` | which configuration to use (default: `dojo.toml`, else `config/example.toml`) |
+| `-c`, `--config PATH` | which configuration to use (default: `dojo.toml`, else the shipped example) |
+| `--example-config` | print the shipped example configuration and stop |
 | `-a`, `--awards LIST` | which awards, or `all` (default: all) |
 | `-v`, `--variants LIST` | which variants, or `all` (default: `overlay,full-cream`) |
 | `-f`, `--formats LIST` | `pdf`, `png`, `svg` (default: `pdf`) |
@@ -175,11 +243,13 @@ constants at the top of `src/build_diploma.py`.
 | `--all` | shorthand for `--awards all --variants all` |
 | `--clean` | empty `build/` first |
 | `--list` | list what would be written, then stop |
+| `--json` | one JSON object per line on stdout, for programs (see above) |
+| `--version` | print the version and stop |
 
 ```
-python3 src/build_diploma.py -a dan -r 5 -n 'ヤン・ヤンセン' -d 2024-07-01
-python3 src/build_diploma.py -a dan -v proof -f png      # one proof sheet
-python3 src/build_diploma.py -v full --press             # for the print shop
+menkyo -a dan -r 5 -n 'ヤン・ヤンセン' -d 2024-07-01
+menkyo -a dan -v proof -f png      # one proof sheet
+menkyo -v full --press             # for the print shop
 ```
 
 ## Variants
@@ -244,8 +314,8 @@ hardest.
    send the `-K` greyscale route: it would throw the border's colour away.
 3. Test on the real printer first. The border's strokes are 0.11–0.22 mm. A
    laser at 600 dpi holds them; an inkjet on absorbent stock may thicken them
-   and darken the band. If so, raise `density` in `src/border.py` — wider
-   spacing — rather than thinning the strokes.
+   and darken the band. If so, raise `density` in `src/menkyo/border.py` —
+   wider spacing — rather than thinning the strokes.
 
 **Print a `-flat` variant alongside your first real print.** The graded text is
 a greyscale raster; a home laser halftones grey, and some commercial RIPs
@@ -255,12 +325,12 @@ files are the same layout in solid black, pure vector. Nothing else differs.
 ## How it looks the way it does
 
 The printed text is set in **Yuji Boku** (佑字 木), a genuinely brush-written
-kaisho, then graded by `src/ink.py` so the ink thins toward grey where the
+kaisho, then graded by `src/menkyo/ink.py` so the ink thins toward grey where the
 brush lifts — a real brush never lays down flat black. The font ships in
-`fonts/` and the build points fontconfig at it, so nothing needs installing and
+`src/menkyo/fonts/` and the build points fontconfig at it, so nothing needs installing and
 nothing on your machine changes.
 
-`src/border.py` draws the engraved border generatively: phoenix plumes with
+`src/menkyo/border.py` draws the engraved border generatively: phoenix plumes with
 herringbone barbs, clipped to an annulus, one half generated and mirrored.
 
 `DECISIONS.md` records why each line reads as it does, and how the border and
@@ -269,12 +339,18 @@ the ink were arrived at.
 ## Layout
 
 ```
-src/build_diploma.py    generator and CLI; typography constants at the top
-src/config.py           the TOML configuration
-src/border.py           the engraved phoenix-plume border
-src/ink.py              the sumi grading
-config/example.toml     placeholder configuration, the shipped default
-fonts/                  Yuji Boku + its OFL licence, used without installing
+src/menkyo/             the package: everything the wheel ships
+  build_diploma.py      generator and CLI; typography constants at the top
+  config.py             the TOML configuration
+  paths.py              where things live: checkout or installed, tools
+  service.py            form values to flags, a build in-process (GUI, web)
+  border.py             the engraved phoenix-plume border
+  ink.py                the sumi grading
+  example.toml          placeholder configuration, the shipped default
+  fonts/                Yuji Boku + its OFL licence, used without installing
+src/gui.py              the desktop window (not in the wheel)
+web/                    the web front end (not in the wheel)
+packaging/, deploy/     the Mac app, Homebrew, Docker
 docs/                   templates explaining each document to the person
                         who receives it, plus the image above
 build/                  generated; git-ignored

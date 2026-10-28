@@ -16,14 +16,14 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 PYTHON="${PYTHON:-python3.13}"
-VERSION="${VERSION:-0.1.0}"
+VERSION="${VERSION:-$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml)}"
 export VERSION
 VENV=packaging/.venv
 
 "$PYTHON" -c "import tkinter; assert tkinter.TkVersion >= 8.6, tkinter.TkVersion"
 
 [ -d "$VENV" ] || "$PYTHON" -m venv "$VENV"
-"$VENV/bin/pip" install -q -r requirements.txt pyinstaller
+"$VENV/bin/pip" install -q . pyinstaller
 
 rm -rf build-app dist
 "$VENV/bin/pyinstaller" --noconfirm --workpath build-app --distpath dist packaging/menkyo.spec
