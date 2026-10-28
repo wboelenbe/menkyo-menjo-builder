@@ -1,0 +1,16 @@
+# Reference renders for the no-inkscape spike: the test image's toolchain
+# (Debian bookworm, Inkscape 1.2.2, fonts-noto-cjk) plus fonts-noto-cjk-extra,
+# which holds the crest's Noto Serif CJK JP SemiBold. Ghostscript and poppler
+# are here for F-4 / F-6 (gs, pdftoppm, pdffonts), not for rendering.
+#
+# The menkyo source is not copied in: render_reference.sh mounts a snapshot
+# of HEAD's src/ read-only, so no dojo.toml can reach the image.
+FROM python:3.13-slim-bookworm
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      inkscape fontconfig fonts-noto-cjk fonts-noto-cjk-extra ghostscript poppler-utils \
+ && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir --root-user-action=ignore -r /tmp/requirements.txt
+ENV HOME=/tmp/home XDG_CONFIG_HOME=/tmp/home/.config PYTHONDONTWRITEBYTECODE=1

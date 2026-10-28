@@ -1,0 +1,8 @@
+# P-2: the candidate's runtime with no system packages at all -- only pip on
+# top of python:3.13-slim-bookworm. No fontconfig, no fonts, no apt-get.
+# menkyo, the prototype and the crest font are mounted at run time.
+FROM python:3.13-slim-bookworm
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir --root-user-action=ignore -r /tmp/requirements.txt
+ENV HOME=/tmp/home XDG_CONFIG_HOME=/tmp/home/.config PYTHONDONTWRITEBYTECODE=1 \
+    MENKYO_SRC=/menkyo/src SPIKE_FONTS=/fonts

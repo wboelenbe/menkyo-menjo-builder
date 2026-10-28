@@ -1,0 +1,10 @@
+# Pinned for the no-inkscape spike (D-3). Runtime of the recommended route:
+fonttools==4.68.0
+pypdfium2==5.14.0
+# menkyo's existing runtime dependencies, at the versions in uv.lock (HEAD 90e5799),
+# which splits numpy and scipy at Python 3.12:
+pillow==13.0.0
+numpy==2.4.6; python_version < "3.12"
+numpy==2.5.4; python_version >= "3.12"
+scipy==1.17.1; python_version < "3.12"
+scipy==1.18.1; python_version >= "3.12"

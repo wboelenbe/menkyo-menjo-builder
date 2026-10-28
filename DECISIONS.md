@@ -470,9 +470,12 @@ went.
   today everything is laid out for A3 landscape (420 × 297 mm).
 - **Kyū grades.** Certificates for the coloured-belt grades below shodan,
   alongside the dan grades.
-- **A smaller package without Inkscape?** Inkscape is most of the install
-  (and of the portal's image). Find out whether the SVG can be rendered
-  without it. The output need not be byte-identical, as long as it looks good.
+- **Render without Inkscape (decided 2026-10-28, after `plain-white`).** The
+  spike ([docs/work/no-inkscape/spike.md](docs/work/no-inkscape/spike.md))
+  found a pip-only route the user accepted from the comparison images: glyph
+  outlines via fontTools, our own PDF writer, pypdfium2 for the PNG and the
+  text layer; Noto Serif JP SemiBold shipped whole for the crest; a missing
+  glyph is an error, not a fallback; PDF text may be outlines.
 - **The `-K` press files of the inked variants are not K-only.** Cairo wraps
   the page in a transparency group with an RGB colour space, which survives
   Ghostscript's `/Gray` conversion, so the graded text (a grey image with a

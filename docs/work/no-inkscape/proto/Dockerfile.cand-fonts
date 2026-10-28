@@ -1,0 +1,5 @@
+# P-3: the same, plus system CJK fonts and fontconfig, to show they are ignored.
+ARG BASE=menkyo-spike-cand:amd64
+FROM ${BASE}
+RUN apt-get update && apt-get install -y --no-install-recommends fontconfig fonts-noto-cjk \
+ && rm -rf /var/lib/apt/lists/*
