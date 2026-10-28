@@ -8,8 +8,9 @@ matter of editing text and never of editing Python.
 Search order, first hit wins:
 
     1. --config PATH
-    2. dojo.toml beside this repository's root   (yours; git-ignored)
-    3. config/example.toml                       (shipped placeholders)
+    2. dojo.toml in the per-user data directory  (written by the GUI)
+    3. dojo.toml beside this repository's root   (yours; git-ignored)
+    4. config/example.toml                       (shipped placeholders)
 
 The shipped example uses 〇〇 throughout -- the ordinary Japanese
 placeholder, "maru-maru" -- so an unconfigured build produces a certificate
@@ -19,13 +20,16 @@ shows a finished sheet rather than a mostly empty one.  Clearing that section
 gives back the blank slots a calligrapher would fill in.
 """
 
+import json
 import os
 import tomllib
 from dataclasses import dataclass, field
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.normpath(os.path.join(HERE, ".."))
+import paths
 
+ROOT = paths.ROOT
+
+USER_CONFIG = os.path.join(paths.user_data_dir(), "dojo.toml")
 LOCAL_CONFIG = os.path.join(ROOT, "dojo.toml")
 EXAMPLE_CONFIG = os.path.join(ROOT, "config", "example.toml")
 
@@ -85,7 +89,10 @@ class Config:
 
 def default_path():
     """The config that would be used if --config is not given."""
-    return LOCAL_CONFIG if os.path.exists(LOCAL_CONFIG) else EXAMPLE_CONFIG
+    for path in (USER_CONFIG, LOCAL_CONFIG):
+        if os.path.exists(path):
+            return path
+    return EXAMPLE_CONFIG
 
 
 def load(path=None):
@@ -158,3 +165,48 @@ def load(path=None):
             f"{path}: dojo.crest_ring is {len(cfg.crest_ring)} characters. "
             f"The lower arc holds four comfortably and five at a squeeze.")
     return cfg
+
+
+def _q(value):
+    """A TOML basic string.  JSON's escapes are a subset of TOML's."""
+    return json.dumps(str(value), ensure_ascii=False)
+
+
+def save(cfg, path=USER_CONFIG):
+    """Write `cfg` as a configuration file that load() reads back.
+
+    Comments in a hand-edited file are not preserved, and [sample] is left
+    out: a saved configuration is a real dōjō's, whose blank slots stay blank.
+    """
+    out = [
+        "# Written by the Menkyo app.  Safe to edit by hand.",
+        f"schema = {SCHEMA}",
+        "",
+        "[art]", f"name = {_q(cfg.art)}", "",
+        "[dojo]",
+        f"name = {_q(cfg.dojo)}",
+        f"crest_ring = {_q(cfg.crest_ring)}",
+        f"traced_glyphs = {str(cfg.crest_traced).lower()}", "",
+        "[signer]",
+        f"title = {_q(cfg.signer_title)}",
+        f"name = {_q(cfg.signer_name)}", "",
+        "[recipient]", f"honorific = {_q(cfg.honorific)}", "",
+        "[motto]", f"text = {_q(cfg.motto)}", "",
+        "[paper]",
+        f"border = {cfg.stock_border}",
+        f"safe_inset = {cfg.safe_inset}",
+        f"text_drop = {cfg.text_drop}", "",
+    ]
+    for a in cfg.awards:
+        out += ["[[awards]]",
+                f"slug = {_q(a.slug)}",
+                f"heading = {_q(a.heading)}",
+                f"formula = {_q(a.formula)}",
+                f"grade_column = {str(a.grade_column).lower()}",
+                f"colour = {_q(a.colour)}", ""]
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(out))
+    os.replace(tmp, path)
+    return path

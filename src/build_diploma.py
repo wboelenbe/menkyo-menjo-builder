@@ -44,9 +44,11 @@ import subprocess
 import border
 import config as config_mod
 import ink
+import paths
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-BUILD = os.path.join(HERE, "..", "build")
+# Output directory; main() replaces it when --out is given.
+BUILD = paths.default_output_dir()
 
 # Who is issuing this, and on what paper. Replaced in main() by whatever
 # --config selects; the placeholder defaults keep the module importable and
@@ -71,7 +73,7 @@ SEPIA = "#8a6a33"
 # carved seal, not brushwork, and the firmer face survives being 5 mm across.
 FONT_BODY = "Yuji Boku"
 FONT_CREST = "Noto Serif CJK JP SemiBold"
-FONT_DIR = os.path.join(HERE, "..", "fonts")
+FONT_DIR = os.path.join(paths.ROOT, "fonts")
 W_REG, W_MED, W_BOLD = 400, 500, 600
 
 # ------------------------------------------------------------- typography ---
@@ -132,7 +134,7 @@ def _diamond(cx, cy, h):
     return f"M {cx:.4f} {cy-h:.4f} L {cx+h:.4f} {cy:.4f} L {cx:.4f} {cy+h:.4f} L {cx-h:.4f} {cy:.4f} Z"
 
 
-CREST_GLYPH_DIR = os.path.join(HERE, "..", "crest")
+CREST_GLYPH_DIR = os.path.join(paths.ROOT, "crest")
 
 
 def _traced_glyph(ch):
@@ -485,13 +487,13 @@ def _inked_text_image(base, verb, heading, kw, env, supersample=1):
 
     # Drawing bounding box, in CSS px; the viewBox is 1 unit = 1 mm.
     q = subprocess.run(
-        ["inkscape", tmp + ".svg", "--query-x", "--query-y",
+        [paths.require_tool("inkscape"), tmp + ".svg", "--query-x", "--query-y",
          "--query-width", "--query-height"],
         check=True, capture_output=True, text=True, env=env)
     x, y, w, h = (float(v) / CSS_PX_PER_MM for v in q.stdout.split())
 
     subprocess.run(
-        ["inkscape", tmp + ".svg", "--export-type=png", "--export-area-drawing",
+        [paths.require_tool("inkscape"), tmp + ".svg", "--export-type=png", "--export-area-drawing",
          f"--export-dpi={INK_DPI * supersample:g}",
          "--export-background-opacity=0",
          "--export-filename=" + tmp + ".png"],
@@ -524,10 +526,13 @@ def _font_env():
             '<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">\n'
             "<fontconfig>\n"
             '  <include ignore_missing="yes">/etc/fonts/fonts.conf</include>\n'
-            f"  <dir>{os.path.abspath(FONT_DIR)}</dir>\n"
+            f"  <dir>{os.path.abspath(FONT_DIR)}</dir>\n")
+        for d in paths.system_font_dirs():
+            fh.write(f"  <dir>{d}</dir>\n")
+        fh.write(
             f"  <cachedir>{os.path.abspath(conf_dir)}/cache</cachedir>\n"
             "</fontconfig>\n")
-    env = dict(os.environ)
+    env = paths.tool_env()
     env["FONTCONFIG_FILE"] = os.path.abspath(conf)
     return env
 
@@ -541,7 +546,7 @@ def render(svg_path, out_base, formats, press=False, dpi=300,
     if "pdf" in formats:
         pdf = out_base + ".pdf"
         subprocess.run(
-            ["inkscape", svg_path, "--export-type=pdf",
+            [paths.require_tool("inkscape"), svg_path, "--export-type=pdf",
              "--export-filename=" + pdf],
             check=True, capture_output=True, env=env)
         written.append(pdf)
@@ -554,7 +559,7 @@ def render(svg_path, out_base, formats, press=False, dpi=300,
             else:
                 suffix, strat, model = "-CMYK", "/CMYK", "/DeviceCMYK"
             subprocess.run(
-                ["gs", "-dSAFER", "-dBATCH", "-dNOPAUSE", "-sDEVICE=pdfwrite",
+                [paths.require_tool("gs"), "-dSAFER", "-dBATCH", "-dNOPAUSE", "-sDEVICE=pdfwrite",
                  "-dColorConversionStrategy=" + strat,
                  "-dProcessColorModel=" + model,
                  "-dPDFSETTINGS=/prepress", "-dEmbedAllFonts=true",
@@ -564,7 +569,7 @@ def render(svg_path, out_base, formats, press=False, dpi=300,
 
     if "png" in formats:
         png = out_base + ".png"
-        cmd = ["inkscape", svg_path, "--export-type=png", f"--export-dpi={dpi}",
+        cmd = [paths.require_tool("inkscape"), svg_path, "--export-type=png", f"--export-dpi={dpi}",
                "--export-filename=" + png]
         if transparent:
             cmd.append("--export-background-opacity=0")
@@ -689,7 +694,7 @@ def _csv(value, allowed, what):
 
 
 def main(argv=None):
-    global CFG
+    global CFG, BUILD
 
     # --config has to be resolved before the parser is built, because the
     # awards it lists are what --awards will accept.
@@ -775,11 +780,15 @@ def main(argv=None):
                          "very little; 4 costs ~2 GB and about a minute.")
     ap.add_argument("--all", action="store_true",
                     help="shorthand for --awards all --variants all")
+    ap.add_argument("-o", "--out", metavar="DIR",
+                    help=f"directory to write into (default: {BUILD})")
     ap.add_argument("--clean", action="store_true",
                     help="empty the build directory first")
     ap.add_argument("--list", action="store_true",
                     help="list the files that would be written, then stop")
     args = ap.parse_args(argv)
+    if args.out:
+        BUILD = os.path.abspath(os.path.expanduser(args.out))
 
     if args.all:
         args.awards, args.variants = "all", "all"
@@ -853,11 +862,11 @@ def main(argv=None):
                                 rank_column=rank_column,
                                 border_colour=border_colour)
             for w in written:
-                print("wrote", os.path.relpath(w, os.path.dirname(BUILD)))
+                print("wrote", w)
             total += len(written)
     shutil.rmtree(work, ignore_errors=True)
     shutil.rmtree(os.path.join(BUILD, ".fontconfig"), ignore_errors=True)
-    print(f"\n{total} file(s) in {os.path.relpath(BUILD, os.path.dirname(BUILD))}/")
+    print(f"\n{total} file(s) in {BUILD}/")
 
 
 if __name__ == "__main__":

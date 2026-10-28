@@ -37,6 +37,45 @@ python3 src/build_diploma.py         # write it
 Needs Python 3.11+ (for `tomllib`), Inkscape, Ghostscript, and Pillow / NumPy
 / SciPy. Files land in `build/` as `<award>-<variant>.<ext>`.
 
+## Installing on a Mac
+
+Three routes, from least to most technical.
+
+**The app (for dōjō staff).** Open `Menkyo-<version>.dmg`, drag Menkyo to
+Applications, and install [Inkscape](https://inkscape.org/release/), which
+draws the certificates. On first launch the app asks for your school's
+details once, then it is one form: pick the document, type the recipient in
+katakana, choose the grade and date, press *Create certificate*. The PDF
+lands in `~/Documents/Menkyo`. Your details are kept in
+`~/Library/Application Support/Menkyo/dojo.toml`.
+
+**Homebrew.** `brew install <tap>/menkyo` gives you `menkyo` (the command
+line described below) and `menkyo-gui` (the window).
+
+**From a checkout.** As in *Quick start*. `python3 src/gui.py` opens the
+window; it needs a Python whose Tk is 8.6 (`brew install python-tk@3.13`).
+
+### Building the app yourself
+
+```
+packaging/build_app.sh                    # unsigned: fine on your own Mac
+CODESIGN_IDENTITY="Developer ID Application: …" NOTARY_PROFILE=… \
+    packaging/build_app.sh                # signed and notarized, for others
+```
+
+Signing and notarizing need a paid Apple Developer account; without them,
+other Macs refuse to open the app until the user right-clicks it and chooses
+Open. The script's header explains the one-time `notarytool` setup.
+`packaging/homebrew/menkyo.rb` is the formula template for a tap.
+
+### As a web page
+
+`web/` is the same generator behind a small form (FastAPI), so nobody needs to
+install anything: they open a URL, fill in the recipient, and download the PDF.
+Nothing but the dōjō's settings is stored on the server. `deploy/` has the
+Docker setup (Inkscape and Ghostscript included, Caddy for HTTPS and a
+password) and `deploy/README.md` walks through putting it on a VPS.
+
 ## Configuring it for your dōjō
 
 Copy the example and edit it:

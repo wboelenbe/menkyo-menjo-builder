@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Menkyo</title>
+<style>
+  :root { --bg:#faf8f4; --fg:#1d1b17; --muted:#6b665c; --line:#d9d3c5; --card:#fff;
+          --accent:#8a2a1f; --accent-fg:#fff; --err:#b3261e; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161411; --fg:#ece7dc; --muted:#a09a8c; --line:#3a352c; --card:#1f1c17;
+            --accent:#d1604f; --accent-fg:#161411; --err:#f2766b; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:16px/1.5 system-ui,-apple-system,"Hiragino Sans",sans-serif; }
+  main { max-width:34rem; margin:0 auto; padding:1.5rem 1rem 3rem; }
+  header { display:flex; justify-content:space-between; align-items:baseline; gap:1rem; }
+  h1 { font-size:1.25rem; margin:0; }
+  .sub { color:var(--muted); font-size:.9rem; }
+  form, dialog { background:var(--card); border:1px solid var(--line); border-radius:10px;
+                 padding:1.25rem; margin-top:1rem; }
+  dialog { color:var(--fg); max-width:30rem; width:calc(100% - 2rem); }
+  dialog::backdrop { background:rgba(0,0,0,.45); }
+  label { display:block; font-weight:600; margin-top:1rem; }
+  label:first-child { margin-top:0; }
+  .hint { color:var(--muted); font-size:.85rem; font-weight:400; margin-top:.15rem; }
+  input, select { width:100%; font:inherit; padding:.5rem .6rem; margin-top:.3rem;
+                  color:var(--fg); background:var(--bg); border:1px solid var(--line);
+                  border-radius:6px; }
+  input:focus-visible, select:focus-visible, button:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+  input:disabled, select:disabled { opacity:.5; }
+  input[type=checkbox] { width:auto; margin:0 .4rem 0 0; }
+  .check { font-weight:400; display:flex; align-items:center; margin-top:.5rem; }
+  .date { display:flex; gap:.5rem; align-items:center; }
+  .date input { width:auto; }
+  .date .y { width:5.5rem; } .date .md { width:4rem; }
+  button { font:inherit; cursor:pointer; border-radius:6px; padding:.55rem 1rem;
+           border:1px solid var(--line); background:var(--card); color:var(--fg); }
+  button.primary { background:var(--accent); color:var(--accent-fg); border-color:var(--accent);
+                   font-weight:600; width:100%; margin-top:1.5rem; padding:.75rem; }
+  button:disabled { opacity:.6; cursor:progress; }
+  .row { display:flex; gap:.5rem; justify-content:flex-end; margin-top:1.25rem; }
+  #status { margin-top:1rem; min-height:1.5rem; }
+  #status.err { color:var(--err); }
+  details { margin-top:1rem; }
+  summary { cursor:pointer; color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div><h1 id="title">Menkyo</h1><div class="sub" id="sub"></div></div>
+    <button type="button" id="open-settings">Dōjō settings…</button>
+  </header>
+
+  <form id="form">
+    <label for="award">Certificate</label>
+    <select id="award"></select>
+
+    <label for="name">Recipient</label>
+    <input id="name" maxlength="40" autocomplete="off" lang="ja">
+    <div class="hint">In katakana, e.g. ヤン・ヤンセン. Leave empty for a calligrapher to write in.</div>
+
+    <label for="grade">Grade</label>
+    <select id="grade"></select>
+    <div class="hint" id="grade-hint"></div>
+
+    <label for="year">Date</label>
+    <div class="date">
+      <input class="y" id="year" type="number" min="1900" max="2200"><span>年</span>
+      <input class="md" id="month" type="number" min="1" max="12"><span>月</span>
+      <input class="md" id="day" type="number" min="1" max="31"><span>日</span>
+    </div>
+    <label class="check"><input type="checkbox" id="date-blank">Leave the date blank</label>
+
+    <label for="output">Output</label>
+    <select id="output"></select>
+
+    <details>
+      <summary>More options</summary>
+      <label class="check"><input type="checkbox" id="press">Also make print-shop versions (greyscale / CMYK)</label>
+    </details>
+
+    <button class="primary" id="go" type="submit">Create certificate</button>
+    <div id="status" role="status" aria-live="polite"></div>
+  </form>
+</main>
+
+<dialog id="settings">
+  <form method="dialog" id="settings-form" style="margin:0;padding:0;border:0">
+    <h1>Dōjō settings</h1>
+    <p class="sub">Printed on every certificate. 〇〇 is the usual Japanese placeholder; replace it with your own.</p>
+    <div id="settings-fields"></div>
+    <div id="settings-status" class="sub" style="color:var(--err)"></div>
+    <div class="row">
+      <button type="button" id="settings-cancel">Cancel</button>
+      <button type="submit" class="primary" style="width:auto;margin:0">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const FIELDS = [
+  ["art", "School / art (流派)", "e.g. 〇〇流柔術. Printed on the certificate and around the crest."],
+  ["dojo", "Dōjō (道場)", "e.g. 〇〇道場"],
+  ["crest_ring", "Crest lettering", "Four characters along the bottom of the crest; often the dōjō name without 道場."],
+  ["signer_title", "Signatory's title", "e.g. 師範"],
+  ["signer_name", "Signatory's name", "Kanji, or katakana for a Western name. Empty leaves it blank for hand signing."],
+  ["motto", "Motto (optional)", "A short line printed quietly at the left. Empty for none."],
+  ["honorific", "Honorific after names", "殿 is the formal form. Empty for none."],
+];
+const $ = id => document.getElementById(id);
+let S = null;
+
+function el(tag, props, ...kids) {
+  const e = Object.assign(document.createElement(tag), props || {});
+  e.append(...kids); return e;
+}
+function fill(sel, items) {
+  sel.replaceChildren(...items.map(([v, t]) => el("option", {value: v, textContent: t})));
+}
+
+async function load() {
+  S = await (await fetch("/api/state")).json();
+  $("title").textContent = S.settings.dojo || "Menkyo";
+  $("sub").textContent = S.settings.art;
+  const prev = $("award").value;
+  fill($("award"), S.awards.map(a => [a.slug, `${a.heading}  (${a.slug})`]));
+  if (S.awards.some(a => a.slug === prev)) $("award").value = prev;
+  fill($("grade"), S.grades.map(g => [g, g || "(blank)"]));
+  fill($("output"), S.outputs.map(o => [o.value, o.label]));
+  if (!$("year").value) {
+    const [y, m, d] = S.today.split("-").map(Number);
+    $("year").value = y; $("month").value = m; $("day").value = d;
+  }
+  syncAward();
+  return S;
+}
+
+function syncAward() {
+  const a = S.awards.find(a => a.slug === $("award").value);
+  $("grade").disabled = !a.grade_column;
+  if (!a.grade_column) $("grade").value = "";
+  $("grade-hint").textContent = a.grade_column ? "" : "This document names its own grade in the heading.";
+}
+function syncDate() {
+  for (const id of ["year", "month", "day"]) $(id).disabled = $("date-blank").checked;
+}
+$("award").onchange = syncAward;
+$("date-blank").onchange = syncDate;
+
+function status(msg, isErr) { $("status").textContent = msg; $("status").className = isErr ? "err" : ""; }
+
+function isoDate() {
+  if ($("date-blank").checked) return "";
+  const p = n => String(n).padStart(2, "0");
+  return `${$("year").value}-${p($("month").value)}-${p($("day").value)}`;
+}
+
+$("form").onsubmit = async ev => {
+  ev.preventDefault();
+  if (!S.configured && !confirm("The dōjō details are still the 〇〇 placeholders. Create the certificate anyway?")) {
+    return openSettings();
+  }
+  $("go").disabled = true;
+  status("Creating… this can take up to a minute.");
+  try {
+    const r = await fetch("/api/generate", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        award: $("award").value, name: $("name").value, grade: $("grade").value,
+        date: isoDate(), output: $("output").value, press: $("press").checked}),
+    });
+    if (!r.ok) {
+      let msg = r.statusText;
+      try { msg = (await r.json()).detail || msg; } catch {}
+      throw new Error(msg);
+    }
+    const blob = await r.blob();
+    const cd = r.headers.get("Content-Disposition") || "";
+    const m = /filename\*=UTF-8''([^;]+)/.exec(cd);
+    const a = el("a", {href: URL.createObjectURL(blob),
+                       download: m ? decodeURIComponent(m[1]) : "certificate.pdf"});
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    status("Done. The file has been downloaded.");
+  } catch (e) {
+    status(`Could not create the certificate: ${e.message}`, true);
+  } finally {
+    $("go").disabled = false;
+  }
+};
+
+// ---- settings dialog
+function openSettings() {
+  const box = $("settings-fields");
+  box.replaceChildren(...FIELDS.flatMap(([k, label, hint]) => [
+    el("label", {htmlFor: "s-" + k, textContent: label}),
+    el("input", {id: "s-" + k, value: S.settings[k] || "", maxLength: 40, lang: "ja"}),
+    el("div", {className: "hint", textContent: hint}),
+  ]));
+  $("settings-status").textContent = "";
+  $("settings").showModal();
+}
+$("open-settings").onclick = openSettings;
+$("settings-cancel").onclick = () => $("settings").close();
+$("settings-form").onsubmit = async ev => {
+  ev.preventDefault();
+  const body = Object.fromEntries(FIELDS.map(([k]) => [k, $("s-" + k).value]));
+  const r = await fetch("/api/settings", {method: "PUT",
+    headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  if (!r.ok) {
+    $("settings-status").textContent = (await r.json()).detail || r.statusText;
+    return;
+  }
+  $("settings").close();
+  await load();
+};
+
+load().then(s => { if (!s.configured) openSettings(); });
+</script>
+</body>
+</html>

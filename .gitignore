@@ -12,3 +12,9 @@ ref/
 
 __pycache__/
 *.pyc
+
+# Packaging output
+dist/
+build-app/
+packaging/.venv/
+deploy/.env
