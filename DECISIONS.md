@@ -701,3 +701,12 @@ fonts-noto-cjk fonts-noto-cjk-extra` once it takes this wheel.
   English, sentence-case headings, ‘single quotes’, a spaced en dash, no
   serial comma). New and changed text follows it; the rest is restyled in
   an item of its own.
+- **A smaller footprint: memory and container size (asked 29 October
+  2026).** See whether both can come down further, now that Inkscape is
+  gone. Starting points from 0.3.0:
+  - Memory: a C-1 run peaks at 189 MB, most of it the ink pass; a flat run
+    at 64 MB, of which about 25 MB is imports.
+  - Container size: numpy, scipy and Pillow are most of an installed image
+    (about 234 MB in the spike), and scipy is used only by `ink.py`. The
+    test image is 941 MB, much of it uv's wheel cache.
+  Measure the portal's image as well, since that is what runs on the NAS.
