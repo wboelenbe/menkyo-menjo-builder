@@ -1,4 +1,4 @@
-# menkyo-menjo-builder — Japanese dan and menkyo certificates
+# menkyo-menjo-builder – Japanese dan and menkyo certificates
 
 > [!NOTE]
 > **Vibe coding warning.** Every line of code and documentation in this
@@ -8,22 +8,22 @@
 > nobody has reviewed it the way a maintained project would be reviewed.
 >
 > The certificates it produces, on the other hand, are real. They were
-> designed carefully, checked against Japanese practice, and are printed and
+> designed carefully, checked against Japanese practice and are printed and
 > issued by an actual dōjō. If you are here for the documents rather than the
 > software, that is the part to trust.
 
 Generates print-ready dan-grade certificates (段位免状) and teaching licences
 (免許状) for a martial-arts dōjō: A3 landscape, vertical Japanese, in the
-manner of a traditional 賞状. The grade, the recipient and the date can each
-be printed or left blank for a calligrapher to brush in.
+manner of a traditional 賞状 (award certificate). The grade, the recipient and
+the date can each be printed or left blank for a calligrapher to brush in.
 
 <p align="center"><img src="docs/three_up.png" alt="the three certificates, unconfigured" width="880"></p>
 
 <p align="center"><em>The three documents as an unconfigured build produces them.</em></p>
 
 Everything that identifies a school lives in a TOML file. Out of the box the
-generator names nobody: it prints 〇〇流柔術 and 〇〇道場 — the ordinary
-Japanese placeholder — so an unconfigured build produces a correctly typeset
+generator names nobody: it prints 〇〇流柔術 and 〇〇道場 – the ordinary
+Japanese placeholder – so an unconfigured build produces a correctly typeset
 certificate that grants nothing.
 
 ## Quick start
@@ -68,7 +68,7 @@ wheel's hash (a plain `uv sync` stops on a hash mismatch); with pip,
 `--force-reinstall` replaces it, which pip would otherwise skip. Or bump the
 version for every build the consumer takes.
 
-The version lives in `pyproject.toml` and nowhere else: bump it, commit, and
+The version lives in `pyproject.toml` and nowhere else: bump it, commit and
 build the wheel again. `menkyo --version` reports which one is installed.
 
 An installed copy has no checkout to sit in, so it writes to
@@ -148,7 +148,7 @@ uv run menkyo --example-config > dojo.toml
 
 `dojo.toml` in the repository root is picked up automatically and is
 git-ignored, so your school's identity never lands in a fork. `--config PATH`
-chooses between several. A per-user `dojo.toml` (see "As a package") takes
+chooses between several. A per-user `dojo.toml` (see ‘As a package’) takes
 precedence over the repository root's when it exists, in a checkout too.
 
 ```toml
@@ -210,10 +210,11 @@ drop them in a `crest/` folder beside your `dojo.toml`, named `安.svg`,
 
 Compare the two before you commit to it. Display lettering is usually drawn
 already distorted to fit its arc, and tracing it puts a second arc on top of
-the first — which is why this is off by default. `crest/` is git-ignored for
+the first – which is why this is off by default. `crest/` is git-ignored for
 the same reason `dojo.toml` is.
 
-The default mon is the yotsume-bishi, a traditional kamon; its proportions are
+The default crest (mon) is the yotsume-bishi, four lozenges in a diamond, a
+traditional family crest (kamon); its proportions are
 constants at the top of `src/menkyo/build_diploma.py`.
 
 ## Options
@@ -225,7 +226,7 @@ constants at the top of `src/menkyo/build_diploma.py`.
 | `-a`, `--awards LIST` | which awards, or `all` (default: all) |
 | `-v`, `--variants LIST` | which variants, or `all` (default: `overlay`) |
 | `-f`, `--formats LIST` | `pdf`, `png`, `svg` (default: `pdf`) |
-| `--no-ink` | solid black instead of graded sumi |
+| `--no-ink` | solid black instead of graded sumi (brush ink) |
 | `-n`, `--name KATAKANA` | print the recipient's name instead of leaving it blank |
 | `-r`, `--rank GRADE` | print the grade: `2` or `nidan` → 二段, `1` → 初段, or literal text |
 | `-d`, `--date YYYY-MM-DD` | print the award date in kanji; `today` also works |
@@ -248,7 +249,7 @@ menkyo --all -f pdf,png            # every variant, PDF and PNG
 
 | variant | what it is |
 |---|---|
-| `overlay` | the certificate, its text graded like sumi — **the one to print** |
+| `overlay` | the certificate, its text graded like sumi – **the one to print** |
 | `overlay-flat` | solid black instead of graded sumi, pure vector |
 | `proof` | safe areas and the zones the calligrapher fills |
 
@@ -258,20 +259,21 @@ frame and no background; `proof` adds pale guides.
 
 ## Filling the document in
 
-Three slots are normally left for the calligrapher — the grade, the recipient
-and the date — and any of them can be printed instead.
+Three slots are normally left for the calligrapher – the grade, the recipient
+and the date – and any of them can be printed instead.
 
-`--rank` takes a number or romaji and writes the kanji: `2` or `nidan` becomes
-二段, and `1` becomes **初段** — first dan has its own word, never 一段. Plain
-numerals are used rather than the formal 弐段; pass the literal text if you
-want the formal forms (`--rank 弐段`). Anything that is not a dan grade passes
-through untouched, so a licence can use the same flag: `--rank 師範`.
+`--rank` takes a number or romaji (Japanese in Latin letters) and writes the
+kanji: `2` or `nidan` becomes 二段, and `1` becomes **初段** – first dan has its
+own word, never 一段. Plain numerals are used rather than the formal 弐段; pass
+the literal text if you want the formal forms (`--rank 弐段`). Anything that is
+not a dan grade passes through untouched, so a licence can use the same flag:
+`--rank 師範`.
 
 `--date` takes an ISO date, or `today`, and writes 西暦二〇二六年九月五日: the
-year digit by digit as 西暦 requires, month and day as spoken numbers (十二月,
-三十一日). Leave it off and the column keeps an empty grid to brush into —
-worth considering, since a sheet with the date already on it is one you cannot
-hold back if a grading slips.
+year digit by digit as 西暦 (the Western calendar) requires, month and day as
+spoken numbers (十二月, 三十一日). Leave it off and the column keeps an empty
+grid to brush into – worth considering, since a sheet with the date already on
+it is one you cannot hold back if a grading slips.
 
 `--name` prints the recipient in katakana, in its own column between the
 heading and the award, and moves the brushed rank slot left to make room. The
@@ -279,7 +281,7 @@ filename picks the name up so one recipient's files never overwrite another's.
 Long names shrink to fit.
 
 **How a Western name should be written in katakana is a judgement call.**
-Dutch *Geert* could be ヘールト, ゲールト or フェールト — the hard G has no
+Dutch *Geert* could be ヘールト, ゲールト or フェールト – the hard G has no
 Japanese equivalent and every choice is a compromise. Agree it with the
 recipient before printing: it is the one word on the sheet they will look at
 hardest.
@@ -287,7 +289,7 @@ hardest.
 ## Printing
 
 1. Plain white A3 paper.
-2. Print `<award>-overlay.pdf` at **100 %** — no "fit to page", no scaling.
+2. Print `<award>-overlay.pdf` at **100 %** – no ‘fit to page’, no scaling.
    The page is exactly 420 × 297 mm; check with a ruler on the first sheet.
 3. `border` and `safe_inset` under `[paper]` are margins on that sheet:
    `border` is kept clear all round (22 mm by default), `safe_inset` is where
@@ -306,10 +308,11 @@ pure grey (DeviceGray), with no colour at all.
 ## How it looks the way it does
 
 The printed text is set in **Yuji Boku** (佑字 木), a genuinely brush-written
-kaisho, then graded by `src/menkyo/ink.py` so the ink thins toward grey where the
-brush lifts — a real brush never lays down flat black. The crest ring is set
-in **Noto Serif JP SemiBold**, a mincho (the printed serif style), since a
-mon is a carved seal rather than brushwork. Both fonts ship in
+kaisho (regular script), then graded by `src/menkyo/ink.py` so the ink thins
+towards grey where the brush lifts – a real brush never lays down flat black.
+The crest ring is set in **Noto Serif JP SemiBold**, a mincho (the printed
+serif style), since a mon is a carved seal rather than brushwork.
+Both fonts ship in
 `src/menkyo/fonts/` and are read from there by file, never looked up by name,
 so nothing needs installing and nothing on your machine changes or is used.
 
@@ -340,18 +343,18 @@ A certificate in a language its recipient cannot read is worth accompanying
 with a page that says what it says. [`docs/`](docs/) holds one such page per
 document, written for exactly that reader.
 
-They explain in full everything the generator prints on its own — the
-headings, the award and licence formulas, the date, 殿, the reading order, the
-default crest. The four things that are configuration are described only as
-far as the form goes, each marked with a block beginning **"If you are
-adapting this document"**. Replace those with your own account: what your
-crest means, what your school's name means, who signs. Nobody else can write
-that part.
+They explain in full everything the generator prints on its own – the
+headings, the award and licence formulas, the date, 殿 (the honorific after
+the name), the reading order, the default crest. The four things that are
+configuration are described only as far as the form goes, each marked with a
+block beginning **‘If you are adapting this document’**. Replace those with
+your own account: what your crest means, what your school's name means, who
+signs. Nobody else can write that part.
 
 ## A note on what this makes
 
 This produces credentials. It is a typesetting tool and it will cheerfully set
-any school's name in any grade — the placeholders exist so that it does not do
+any school's name in any grade – the placeholders exist so that it does not do
 so by default, but they are placeholders and not a lock.
 
 Awarding rank in a Japanese martial art is somebody's prerogative, and usually
@@ -360,6 +363,6 @@ you are actually entitled to issue.
 
 ## Licence
 
-MIT — see [LICENSE](LICENSE). Two things are not covered by it: the bundled
+MIT – see [LICENSE](LICENSE). Two things are not covered by it: the bundled
 fonts, which are under the SIL Open Font License, and crests and school names,
 which are nobody's to grant. See [NOTICE](NOTICE).

@@ -36,6 +36,9 @@ from menkyo import build_diploma as bd
 from menkyo import config as config_mod
 from menkyo import paths
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import house_style  # noqa: E402
+
 THIS = Path(__file__).resolve()
 EX = str(support.EXAMPLE)
 BEFORE = "823af58"          # HEAD when the item was planned
@@ -534,19 +537,8 @@ def test_ac15_readme_stages_and_requirements():
 
 
 # ----------------------------------------------------------------- AC-16 ----
-# The item that removed the flag (its acceptance.md, AC-10, user-approved) rewords the last two bullets of the 2026-09-05 "Output, and
-# the ... cap" entry into the past tense.  Those bullets, and nothing else,
-# are left out of the byte-for-byte history comparison.  The flag's name is
-# spelled in two halves: that item's AC-11 bans it from the repository.
-_REWORDED_BULLETS = re.compile(
-    r"^- \*\*`--super" r"sample` .*?(?=\n\n## 2026-09-05 — Printing the three hand slots\n)",
-    re.M | re.S)
-
-
-def _without_reworded_bullets(text):
-    stripped, n = _REWORDED_BULLETS.subn("<reworded bullets>", text, count=1)
-    assert n == 1, "the reworded 2026-09-05 bullets were not found"
-    return stripped
+# The rewording the flag-removal item made to two 2026-09-05 bullets is
+# set aside by house_style.HISTORY_EDITS against a baseline older than it.
 
 
 def _entries():
@@ -557,20 +549,22 @@ def _entries():
 def test_ac16_decisions_entry_appended_history_untouched():
     """History up to 823af58 is untouched, and this item's entry is among the
     entries after it, found by its heading: other items (ink-memory) may
-    append theirs too, before or after it."""
+    append theirs too, before or after it.  house-style-sweep restyled the
+    history in full, so the comparison is house_style.history_problems, which
+    is facts-preserving: numbers, code spans, links, quoted titles and kanji
+    survive in each entry, and the meaning is read by hand (its AC-10, AC-14)."""
     entries, _ = _entries()
+    text = (support.REPO / "DECISIONS.md").read_text(encoding="utf-8")
+    blocks = house_style.decisions_blocks(text)
     old = _git("show", f"{BEFORE}:DECISIONS.md")
     if old is not None:
-        old_entries = old.stdout.split("\n## Open\n", 1)[0]
-        kept = _without_reworded_bullets(old_entries)
-        now = _without_reworded_bullets(entries)
-        assert now.startswith(kept), "an earlier entry was changed"
-        new = now[len(kept):]
-    else:
-        new = entries                   # no git (the Docker image)
-    blocks = [b for b in re.split(r"^(?=## )", new, flags=re.M) if b.startswith("## ")]
+        problems = house_style.history_problems(old.stdout, text, baseline=BEFORE)
+        assert problems == [], "an earlier entry was changed:\n" + "\n".join(problems)
+        blocks = blocks[len(house_style.decisions_blocks(old.stdout)):]
+    # else: no git (the Docker image), every entry is a candidate
+    blocks = [b for b in blocks if b.startswith("## ")]
     mine = [b for b in blocks
-            if re.match(r"## \d{4}-\d{2}-\d{2} — ", b)
+            if re.match(r"## \d{4}-\d{2}-\d{2} [–—] ", b)
             and "white" in b.splitlines()[0].lower()]
     assert len(mine) == 1, [b.splitlines()[0] for b in blocks]
     for word in ("--press", "Ghostscript", "overlay", "proof", "colour", "portal"):

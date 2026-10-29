@@ -21,6 +21,9 @@ import pytest
 
 import support
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import house_style  # noqa: E402
+
 THIS = Path(__file__).resolve()
 BEFORE = "90e5799"          # HEAD when the item was planned
 
@@ -360,22 +363,11 @@ def test_ac10_claude_md_layout():
 
 
 # ----------------------------------------------------------------- AC-11 ----
-# The item that removed the flag (its acceptance.md, AC-10, user-approved) rewords the last two bullets of the 2026-09-05 "Output, and
-# the ... cap" entry into the past tense.  Those bullets, and nothing else,
-# are left out of the byte-for-byte history comparison.  The flag's name is
-# spelled in two halves: that item's AC-11 bans it from the repository.
-_REWORDED_BULLETS = re.compile(
-    r"^- \*\*`--super" r"sample` .*?(?=\n\n## 2026-09-05 — Printing the three hand slots\n)",
-    re.M | re.S)
+# The rewording the flag-removal item made to two 2026-09-05 bullets is
+# set aside by house_style.HISTORY_EDITS against a baseline older than it.
 
 
-def _without_reworded_bullets(text):
-    stripped, n = _REWORDED_BULLETS.subn("<reworded bullets>", text, count=1)
-    assert n == 1, "the reworded 2026-09-05 bullets were not found"
-    return stripped
-
-
-CLI_ONLY_HEADING = "2026-10-28 — The command is the product"
+CLI_ONLY_HEADING = "2026-10-28 – The command is the product"
 
 
 def test_ac11_decisions_entry_appended_history_untouched():
@@ -383,17 +375,20 @@ def test_ac11_decisions_entry_appended_history_untouched():
 
     Later items append entries of their own after it (plain-white did), so
     the entry is found by its heading rather than as the only new one.
+    house-style-sweep restyled the history in full, so the comparison is
+    house_style.history_problems, which is facts-preserving: numbers, code spans, links, quoted titles and kanji
+    survive in each entry, and the meaning is read by hand (its AC-10, AC-14).
     """
     text = (support.REPO / "DECISIONS.md").read_text(encoding="utf-8")
     entries, open_ = text.split("\n## Open\n", 1)
     old = _git("show", f"{BEFORE}:DECISIONS.md")
     if old is not None:
-        old_entries = old.stdout.split("\n## Open\n", 1)[0]
-        assert _without_reworded_bullets(entries).startswith(
-            _without_reworded_bullets(old_entries)), "an earlier entry was changed"
-        assert CLI_ONLY_HEADING not in old_entries
+        problems = house_style.history_problems(old.stdout, text, baseline=BEFORE)
+        assert problems == [], "an earlier entry was changed:\n" + "\n".join(problems)
+        assert "The command is the product" not in old.stdout.split("\n## Open\n", 1)[0]
     blocks = re.split(r"^(?=## )", entries, flags=re.M)
-    mine = [b for b in blocks if b.startswith("## " + CLI_ONLY_HEADING)]
+    mine = [b for b in blocks
+            if house_style.entry_heading_key(b).startswith("## " + CLI_ONLY_HEADING)]
     assert len(mine) == 1, [b.splitlines()[0] for b in blocks if b.startswith("## ")]
     new = mine[0]
     assert "portal" in new and "--json" in new

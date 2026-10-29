@@ -31,6 +31,9 @@ KIT = Path(__file__).resolve().parent / "render_without_inkscape"
 sys.path.insert(0, str(KIT))
 import refkit  # noqa: E402
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import house_style  # noqa: E402
+
 REF = KIT / "reference"
 META = json.loads((REF / "meta.json").read_text(encoding="utf-8"))
 EX = str(support.EXAMPLE)
@@ -1060,12 +1063,16 @@ def _decisions():
 
 
 def test_ac35_history_untouched():
+    """house-style-sweep restyled the history in full, so the comparison is
+    house_style.history_problems, which is facts-preserving: numbers, code spans, links, quoted titles and kanji
+    survive in each entry, and the meaning is read by hand (its AC-10, AC-14).  The baseline
+    already has the flag-removal rewording, so that region is compared too."""
     old = _git("show", f"{BASELINE}:DECISIONS.md")
     if old is None:
         pytest.skip("no git history here (the Docker image)")
-    kept = old.stdout.split("\n## Open\n", 1)[0]
-    assert _decisions().split("\n## Open\n", 1)[0].startswith(kept), \
-        "an entry up to the last one at 8509b85 changed"
+    problems = house_style.history_problems(old.stdout, _decisions(), baseline=BASELINE)
+    assert problems == [], \
+        "an entry up to the last one at 8509b85 changed:\n" + "\n".join(problems)
 
 
 def test_ac35_decisions_entry():
@@ -1075,10 +1082,12 @@ def test_ac35_decisions_entry():
     # entries newer than the baseline count: 2026-10-28's "xlink:href ... for
     # Inkscape 1.2" names Inkscape too, and must stay as it is.
     old = _git("show", f"{BASELINE}:DECISIONS.md")
-    before = set(re.findall(r"^## .*$", old.stdout, re.M)) if old is not None else set()
+    before = ({house_style.entry_heading_key(h + "\n")
+               for h in re.findall(r"^## .*$", old.stdout, re.M)}
+              if old is not None else set())
     mine = [b for b in blocks if re.match(r"## (\d{4}-\d{2}-\d{2}) [–—] ", b)
             and re.match(r"## (\d{4}-\d{2}-\d{2})", b).group(1) >= "2026-10-29"
-            and b.splitlines()[0] not in before
+            and house_style.entry_heading_key(b) not in before
             and "inkscape" in b.splitlines()[0].lower()]
     assert len(mine) == 1, [b.splitlines()[0] for b in blocks[-4:]]
     body = mine[0]
@@ -1101,8 +1110,8 @@ def test_ac35_open_item_closed():
     assert not [i for i in items if "Inkscape" in i], items
     for kept in ("Paper format", "Kyū grades", "An annotated version in Dutch"):
         assert [i for i in items if i.startswith(kept)], (kept, items)
-    # the user decided 2026-10-29: the existing docs get a house-style sweep
-    assert [i for i in items if re.search(r"house.style", i, re.I)], items
+    # This item added an Open item for a house-style sweep of the existing
+    # docs; house-style-sweep did it and closed it (its AC-12).
 
 
 # ------------------------------------------------------------------- AC-36 ---

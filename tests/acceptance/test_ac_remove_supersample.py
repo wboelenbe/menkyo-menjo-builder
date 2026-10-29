@@ -83,9 +83,12 @@ def _decisions():
 
 
 def _sections(text):
-    """{heading line: body} for every `## ` section."""
+    """{heading line: body} for every `## ` section.  The dash after an
+    entry's date is read as an en dash, whichever it is: house-style-sweep
+    changed it from an em dash."""
     parts = re.split(r"^(## .*)$", text, flags=re.M)
-    return {parts[i].strip(): parts[i + 1] for i in range(1, len(parts) - 1, 2)}
+    return {re.sub(r"^(## \d{4}-\d{2}-\d{2}) — ", r"\1 – ", parts[i].strip()): parts[i + 1]
+            for i in range(1, len(parts) - 1, 2)}
 
 
 # ------------------------------------------------------------------ AC-1 ----
@@ -299,7 +302,7 @@ def test_ac10_readme():
     assert not WORD.search(text)
 
 
-INK_PASS = "## 2026-10-29 — The ink pass grades the alpha alone"
+INK_PASS = "## 2026-10-29 – The ink pass grades the alpha alone"
 
 
 def test_ac10_decisions_records_the_removal():

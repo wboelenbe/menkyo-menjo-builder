@@ -1,7 +1,7 @@
 This repository is MIT-licensed (see LICENSE), with two exceptions: the
 bundled fonts, and crests and names.
 
-## src/menkyo/fonts/ — Yuji Boku
+## src/menkyo/fonts/ – Yuji Boku
 
     Copyright 2021 The Yuji Project Authors
     https://github.com/Kinutafontfactory/Yuji
@@ -14,7 +14,7 @@ travels with the font and the font is not sold on its own. There is no
 Reserved Font Name, so the family may be renamed, though there is no reason
 to. A modified version of the font must itself stay under the OFL; nothing
 here modifies it, and documents *set* in it carry no licence obligation of
-any kind — the OFL governs the font file, not what you print with it.
+any kind – the OFL governs the font file, not what you print with it.
 
 ## src/menkyo/fonts/ – Noto Serif JP SemiBold
 
@@ -38,5 +38,6 @@ are identity, not software. Nothing in this repository grants any right to
 use anyone's.
 
 The generator ships with placeholders and draws its default crest from the
-yotsume-bishi, a traditional Japanese kamon in the public domain. Whatever
-you configure in its place is your own affair and your own responsibility.
+yotsume-bishi, four lozenges in a diamond, a traditional Japanese family crest
+(kamon) in the public domain. Whatever you configure in its place is your own
+affair and your own responsibility.

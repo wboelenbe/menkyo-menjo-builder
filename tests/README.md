@@ -59,7 +59,7 @@ runs the generator's `main()` through `golden_driver.py`, with only
   box (render-without-inkscape's AC-21 checks them against Inkscape's);
 - the text layers drawn (`document(…, layer="text")`, captured by the
   driver), as a set of sha256 values;
-- stdout, the set of files written, and the `--list` output.
+- stdout, the set of files written and the `--list` output.
 
 The manifest still holds the Inkscape calls the baseline made, under
 `tools`, as history; they are not compared, since there are none any more.
