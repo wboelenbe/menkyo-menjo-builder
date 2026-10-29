@@ -490,6 +490,48 @@ entries are left as they were written.
   `menkyo-0.2.0-py3-none-any.whl`: the version went to 0.2.0 with this
   change. Its image can drop Ghostscript.
 
+## 2026-10-29 — The ink pass grades the alpha alone
+
+An inked A3 overlay peaked near 1 GB, about 820 MB of it in `ink_layer`,
+which carried the full 600 dpi RGBA raster (109 MB a copy at 7299 × 3733)
+and float32 copies of it through the grading. The ink is unchanged: the
+graded alpha is bit for bit what it was.
+
+- **Only the coverage is kept.** `ink_layer` reads the render, keeps its
+  alpha and lets the rest go; the graded raster is rebuilt at the end as
+  the ink colour, `#111111`, under the graded alpha. Inkscape's own RGB at
+  the antialiased edge (0 to 32 against 17) is not kept: over white that is
+  at most 0.91/255, and the colour now says what it means.
+- **Coverage × density goes a band of rows at a time**, in the same
+  float32 arithmetic as the whole-image product, so no full-size float
+  array exists.
+- **The distance transforms come a band at a time too** (`ink._edt`).
+  SciPy's computes its distances from the nearest-background indices in one
+  go, at about 40 bytes a pixel; on the 200 dpi field that made the
+  local-thickness sweep the peak. Same arithmetic, so the same values.
+- **`--supersample` scales the alpha alone.** Pillow resizes RGBA
+  premultiplied, channel by channel, so the alpha comes out as before, and
+  the RGB and its premultiplied copy (1.7 GB each at 4×) are never made.
+  The decoded render itself is still the floor at 4×: Pillow has no way to
+  read a PNG in strips.
+
+| measured | before | after |
+|---|---|---|
+| `ink_layer`, C-1 size, peak RSS over a fresh process (Mac) | +1176 MB, 1.67 s | +263 MB (22 %), 1.63 s |
+| `--supersample 2`: resize + `ink_layer` (Mac) | +1961 MB, 3.1 s | +740 MB, 2.7 s |
+| `--supersample 4`: resize + `ink_layer` (Mac) | +4041 MB, 5.2 s | +2184 MB, 4.3 s |
+| whole run, C-1, cgroup `memory.peak` (Docker, median of 3) | 927 MB, 3.8 s | 437 MB (47 %), 3.8 s |
+| peak RSS of the `menkyo` process alone (`ink_driver.py`, Inkscape excluded; RSS counts shared pages the cgroup peak does not) | 944 MB | 221 MB (23 %) |
+| the same, `ink_layer` replaced by a file copy (the floor) | | 435 MB, 2.1 s |
+| `ink_layer` in that run (Docker, median of 3) | 1.69 s | 1.62 s |
+| whole run, `--supersample 2` (Docker) | 1378 MB, 6.9 s | 622 MB, 6.5 s |
+| whole run, `--supersample 4` (Docker) | 4092 MB, 15.4 s | 2235 MB, 14.0 s |
+
+The whole run now peaks in Inkscape, not here: with the grading replaced
+by a file copy it still reaches 435 MB, so the target of 40 % (370 MB) is
+out of reach for the ink pass, and the run sits within 1 % of that floor
+(the contract's fallback allows 15 %).
+
 ## Open
 
 - **Confirm the katakana transcription of any recipient's name** with the

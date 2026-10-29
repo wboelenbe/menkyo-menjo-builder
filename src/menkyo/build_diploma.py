@@ -544,10 +544,18 @@ def _inked_text_image(base, verb, heading, kw, env, supersample=1):
         check=True, capture_output=True, env=env)
 
     if supersample > 1:
-        im = Image.open(tmp + ".png")
+        # Only the alpha is scaled down: ink_layer grades the coverage and
+        # lays the ink colour under it, so the render's RGB, and the
+        # premultiplied copy Pillow's resize would make of it (1.7 GB at 4x),
+        # are never needed.
+        cov = ink.coverage(tmp + ".png")
         target = (max(1, round(w * INK_DPI / 25.4)),
                   max(1, round(h * INK_DPI / 25.4)))
-        im.resize(target, Image.LANCZOS).save(tmp + ".png")
+        layer = Image.new("RGBA", target, ink.INK + (0,))
+        layer.putalpha(cov.resize(target, Image.LANCZOS))
+        del cov
+        layer.save(tmp + ".png")
+        del layer
 
     PROGRESS("ink")
     ink.ink_layer(tmp + ".png", tmp + ".png", INK_DPI)

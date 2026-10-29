@@ -20,7 +20,7 @@ Thickness is then normalised per connected stroke, so the award formula at
 40 mm and the authority block at 12 mm come out looking like the same brush.
 
 Used by build_diploma.py: the text layer is rendered on its own, inked here,
-and composited back under the vector border.
+and placed back on the page as a raster beside the vector crest.
 """
 
 import numpy as np
@@ -44,6 +44,45 @@ NOISE_MM = 0.30
 # resolution and interpolated back up. Keeps the local-thickness sweep cheap.
 WORK_DPI = 200.0
 
+# The colour of the graded raster: build_diploma.INK, which the renderer
+# writes at full coverage. Only the alpha is graded.
+INK = (0x11, 0x11, 0x11)
+
+# Rows per band when a large array is worked through in pieces.
+_BAND = 256
+
+
+def _edt(mask, within=None):
+    """`ndimage.distance_transform_edt(mask)`, or with `within`, whether that
+    distance is at most `within`: the same values, without the transform's
+    float64 temporaries.
+
+    SciPy computes the distances from the nearest-background indices all at
+    once, at about 40 bytes a pixel; here they come a band of rows at a time,
+    with the same arithmetic, so only the indices are held whole.
+    """
+    ft = ndimage.distance_transform_edt(
+        mask, return_distances=False, return_indices=True)
+    out = np.empty(mask.shape, dtype=np.float64 if within is None else bool)
+    rows, cols = np.arange(mask.shape[0])[:, None], np.arange(mask.shape[1])
+    for y in range(0, mask.shape[0], _BAND):
+        b = slice(y, y + _BAND)
+        dy = (ft[0, b] - rows[b]).astype(np.float64)
+        dx = (ft[1, b] - cols).astype(np.float64)
+        d = np.sqrt(dy * dy + dx * dx)
+        out[b] = d if within is None else d <= within
+    return out
+
+
+def coverage(png_path):
+    """The alpha of the render at `png_path`, as an L image: the glyph
+    coverage, which is all the grading needs. The rest is let go at once."""
+    im = Image.open(png_path)
+    im.load()
+    if im.mode != "RGBA":
+        im = im.convert("RGBA")
+    return im.getchannel("A")
+
 
 def local_thickness(mask, steps=26):
     """Diameter of the largest inscribed disc covering each point, in pixels.
@@ -55,7 +94,7 @@ def local_thickness(mask, steps=26):
     smoothly, with no seams, because it is a union of discs rather than a
     nearest-neighbour partition.
     """
-    dist = ndimage.distance_transform_edt(mask)
+    dist = _edt(mask)
     dmax = float(dist.max())
     if dmax <= 0:
         return dist
@@ -64,7 +103,7 @@ def local_thickness(mask, steps=26):
         centres = dist >= r
         if not centres.any():
             continue
-        covered = ndimage.distance_transform_edt(~centres) <= r
+        covered = _edt(~centres, within=r)
         fill = covered & mask & (out == 0)
         if fill.any():
             out[fill] = 2.0 * r
@@ -101,23 +140,27 @@ def ink_layer(png_path, out_path, dpi, seed=11):
 
     `png_path` is an RGBA render of the text alone on transparency; its alpha
     carries glyph coverage, so the renderer's antialiasing survives intact.
+
+    Only that alpha is kept, and the result is rebuilt as the ink colour under
+    the graded alpha. An A3 text layer is 109 MB a copy as RGBA; carrying it,
+    and float copies of it, through the grading cost about a GB.
     """
-    im = Image.open(png_path).convert("RGBA")
-    a = np.array(im)
-    cov = a[..., 3].astype(np.float32) / 255.0
-    if not (cov > 0.5).any():
-        im.save(out_path)
+    cov = coverage(png_path)
+    # Nothing at more than half coverage: no stroke to grade.
+    if cov.getextrema()[1] < 128:
+        Image.open(png_path).convert("RGBA").save(out_path)
         return out_path
+    size = cov.size
 
     # --- density field, computed small ------------------------------------
     scale = min(1.0, WORK_DPI / float(dpi))
-    small = (max(1, int(a.shape[1] * scale)), max(1, int(a.shape[0] * scale)))
-    m = np.array(Image.fromarray((cov * 255).astype(np.uint8)).resize(
-        small, Image.BILINEAR)) > 128
+    small = (max(1, int(size[0] * scale)), max(1, int(size[1] * scale)))
+    m = np.array(cov.resize(small, Image.BILINEAR)) > 128
 
     thick = local_thickness(m)
     ref = _per_stroke_reference(m, thick)
     rel = np.clip(thick / (ref * FULL_AT), 0.0, 1.0)
+    del thick, ref
     rel = rel * rel * (3.0 - 2.0 * rel)                     # smoothstep
 
     # Extend the field outward before it is blurred or scaled up. Outside the
@@ -130,6 +173,7 @@ def ink_layer(png_path, out_path, dpi, seed=11):
     outside = ndimage.distance_transform_edt(
         ~m, return_distances=False, return_indices=True)
     rel = rel[tuple(outside)]
+    del outside
 
     density = MIN_DENSITY + (1.0 - MIN_DENSITY) * rel
 
@@ -139,14 +183,27 @@ def ink_layer(png_path, out_path, dpi, seed=11):
         max(1.0, NOISE_MM * WORK_DPI / 25.4))
     grain /= np.abs(grain).max() or 1.0
     density += grain * NOISE_AMP * (1.0 - rel)              # grain where it lifts
+    del grain, rel
     density = ndimage.gaussian_filter(np.clip(density, 0.4, 1.0), 1.2)
 
     # --- back up to full resolution ---------------------------------------
-    dens = np.array(Image.fromarray(
-        (np.clip(density, 0, 1) * 255).astype(np.uint8)
-    ).resize((a.shape[1], a.shape[0]), Image.BICUBIC)).astype(np.float32) / 255.0
+    dens = Image.fromarray(
+        (np.clip(density, 0, 1) * 255).astype(np.uint8)).resize(size, Image.BICUBIC)
+    del density
 
-    out = a.copy()
-    out[..., 3] = np.clip(cov * dens * 255.0, 0, 255).astype(np.uint8)
-    Image.fromarray(out).save(out_path)
+    # coverage x density, a band of rows at a time and written back over the
+    # coverage: the same float32 arithmetic as one whole-image product,
+    # without its full-size temporaries.
+    w, h = size
+    for y in range(0, h, _BAND):
+        box = (0, y, w, min(h, y + _BAND))
+        c = np.array(cov.crop(box)).astype(np.float32) / 255.0
+        k = np.array(dens.crop(box)).astype(np.float32) / 255.0
+        cov.paste(Image.fromarray(
+            np.clip(c * k * 255.0, 0, 255).astype(np.uint8)), box)
+    del dens
+
+    out = Image.new("RGBA", size, INK + (0,))
+    out.putalpha(cov)
+    out.save(out_path)
     return out_path
