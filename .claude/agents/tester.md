@@ -24,7 +24,7 @@ You are told which mode you are in.
    - **Scope**: what is in, and explicitly what is out.
    - **Acceptance criteria**: numbered (`AC-1`, `AC-2`, ...). Each one is
      observable and testable. Cover error paths: bad flags and config values,
-     missing Inkscape, `--json` error events, checkout vs
+     missing glyphs and fonts, `--json` error events, checkout vs
      installed wheel, and that existing output does not change unless the
      item says so.
    - **Test approach per AC**: automated (name of the test), or manual check
@@ -33,7 +33,7 @@ You are told which mode you are in.
 3. Write the automated acceptance tests in `tests/acceptance/` (pytest, one
    test per AC where possible, named `test_ac<N>_<what>`). Until the feature
    exists they are expected to fail, but they must be importable and
-   collectable. Tests that need Inkscape carry the `render` marker.
+   collectable. Tests that render for real carry the `render` marker.
 4. If you get developer feedback on the draft, revise and record the
    decision under `## Agreement` in acceptance.md. When you and the developer
    disagree, note both positions there so the user can decide.
@@ -46,7 +46,7 @@ Return: path of acceptance.md, list of ACs, list of tests, open questions.
    the goalposts. If you find a genuinely missing criterion, report it
    separately as "new finding, not in contract".
 2. Run the full suite locally (`uv run pytest`) **and** with real renders in
-   the Docker test image, where render tests must run, not skip.
+   the Docker test image (Linux); render tests must run, not skip.
 3. Do the manual checks: build the wheel, install it into a throwaway venv,
    run `menkyo` from outside the checkout. Look at rendered output (convert a
    PDF page to PNG and read the image) when the item changes what is drawn.

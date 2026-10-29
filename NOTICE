@@ -1,4 +1,5 @@
-This repository is MIT-licensed (see LICENSE), with two exceptions.
+This repository is MIT-licensed (see LICENSE), with two exceptions: the
+bundled fonts, and crests and names.
 
 ## src/menkyo/fonts/ — Yuji Boku
 
@@ -14,6 +15,21 @@ Reserved Font Name, so the family may be renamed, though there is no reason
 to. A modified version of the font must itself stay under the OFL; nothing
 here modifies it, and documents *set* in it carry no licence obligation of
 any kind — the OFL governs the font file, not what you print with it.
+
+## src/menkyo/fonts/ – Noto Serif JP SemiBold
+
+    © 2017-2024 Adobe (http://www.adobe.com/)
+    https://github.com/notofonts/noto-cjk
+
+The crest ring's face: NotoSerifJP-SemiBold.otf, the Japanese subset of
+Noto Serif CJK, taken unmodified from noto-cjk release Serif2.003
+(Serif/SubsetOTF/JP/; sha256 116d06c2b11ceba33ccb3f8c9eb1c86aba3d5761a1199fd37f74e83365e7a53d).
+
+Licensed under the SIL Open Font License, Version 1.1, reproduced in full at
+src/menkyo/fonts/OFL-NotoSerifJP.txt. The MIT licence above does not apply
+to it. What is said of Yuji Boku above holds here too: it travels with its
+licence, it is not modified, there is no Reserved Font Name and documents
+set in it carry no obligation.
 
 ## Crests, school names and marks
 

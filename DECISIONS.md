@@ -555,6 +555,129 @@ run without the flag writes exactly what it wrote before.
   supersampling to reproduce: it only has to render the text layer at
   600 dpi, as Inkscape does now.
 
+## 2026-10-29 – Rendered without Inkscape
+
+The package draws the certificates itself, from Python packages alone: no
+Inkscape, no fontconfig, no system font and no other program at run time,
+on macOS arm64 and Linux x86_64 alike. The route is the one the no-inkscape
+spike recommended and the user accepted
+([spike.md](docs/work/no-inkscape/spike.md)). It overrides these, which
+are left as they were written:
+
+- ‘The font is vendored, not installed’: fontconfig and `FONTCONFIG_FILE`;
+- the text-layer bullet of ‘Output, and the supersampling cap’: Inkscape's
+  `--export-area-drawing` and its bbox query;
+- ‘Cost: the text becomes a raster’, where it says Inkscape;
+- ‘Installed-copy behaviour is kept’, where Homebrew, MacPorts and
+  `Inkscape.app` are searched for the tools;
+- ‘Packaging is tested by rendering’, where the release checks with
+  `pdffonts` that the PDF embeds Yuji Boku;
+- ‘Plain white paper only’, where Inkscape is the one program needed.
+
+What replaces them:
+
+- **`document()` stays the one description of the sheet**, and its SVG is
+  unchanged byte for byte, `-f svg` included, `<text>` and all. What
+  Inkscape did with it is now `render.py`: fontTools reads each glyph's
+  outline from the font *file*, our own writer turns the small part of SVG
+  that `document()` uses into PDF operators and pdfium (pypdfium2) draws
+  that PDF for the PNG and for the 600 dpi text layer the ink pass grades.
+  Two dependencies are added, `fonttools>=4.68` and `pypdfium2==5.14.0`,
+  the second pinned exactly because its raster bytes move between releases.
+- **The writer refuses what it does not handle.** An element, attribute,
+  transform, colour or path command outside its list (the arc `A` among
+  them) ends the run with an error naming it; nothing is silently dropped,
+  so a layout change that needs more fails loudly instead of printing
+  wrongly. `.work` is removed on every failure, not only on success.
+- **The crest face is vendored too: Noto Serif JP SemiBold**, the Japanese
+  subset of the face Inkscape used, from noto-cjk `Serif2.003`
+  (`SubsetOTF/JP/NotoSerifJP-SemiBold.otf`, 6.31 MB, unmodified, OFL beside
+  it as `OFL-NotoSerifJP.txt`). The whole pan-CJK file is four times the
+  size for the same ring.
+- **Family names map to files.** The SVG still says
+  `font-family="Yuji Boku"` and `font-family="Noto Serif CJK JP SemiBold"`;
+  `render.FONTS` maps the first to `YujiBoku-Regular.ttf` and the second to
+  `NotoSerifJP-SemiBold.otf`. Fonts are opened by path, never looked up by
+  family name, so nothing installed on the machine is read. `font-weight`
+  selects nothing: each family is one file.
+- **The PDF's text is outlines**: filled paths, written inline per glyph,
+  with no font in the file. It cannot be searched or copied; these are
+  print files, and the user accepted it. One glyph per character at its
+  advance width, which is all `document()` sets.
+- **The overlays are DeviceGray.** A neutral colour is written as `g`/`G`,
+  the inked text is a DeviceGray image with a DeviceGray soft mask and
+  there is no page transparency group, so C = M = Y = 0 where Inkscape's
+  RGB group carried 3–4 % of each. The proof keeps its coloured guides.
+- **A character the fonts lack is an error, not a fallback**, found before
+  anything is drawn, written or emptied by `--clean`. Exactly what will be
+  drawn is checked: the selected awards only, the honorific only with a
+  name, a `[sample]` grade only where there is a grade column, `[art]
+  name` against both faces. The message names the character, its `U+`
+  code and the flag or key it came from, and asks for a replacement; under
+  `--json` it is the one `error` event. A traced `crest/<ch>.svg` stands in
+  for the font, and its path data is checked up front as well. `--list` is
+  not checked. The writer itself never draws `.notdef`. A missing or
+  truncated font file is named the same way, up front: every table's
+  extent is checked against the file's size, since fontTools reads lazily.
+- **The flat variants render in greyscale.** A page without colour on it
+  (`overlay`, `overlay-flat`) is drawn by pdfium in grey and written as an
+  LA PNG: the ink, `#111111`, under the alpha that gives the grey drawn,
+  which over white is the same pixel. The proof is drawn in RGBA. Every PNG
+  stays transparent where nothing is drawn, as before.
+- **Nothing large is held whole.** Rasters are drawn and written a band of
+  rows (256 KB) at a time by `png.py`, which writes unfiltered rows (they
+  deflate as well as Pillow's adaptive filters on this content) and reads
+  its own files back the same way. `ink.coverage` reads the LA text layer a
+  band at a time, `ink_layer` lets the coverage go while it works out the
+  density field and reads it again for the product, and writes its RGBA
+  result a band at a time; NumPy and SciPy are imported only when the ink
+  is graded. The graded alpha is bit for bit what it was. A side effect of
+  banding: pixels differ from a one-piece pdfium draw by at most 2/255,
+  scattered, with no seam, and the result is the same every time.
+- **The text layer's box** is the exact outline box of the glyphs (curve
+  extrema, from fontTools) and its pixel size that box at 600 dpi, rounded
+  per side; C-1's is 7299 × 3733 px, as Inkscape's was.
+- **Deterministic**: no dates and no IDs in the PDF, so the same command
+  writes the same bytes.
+- **`--dpi` takes 1 to 2400**, on every run, `--list` and runs without a
+  PNG included; anything else is refused with an error (the one `error`
+  event under `--json`). Without Inkscape in between, a bad value would
+  reach our own code; 2400 dpi is already over a gigapixel on A3, and the
+  portal never passes `--dpi`.
+
+Measured on the Mac's native `linux/arm64` Docker (OrbStack), cgroup
+`memory.peak` and wall time, median of 3, with
+`tests/acceptance/render_without_inkscape/measure.sh`, the same day: before
+is 8509b85 with Inkscape 1.2.2 (`Dockerfile.ref`), after is this change in
+`menkyo-test`.
+
+| case | before | after |
+|---|---|---|
+| C-1, overlay, PDF + PNG | 413 MB, 3.65 s | 206 MB, 2.53 s |
+| C-1p, overlay, PDF (the portal's run) | 413 MB, 3.02 s | 188 MB, 2.33 s |
+| C-4, overlay-flat, PDF + PNG | 104 MB, 0.75 s | 64 MB, 0.34 s |
+| C-4p, overlay-flat, PDF | 103 MB, 0.35 s | 59 MB, 0.22 s |
+| C-5, proof, PDF + PNG | 102 MB, 0.75 s | 64 MB, 0.38 s |
+
+- C-1 is 22 % of the 933 MB it took before the ink pass was reworked. The
+  first run of a fresh source tree reads it cold and peaks higher (up to
+  309 MB for C-1); the median is the steady figure.
+- The floor of a flat run, in the same image: 25 MB for the imports, 60 MB
+  with both fonts open. C-4 renders in 4 MB above that.
+- C-1's stages: the checks and opening the fonts 0.12 s, text 0.20 s, ink
+  1.68 s, PDF 0.23 s, PNG 0.15 s (the spike's Inkscape run: text 0.78,
+  ink 1.69, PDF 0.48, PNG 0.58).
+- The `menkyo` process's own peak on the Mac (`ru_maxrss`, which keeps
+  pages macOS has not reclaimed): C-1 359 MB, C-4 77 MB.
+- The wheel grows from 5.14 to 10.53 MB, nearly all of it the crest font.
+  The test image goes from 1.44 GB to 941 MB (`du -sx /`: 1041 to 701 MB);
+  what is left is Python, the dependencies and uv's cache for the wheel
+  tests.
+
+The version went to 0.3.0. The CLI flags, the `--json` events and their
+stages are unchanged. dojo-portal's image can drop `inkscape fontconfig
+fonts-noto-cjk fonts-noto-cjk-extra` once it takes this wheel.
+
 ## Open
 
 - **Confirm the katakana transcription of any recipient's name** with the
@@ -563,14 +686,6 @@ run without the flag writes exactly what it wrote before.
   today everything is laid out for A3 landscape (420 × 297 mm).
 - **Kyū grades.** Certificates for the coloured-belt grades below shodan,
   alongside the dan grades.
-- **Render without Inkscape (decided 2026-10-28, after `plain-white`).** The
-  spike ([docs/work/no-inkscape/spike.md](docs/work/no-inkscape/spike.md))
-  found a pip-only route the user accepted from the comparison images: glyph
-  outlines via fontTools, our own PDF writer, pypdfium2 for the PNG and the
-  text layer; Noto Serif JP SemiBold shipped whole for the crest; a missing
-  glyph is an error, not a fallback; PDF text may be outlines. Its plan
-  must also cover the flat overlay's peak memory (288 MB in the spike against
-  Inkscape's 110 MB), e.g. by rendering the page in greyscale.
 - **An annotated version in Dutch (asked 2026-10-28).** Besides the inked
   overlay, a default run should also produce a version that explains what
   the certificate says, in Dutch, for that recipient. The English
@@ -581,3 +696,8 @@ run without the flag writes exactly what it wrote before.
   dōjō's own parts (art, dōjō, signatory, motto, crest) explained from
   **optional Dutch text in `dojo.toml`**, falling back to a generic
   description of the form. It joins the default run once built.
+- **A house-style sweep of the existing docs (decided 29 October 2026).** README,
+  DECISIONS, `tests/README.md` and NOTICE predate the house style (British
+  English, sentence-case headings, ‘single quotes’, a spaced en dash, no
+  serial comma). New and changed text follows it; the rest is restyled in
+  an item of its own.

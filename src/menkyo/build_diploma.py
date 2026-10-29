@@ -36,11 +36,11 @@ import json
 import os
 import re
 import shutil
-import subprocess
 import sys
 
 from . import __version__, ink, paths
 from . import config as config_mod
+from . import render as renderer
 
 # Output directory; main() replaces it when --out is given.
 BUILD = paths.default_output_dir()
@@ -54,15 +54,17 @@ CFG = config_mod.Config()
 PAGE_W, PAGE_H = 420.0, 297.0          # A3 landscape, mm
 
 INK = "#111111"                        # near-black, reads as sumi in print
+INK_GREY = int(INK[1:3], 16)           # the same, as a grey level (it is one)
 
 # Yuji Boku (佑字 木) — a genuinely brush-written kaisho by Kinuta Font
 # Factory, OFL, vendored in fonts/ inside this package.  It is what makes the
 # printed columns read as sumi rather than as type.  The crest ring stays a
 # mincho: a mon is a carved seal, not brushwork, and the firmer face survives
-# being 5 mm across.
-FONT_BODY = "Yuji Boku"
-FONT_CREST = "Noto Serif CJK JP SemiBold"
-FONT_DIR = paths.resource("fonts")
+# being 5 mm across.  These are family names; render.FONTS maps each to its
+# file in fonts/ (the crest's to Noto Serif JP SemiBold).
+FONT_BODY = renderer.BODY
+FONT_CREST = renderer.CREST
+FONT_DIR = renderer.FONT_DIR   # for reading only: render.FONT_DIR is the one used
 W_REG, W_MED, W_BOLD = 400, 500, 600
 
 # ------------------------------------------------------------- typography ---
@@ -123,6 +125,11 @@ def _diamond(cx, cy, h):
     return f"M {cx:.4f} {cy-h:.4f} L {cx+h:.4f} {cy:.4f} L {cx:.4f} {cy+h:.4f} L {cx-h:.4f} {cy:.4f} Z"
 
 
+def _traced_path(ch):
+    """Where a traced crest glyph for `ch` would be: crest/ beside the config."""
+    return os.path.join(os.path.dirname(CFG.source), "crest", f"{ch}.svg")
+
+
 def _traced_glyph(ch):
     """Path data + viewBox for one crest glyph, if a vector trace is supplied.
 
@@ -136,7 +143,7 @@ def _traced_glyph(ch):
     second arc on top of the first. At 5 mm the typeset ring is normally the
     more legible of the two. Returns None when there is no such file.
     """
-    path = os.path.join(os.path.dirname(CFG.source), "crest", f"{ch}.svg")
+    path = _traced_path(ch)
     if not os.path.exists(path):
         return None
     src = open(path).read()
@@ -440,8 +447,8 @@ def document(verb, heading, crest_kind="full", guides=False,
 
 
 # --------------------------------------------------------------- progress ---
-# A certificate takes tens of seconds, nearly all of it in a handful of slow
-# steps: Inkscape rendering the text, the sumi grading, each export.  Those
+# A certificate takes seconds, nearly all of it in a handful of slow steps:
+# rendering the text layer, the sumi grading, each export.  Those
 # are counted and reported as each one starts, so whoever is waiting -- a
 # terminal, or the portal reading --json -- can show "step 3 of 8" instead of
 # nothing.
@@ -502,15 +509,15 @@ def _emit(event, **data):
 
 # ------------------------------------------------------------------ build ---
 INK_DPI = 600.0         # resolution of the inked text raster
-CSS_PX_PER_MM = 96.0 / 25.4
+MAX_DPI = 2400          # the most --dpi takes for a PNG
 
 
-def _inked_text_image(base, verb, heading, kw, env):
+def _inked_text_image(base, verb, heading, kw):
     """Render the text layer alone, ink it, and return an <image> element.
 
-    Rendered to the text's own bounding box rather than the page: a full A3 at
-    600 dpi is mostly empty, and cropping keeps the raster, and the memory the
-    ink pass needs for it, to the part that carries text.
+    Rendered to the text's own outline box rather than the page: a full A3
+    at 600 dpi is mostly empty, and cropping keeps the raster, and the memory
+    the ink pass needs for it, to the part that carries text.
     """
     from PIL import Image
 
@@ -521,82 +528,49 @@ def _inked_text_image(base, verb, heading, kw, env):
 
     PROGRESS("text")
     tmp = base + "-textlayer"
-    open(tmp + ".svg", "w").write(
-        document(verb, heading, layer="text", **kw))
-
-    # Drawing bounding box, in CSS px; the viewBox is 1 unit = 1 mm.
-    q = subprocess.run(
-        [paths.require_tool("inkscape"), tmp + ".svg", "--query-x", "--query-y",
-         "--query-width", "--query-height"],
-        check=True, capture_output=True, text=True, env=env)
-    x, y, w, h = (float(v) / CSS_PX_PER_MM for v in q.stdout.split())
-
-    subprocess.run(
-        [paths.require_tool("inkscape"), tmp + ".svg", "--export-type=png", "--export-area-drawing",
-         f"--export-dpi={INK_DPI:g}",
-         "--export-background-opacity=0",
-         "--export-filename=" + tmp + ".png"],
-        check=True, capture_output=True, env=env)
+    box = renderer.text_layer(document(verb, heading, layer="text", **kw),
+                              tmp + ".png", INK_DPI, ink=INK_GREY)
+    if box is None:                     # no text at all: nothing to ink
+        return ""
+    x, y, w, h = box
 
     PROGRESS("ink")
     ink.ink_layer(tmp + ".png", tmp + ".png", INK_DPI)
-    os.remove(tmp + ".svg")
-    # xlink:href, not SVG 2's plain href: Inkscape 1.2 (Debian bookworm,
-    # Ubuntu 24.04) ignores the latter and the sheet comes out without text.
+    # xlink:href, not SVG 2's plain href, so that the -f svg file opens with
+    # its text in older SVG editors too, which ignore the latter.
     return (f'<image x="{x:.4f}" y="{y:.4f}" width="{w:.4f}" height="{h:.4f}" '
             f'xlink:href="{os.path.basename(tmp)}.png" preserveAspectRatio="none"/>')
 
 
-def _font_env():
-    """Environment that makes the vendored font visible without installing it.
+def render(svg_path, out_base, formats, dpi=300):
+    """Export one intermediate SVG into `out_base` in the requested formats.
 
-    Inkscape resolves families through fontconfig, so we hand it a config that
-    includes the system one and adds the package's fonts/.  Nothing on the
-    machine changes.
+    Each stage is announced before its work, and a file is written whole
+    under a temporary name and then moved into place, so a caller never
+    sees half of one.
     """
-    conf_dir = os.path.join(BUILD, ".fontconfig")
-    os.makedirs(conf_dir, exist_ok=True)
-    conf = os.path.join(conf_dir, "fonts.conf")
-    with open(conf, "w") as fh:
-        fh.write(
-            '<?xml version="1.0"?>\n'
-            '<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">\n'
-            "<fontconfig>\n"
-            '  <include ignore_missing="yes">/etc/fonts/fonts.conf</include>\n'
-            f"  <dir>{os.path.abspath(FONT_DIR)}</dir>\n")
-        for d in paths.system_font_dirs():
-            fh.write(f"  <dir>{d}</dir>\n")
-        fh.write(
-            f"  <cachedir>{os.path.abspath(conf_dir)}/cache</cachedir>\n"
-            "</fontconfig>\n")
-    env = paths.tool_env()
-    env["FONTCONFIG_FILE"] = os.path.abspath(conf)
-    return env
-
-
-def render(svg_path, out_base, formats, dpi=300, transparent=False):
-    """Export one intermediate SVG into `out_base` in the requested formats."""
-    env = _font_env()
     written = []
+    with open(svg_path, encoding="utf-8") as fh:
+        svg = fh.read()
+    base_dir = os.path.dirname(svg_path)
+    tmp = svg_path[:-4] + ".part"
+    pdf = None
 
     if "pdf" in formats:
         PROGRESS("pdf")
-        pdf = out_base + ".pdf"
-        subprocess.run(
-            [paths.require_tool("inkscape"), svg_path, "--export-type=pdf",
-             "--export-filename=" + pdf],
-            check=True, capture_output=True, env=env)
-        written.append(pdf)
+        pdf, _ = renderer.svg_to_pdf(svg, base_dir)
+        with open(tmp, "wb") as fh:
+            fh.write(pdf.data)
+        os.replace(tmp, out_base + ".pdf")
+        written.append(out_base + ".pdf")
 
     if "png" in formats:
         PROGRESS("png")
-        png = out_base + ".png"
-        cmd = [paths.require_tool("inkscape"), svg_path, "--export-type=png", f"--export-dpi={dpi}",
-               "--export-filename=" + png]
-        if transparent:
-            cmd.append("--export-background-opacity=0")
-        subprocess.run(cmd, check=True, capture_output=True, env=env)
-        written.append(png)
+        if pdf is None:
+            pdf, _ = renderer.svg_to_pdf(svg, base_dir)
+        renderer.page_png(pdf, tmp, dpi, ink=INK_GREY)
+        os.replace(tmp, out_base + ".png")
+        written.append(out_base + ".png")
 
     if "svg" in formats:
         # An inked SVG references its text raster by relative path, so the
@@ -681,16 +655,72 @@ def build_one(slug, heading, verb, variant, formats, dpi=300, inked=True,
     stem = f"{slug}-{variant}" + (f"-{suffix}" if suffix else "")
     svg_path = os.path.join(work, stem + ".svg")
     if use_ink:
-        img = _inked_text_image(os.path.join(work, stem), verb, heading,
-                                kw, _font_env())
+        img = _inked_text_image(os.path.join(work, stem), verb, heading, kw)
         svg = document(verb, heading, layer="chrome", **kw)
         svg = svg.replace("</svg>", img + "</svg>")
     else:
         svg = document(verb, heading, **kw)
     open(svg_path, "w").write(svg)
 
-    return render(svg_path, os.path.join(BUILD, stem), formats, dpi=dpi,
-                  transparent=not kw.get("guides"))
+    return render(svg_path, os.path.join(BUILD, stem), formats, dpi=dpi)
+
+
+def _check_glyphs(checks):
+    """Stop before anything is drawn if a font lacks a character.
+
+    `checks` is a list of (text, where it came from, font family, traced):
+    exactly the strings a run will draw, each with the flag or configuration
+    key it came from, so the message can say what to change.  With `traced`,
+    a character that has a traced crest/<ch>.svg needs no glyph from the
+    font; its path data is read now, so a file the writer cannot draw fails
+    here too, naming the file.  The fonts themselves are opened and checked
+    first.
+    """
+    renderer.open_fonts()
+    for text, source, family, traced in checks:
+        face = renderer.face(family)
+        for ch in text:
+            glyph = _traced_glyph(ch) if traced else None
+            if glyph:
+                for d in glyph[2]:
+                    try:
+                        renderer.path_ops(d)
+                    except SystemExit as e:
+                        raise SystemExit(f"{_traced_path(ch)}: {e.code}")
+                continue
+            if not face.has(ch):
+                raise SystemExit(renderer.missing_glyph(ch, source, face))
+
+
+def _glyph_checks(awards, name, name_src, honorific, honorific_src,
+                  rank, rank_src, sample_rank, date, date_src):
+    """What _check_glyphs looks at for this run: what will be drawn, only."""
+    body, crest = FONT_BODY, FONT_CREST
+    out = []
+    if name:
+        out.append((name, name_src, body, False))
+        out.append((honorific or "", honorific_src, body, False))
+    if date:
+        out.append(("".join(date), date_src, body, False))
+    else:
+        out.append(("".join(c for c in DATE_SLOTS if c), "the blank date column",
+                    body, False))
+    for text, key in ((CFG.art, "[art] name"), (CFG.dojo, "[dojo] name"),
+                      (CFG.signer_title, "[signer] title"),
+                      (CFG.signer_name, "[signer] name"),
+                      (CFG.motto, "[motto] text")):
+        out.append((text, key, body, False))
+    # the crest ring: the art on the upper arc, crest_ring on the lower
+    out.append((CFG.crest_ring, "[dojo] crest_ring", crest, CFG.crest_traced))
+    out.append((CFG.art, "[art] name, on the crest ring", crest, CFG.crest_traced))
+    for slug in awards:
+        aw = CFG.award(slug)
+        out.append((aw.heading, f"the heading of [[awards]] {slug!r}", body, False))
+        out.append((aw.formula, f"the formula of [[awards]] {slug!r}", body, False))
+        # A sample grade is drawn only where there is a grade column.
+        if rank and not (sample_rank and not aw.grade_column):
+            out.append((rank, rank_src, body, False))
+    return out
 
 
 def _csv(value, allowed, what):
@@ -802,7 +832,7 @@ def main(argv=None, progress=None):
                     help="skip the sumi grading and set solid black; the same "
                          "thing the -flat variant gives you")
     ap.add_argument("--dpi", type=int, default=300, metavar="N",
-                    help="resolution for PNG output (default: 300)")
+                    help=f"resolution for PNG output, 1-{MAX_DPI} (default: 300)")
     ap.add_argument("-n", "--name", metavar="KATAKANA",
                     help="print the recipient's name in its own column instead "
                          "of leaving it for the calligrapher, e.g. "
@@ -820,7 +850,7 @@ def main(argv=None, progress=None):
                          "for the calligrapher; 'today' also works. "
                          "西暦二〇二六年九月五日. "
                          + _sample_help(CFG.sample_date))
-    ap.add_argument("--honorific", default=CFG.honorific, metavar="TEXT",
+    ap.add_argument("--honorific", metavar="TEXT",
                     help="appended to the printed name (default: "
                          f"{CFG.honorific or 'none'}, from the config); "
                          "pass '' to leave it off")
@@ -843,6 +873,10 @@ def main(argv=None, progress=None):
                          "is a JSON object -- progress, a file written, done, "
                          "or an error. See the README for the events.")
     args = ap.parse_args(argv)
+    # A PNG of zero or fewer pixels is nothing to draw, and at MAX_DPI an A3
+    # page is already over a gigapixel.  Checked for every run, --list too.
+    if not 1 <= args.dpi <= MAX_DPI:
+        raise SystemExit(f"--dpi {args.dpi}: use a resolution from 1 to {MAX_DPI}")
     if args.out:
         BUILD = os.path.abspath(os.path.expanduser(args.out))
 
@@ -865,6 +899,7 @@ def main(argv=None, progress=None):
 
     rank = rank_kanji(raw_rank) if raw_rank else None
     date = date_column(raw_date) if raw_date else None
+    honorific = CFG.honorific if args.honorific is None else args.honorific
     # The filename tag: whatever you asked for, else the config's tag for its
     # own specimens, else the recipient and grade you named -- which is what
     # keeps one recipient's files from overwriting another's. Asking for a
@@ -890,6 +925,17 @@ def main(argv=None, progress=None):
                         print(n)
         return
 
+    # Every character drawn must be in its font, and both fonts must open:
+    # checked for the whole run before anything is written, or emptied.
+    _check_glyphs(_glyph_checks(
+        awards, name,
+        "--name" if args.name is not None else "[sample] name (no --name given)",
+        honorific,
+        "--honorific" if args.honorific is not None else "[recipient] honorific",
+        rank, "--rank" if args.rank is not None else "[sample] rank (no --rank given)",
+        sample_rank, date,
+        "--date" if args.date is not None else "[sample] date (no --date given)"))
+
     if args.clean and os.path.isdir(BUILD):
         shutil.rmtree(BUILD)
     os.makedirs(BUILD, exist_ok=True)
@@ -907,26 +953,28 @@ def main(argv=None, progress=None):
         report)
 
     total = []
-    for slug in awards:
-        aw = CFG.award(slug)
-        heading, verb = aw.heading, aw.formula
-        rank_column = aw.grade_column
-        for variant in variants:
-            written = build_one(slug, heading, verb, variant, formats,
-                                dpi=args.dpi, inked=not args.no_ink, work=work,
-                                name=name, honorific=args.honorific,
-                                rank=None if sample_rank and not rank_column
-                                     else rank,
-                                date=date, suffix=suffix,
-                                rank_column=rank_column)
-            for w in written:
-                if args.json:
-                    _emit("file", path=w)
-                else:
-                    print("wrote", w)
-            total += written
-    shutil.rmtree(work, ignore_errors=True)
-    shutil.rmtree(os.path.join(BUILD, ".fontconfig"), ignore_errors=True)
+    try:
+        for slug in awards:
+            aw = CFG.award(slug)
+            heading, verb = aw.heading, aw.formula
+            rank_column = aw.grade_column
+            for variant in variants:
+                written = build_one(slug, heading, verb, variant, formats,
+                                    dpi=args.dpi, inked=not args.no_ink,
+                                    work=work, name=name, honorific=honorific,
+                                    rank=None if sample_rank and not rank_column
+                                         else rank,
+                                    date=date, suffix=suffix,
+                                    rank_column=rank_column)
+                for w in written:
+                    if args.json:
+                        _emit("file", path=w)
+                    else:
+                        print("wrote", w)
+                total += written
+    finally:
+        # The intermediates go whether the run worked or not.
+        shutil.rmtree(work, ignore_errors=True)
     if args.json:
         _emit("done", out=BUILD, files=total)
     else:
@@ -953,12 +1001,6 @@ def cli(argv=None):
         # main()'s messages for the user, rejected flags among them
         _emit("error", message=e.code if isinstance(e.code, str)
               else f"exit status {e.code}")
-        raise SystemExit(1)
-    except subprocess.CalledProcessError as e:
-        detail = (e.stderr.decode("utf-8", "replace")
-                  if isinstance(e.stderr, bytes) else (e.stderr or "")).strip()
-        _emit("error", message=f"{os.path.basename(e.cmd[0])} failed.",
-              detail=detail[-800:])
         raise SystemExit(1)
     except Exception as e:              # an unusable --out, a full disk, a bug
         _emit("error", message=f"{type(e).__name__}: {e}")

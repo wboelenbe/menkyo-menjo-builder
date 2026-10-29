@@ -1,21 +1,25 @@
-"""AC-13: real renders with Inkscape.
+"""AC-13: real renders.
 
-Skipped where Inkscape is missing (a Mac without it); failed instead under
-REQUIRE_RENDER=1, which the Docker test image and the CI workflow set.
 One run renders every variant of the dan certificate as PDF and PNG; the
 tests look at what it wrote.
 
 Rewritten for plain-white (docs/work/plain-white/acceptance.md, AC-19): the
 three variants that remain, no press conversions, and nothing coloured.
+Rewritten again for render-without-inkscape: there is no Inkscape to skip
+for, and the PDFs are read with pypdfium2 and the kit in
+render_without_inkscape/ instead of poppler.  The text is outlines now, so
+"embeds Yuji Boku" became "outlines, no font" (that item's AC-12).
 """
 
-import re
-import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 
 import support
-from conftest import require_program
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "render_without_inkscape"))
+import refkit  # noqa: E402
 
 pytestmark = pytest.mark.render
 
@@ -26,7 +30,7 @@ VARIANTS = ["overlay", "overlay-flat", "proof"]
 
 
 @pytest.fixture(scope="module")
-def rendered(inkscape, session_home, tmp_path_factory):
+def rendered(session_home, tmp_path_factory):
     out = tmp_path_factory.mktemp("render") / "out"
     r = support.run_menkyo(
         ["-c", support.EXAMPLE, "-a", "dan", "-v", ",".join(VARIANTS), "-f", "pdf,png",
@@ -57,14 +61,11 @@ def test_ac13_every_file_written(rendered):
 
 
 def test_ac13_pdfs_are_a3_landscape(rendered):
-    pdfinfo = require_program("pdfinfo")
     for p in sorted(rendered["out"].glob("*.pdf")):
         assert p.read_bytes()[:5] == b"%PDF-", p
-        info = subprocess.run([pdfinfo, str(p)], capture_output=True, text=True).stdout
-        line = next(l for l in info.splitlines() if l.startswith("Page size:"))
-        w, h = (float(x) for x in line.split(":")[1].split("pts")[0].split(" x "))
-        assert abs(w - A3_PT[0]) < 1 and abs(h - A3_PT[1]) < 1, (p.name, line)
-        assert re.search(r"^Pages:\s+1$", info, re.M), (p.name, info)
+        pages, (w, h) = refkit.pdf_info(p)
+        assert abs(w - A3_PT[0]) < 1 and abs(h - A3_PT[1]) < 1, (p.name, w, h)
+        assert pages == 1, (p.name, pages)
 
 
 def test_ac13_pngs_are_a3_at_300_dpi(rendered):
@@ -89,7 +90,6 @@ def test_ac13_nothing_coloured(rendered):
     coloured on purpose and are not checked."""
     import numpy as np
     from PIL import Image
-    pdftoppm = require_program("pdftoppm")
     for v in ("overlay", "overlay-flat"):
         with Image.open(f(rendered, v, "png")) as im:
             rgba = np.asarray(im.convert("RGBA")).astype(int)
@@ -97,11 +97,7 @@ def test_ac13_nothing_coloured(rendered):
         chroma = rgba[..., :3].max(axis=2) - rgba[..., :3].min(axis=2)
         assert seen.sum() > 0, v
         assert int(chroma[seen].max()) <= 12, (v, int(chroma[seen].max()))
-        ppm = rendered["out"].parent / f"{v}-colour"
-        subprocess.run([pdftoppm, "-r", "50", "-png", "-singlefile", str(f(rendered, v)),
-                        str(ppm)], check=True)
-        with Image.open(str(ppm) + ".png") as im:
-            rgb = np.asarray(im.convert("RGB")).astype(int)
+        rgb = refkit.pdf_rgb(f(rendered, v), 50).astype(int)
         assert int((rgb.max(axis=2) - rgb.min(axis=2)).max()) <= 12, f"{v}.pdf"
 
 
@@ -121,37 +117,36 @@ def test_ac13_text_is_drawn(rendered):
     that ignores it leaves the column empty while the flat ones are fine.
     """
     from PIL import Image
-    pdftoppm = require_program("pdftoppm")
     empty = {}
     for v in VARIANTS:
         with Image.open(f(rendered, v, "png")) as im:
             if _heading_ink(im, 300) < 100:
                 empty[f"{v}.png"] = _heading_ink(im, 300)
-        ppm = rendered["out"].parent / f"{v}-page"
-        subprocess.run([pdftoppm, "-r", "75", "-png", "-singlefile", str(f(rendered, v)),
-                        str(ppm)], check=True)
-        with Image.open(str(ppm) + ".png") as im:
+        page = Image.fromarray(refkit.pdf_grey(f(rendered, v), 75))
+        with page as im:
             if _heading_ink(im, 75) < 100:
                 empty[f"{v}.pdf"] = _heading_ink(im, 75)
     assert not empty, f"no text in the heading column (mm² of ink): {empty}"
 
 
-def test_ac13_flat_pdf_embeds_yuji_boku(rendered):
-    pdffonts = require_program("pdffonts")
+def test_ac13_flat_pdf_text_is_outlines(rendered):
+    """Was: the flat PDF embeds Yuji Boku.  The text is glyph outlines now,
+    so there is no font to embed and the check is that none is."""
     for v in ("overlay-flat", "proof"):
-        out = subprocess.run([pdffonts, str(f(rendered, v))], capture_output=True, text=True).stdout
-        assert "yuji" in out.lower(), (v, out)
+        s = refkit.pdf_summary(f(rendered, v))
+        assert s["font_objects"] == 0 and s["text_ops"] == 0, (v, s)
+        assert s["path_ops"] > 1000, (v, s["path_ops"])
 
 
-def test_ac13_inked_svg_carries_its_raster(inkscape, session_home, tmp_path):
+def test_ac13_inked_svg_carries_its_raster(session_home, tmp_path):
     out = tmp_path / "out"
     r = support.run_menkyo(["-c", support.EXAMPLE, "-a", "shihan", "-v", "overlay", "-f", "svg",
                             "-d", "", f"--out={out}"], support.isolated_env(session_home),
                            tmp_path, timeout=900)
     assert r.returncode == 0, r.stderr
     svg = (out / "shihan-overlay-sample.svg").read_text(encoding="utf-8")
-    # xlink:href with xlink declared on the root: Inkscape 1.2 ignores a plain
-    # href (F-3, see acceptance.md, Agreement).
+    # xlink:href with xlink declared on the root, so the SVG still opens in
+    # Inkscape 1.2, which ignores a plain href (packaging, F-3).
     assert 'xlink:href="shihan-overlay-sample-textlayer.png"' in svg
     assert svg.startswith('<svg xmlns="http://www.w3.org/2000/svg" '
                           'xmlns:xlink="http://www.w3.org/1999/xlink" ')

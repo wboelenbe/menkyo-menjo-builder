@@ -1,6 +1,6 @@
 #!/bin/sh
-# Run the test suite in the Docker test image, where Inkscape is installed and
-# REQUIRE_RENDER=1 turns a skipped render into a failure.
+# Run the test suite in the Docker test image: Linux, with nothing installed
+# beside Python and the package's own dependencies.
 #
 #   scripts/test-docker.sh                   the whole suite
 #   scripts/test-docker.sh -k render -x      arguments go to pytest
@@ -10,4 +10,4 @@
 set -eu
 cd "$(dirname "$0")/.."
 docker build -f tests/docker/Dockerfile -t menkyo-test .
-exec docker run --rm -e REQUIRE_RENDER=1 menkyo-test uv run --frozen pytest "$@"
+exec docker run --rm menkyo-test uv run --frozen pytest "$@"

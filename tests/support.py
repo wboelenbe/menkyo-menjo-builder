@@ -9,7 +9,6 @@ import hashlib
 import json
 import os
 import shutil
-import stat
 import subprocess
 import sys
 from pathlib import Path
@@ -19,7 +18,6 @@ SRC = REPO / "src"
 PACKAGE = SRC / "menkyo"
 EXAMPLE = PACKAGE / "example.toml"
 TESTS = REPO / "tests"
-FAKE_TOOL = TESTS / "fakes" / "fake_tool.py"
 DATA = TESTS / "data"
 
 # The baseline the goldens are generated from: 823af58, the last commit before
@@ -29,17 +27,6 @@ DATA = TESTS / "data"
 BASELINE_REF = "823af58"
 
 PERSONAL = ("dojo.toml", "crest", "ref")
-
-
-def make_fake_bin(bin_dir, tools=("inkscape",), python=sys.executable):
-    """Write shell wrappers named after `tools` that run tests/fakes/fake_tool.py."""
-    bin_dir = Path(bin_dir)
-    bin_dir.mkdir(parents=True, exist_ok=True)
-    for tool in tools:
-        p = bin_dir / tool
-        p.write_text(f'#!/bin/sh\nexec "{python}" "{FAKE_TOOL}" {tool} "$@"\n')
-        p.chmod(p.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-    return bin_dir
 
 
 def isolated_env(home, path_prepend=(), path=None, **extra):
@@ -77,23 +64,10 @@ def events(stdout):
     return out
 
 
-def read_log(path):
-    path = Path(path)
-    if not path.exists():
-        return []
-    return [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines()]
-
-
 def sha256(data):
     if isinstance(data, str):
         data = data.encode("utf-8")
     return hashlib.sha256(data).hexdigest()
-
-
-def find_inkscape():
-    """Inkscape as the generator would find it, or None."""
-    from menkyo import paths
-    return paths.find_tool("inkscape")
 
 
 def project_version():

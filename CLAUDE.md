@@ -17,8 +17,12 @@ why things are the way they are; its `## Open` section is the todo list.
 - When something is unclear, **ask questions one at a time** (requirements
   first, then design, then details). Recommend an option rather than listing
   every alternative.
-- Build work runs through the `/feature` skill: tester, developer, reviewer
-  ([.claude/agents/](.claude/agents/)).
+- Build work runs through the `/feature` skill: tester, developer, docs,
+  reviewer ([.claude/agents/](.claude/agents/)).
+- Prose (README, DECISIONS, docs) follows the user's house style in
+  `~/dev/house-style` (`principles/` and `writing/`): British English,
+  sentence-case headings, single quotes, spaced en dash, no serial comma.
+  The `docs` agent applies it.
 - **Commits:** the orchestrator makes exactly two per `/feature` run (a
   snapshot before, the validated result after). Never push, tag, amend,
   stash, reset, rebase or switch branches; the user pushes.
@@ -41,8 +45,10 @@ why things are the way they are; its `## Open` section is the todo list.
   `menkyo` command is the product; there is no other front end here.
 - The generator keeps its state in module globals (`CFG`, `BUILD`,
   `PROGRESS`); one run at a time per process.
-- Inkscape renders. It is not installed on the Mac; use the Docker test
-  image for real renders (see Commands).
+- Rendering is pure Python (fontTools outlines, an own PDF writer, pypdfium2
+  for the rasters; fonts bundled in `src/menkyo/fonts/`), so it runs on the
+  Mac too. No system tool or system font is used. The Docker test image is
+  the Linux check.
 - Python 3.11+ (`tomllib`). Match the surrounding code: its comment density,
   docstring tone and naming. No formatter is applied to existing code.
 - The version lives only in `pyproject.toml`.
@@ -51,8 +57,8 @@ why things are the way they are; its `## Open` section is the todo list.
 
 ```sh
 uv run menkyo -c src/menkyo/example.toml --list   # what a build would write
-uv run pytest                                      # tests; renders skip without Inkscape
-scripts/test-docker.sh                             # the full suite with real renders
+uv run pytest                                      # the full suite, real renders
+scripts/test-docker.sh                             # the same suite on Linux (slim image)
 uv build --wheel                                   # the wheel into dist/
 ```
 

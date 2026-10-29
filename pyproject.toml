@@ -5,17 +5,22 @@ build-backend = "hatchling.build"
 [project]
 name = "menkyo"
 # The one place the version lives; `menkyo --version` reports it.
-version = "0.2.0"
+version = "0.3.0"
 description = "Japanese dan-grade and menkyo certificates: A3, vertical, print-ready"
 readme = "README.md"
 license = "MIT AND OFL-1.1"
-license-files = ["LICENSE", "NOTICE", "src/menkyo/fonts/OFL.txt"]
+license-files = ["LICENSE", "NOTICE", "src/menkyo/fonts/OFL.txt",
+                 "src/menkyo/fonts/OFL-NotoSerifJP.txt"]
 requires-python = ">=3.11"
-# The system programs it also needs: inkscape.
+# No system programs and no system fonts: fontTools reads the glyphs from
+# the fonts in fonts/, and pdfium (pypdfium2) draws the PNGs.  pypdfium2 is
+# pinned exactly, because its raster bytes move between releases.
 dependencies = [
     "pillow>=9.0",
     "numpy>=1.22",
     "scipy>=1.8",
+    "fonttools>=4.68",
+    "pypdfium2==5.14.0",
 ]
 
 [project.scripts]
@@ -42,6 +47,6 @@ testpaths = ["tests"]
 pythonpath = ["tests"]
 addopts = "-ra"
 markers = [
-    "render: needs Inkscape; skipped without it, failed instead when REQUIRE_RENDER=1",
+    "render: does a real render, seconds each; -m 'not render' is the quick run",
     "slow: builds the wheel and installs it into a throwaway virtualenv",
 ]

@@ -6,6 +6,7 @@ compares against it).
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -17,6 +18,10 @@ GOLDEN = HERE / "golden"
 MANIFEST = GOLDEN / "manifest.json"
 BLOBS = GOLDEN / "svg"
 DRIVER = HERE / "golden_driver.py"
+# The flat and proof PDFs' sha256 per case (render-without-inkscape, Q-7):
+# written by make_golden.py --pdf-hashes, beside the manifest, which stays as
+# it was made from the baseline.
+PDF_HASHES = GOLDEN / "pdf_sha256.json"
 
 
 def layout_of(root):
@@ -46,20 +51,24 @@ def run_case(root, case, work, python=sys.executable):
 
     Returns {"stdout", "exit", "files", "textlayers", "tools"} and, separately,
     {sha: normalised svg} for every SVG seen.
+
+    Since render-without-inkscape every case renders for real and nothing
+    stands in for a program on PATH, so "tools" is always empty.  The text
+    layers are the document(..., layer="text") SVGs, captured by the driver;
+    they are named after their order, the stand-in's file names being gone.
     """
     root, work = Path(root), Path(work)
     work.mkdir(parents=True, exist_ok=True)
     out, home = work / "out", work / "home"
-    fakebin = support.make_fake_bin(work / "fakebin", python=python)
-    log, capture = work / "tools.jsonl", work / "captured"
+    capture = work / "captured"
     spec = {
         "layout": layout_of(root), "src": str(root / "src"),
         "config": str(config_path(root, case["config"])),
         "argv": case["argv"], "out": str(out), "result": str(work / "result.json"),
+        "capture": str(capture),
     }
     (work / "spec.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
-    env = support.isolated_env(home, path_prepend=[fakebin], path="/usr/bin:/bin",
-                               FAKE_TOOL_LOG=log, FAKE_CAPTURE_DIR=capture)
+    env = support.isolated_env(home, path="/usr/bin:/bin")
     r = subprocess.run([str(python), "-I", str(DRIVER), str(work / "spec.json")],
                        env=env, cwd=str(work), capture_output=True, text=True,
                        timeout=600)
@@ -79,8 +88,9 @@ def run_case(root, case, work, python=sys.executable):
                 files[rel] = sha
                 blobs[sha] = raw
             else:
-                # PNG / PDF here come from the stand-ins (or, for the text
-                # layer, from numpy): their presence is the contract.
+                # PNG / PDF bytes depend on the renderer: their presence is
+                # the contract here (render-without-inkscape compares how
+                # they look).
                 files[rel] = None
     if capture.exists():
         for p in sorted(capture.glob("*.svg")):
@@ -88,14 +98,35 @@ def run_case(root, case, work, python=sys.executable):
             sha = support.sha256(raw)
             textlayers[p.name] = sha
             blobs[sha] = raw
-    tools = [{"tool": c["tool"], "argv": [_norm(a, out) for a in c["argv"]],
-              "fontconfig": c["fontconfig"]}
-             for c in support.read_log(log)]
+    tools = []
     return {
         "argv": case["argv"], "config": case["config"],
         "stdout": _norm(result["stdout"], out), "exit": result["exit"],
         "files": files, "textlayers": textlayers, "tools": tools,
     }, blobs
+
+
+# The text layer's <image> box came from the stand-in inkscape's fixed query
+# answer; since render-without-inkscape it is the real outline box.  Only its
+# four numbers are left out of the comparison.
+_IMAGE_BOX = re.compile(r'(<image x=")[\d.]+(" y=")[\d.]+(" width=")[\d.]+(" height=")[\d.]+(")')
+
+
+def without_image_box(svg):
+    return _IMAGE_BOX.sub(r"\1X\2Y\3W\4H\5", svg)
+
+
+def pinned_pdf(name):
+    """A flat or proof PDF: drawn by our writer and fontTools alone, no pdfium.
+
+    Its bytes are pinned.  An inked overlay's PDF holds pdfium's raster of
+    the text layer, and a PNG is pdfium's, so neither is.
+    """
+    return name.endswith(".pdf") and ("-overlay-flat" in name or "-proof" in name)
+
+
+def load_pdf_hashes():
+    return json.loads(PDF_HASHES.read_text(encoding="utf-8"))
 
 
 def load_manifest():

@@ -133,7 +133,8 @@ def test_ac4_another_projects_pyproject_is_not_a_checkout(tmp_path):
     assert list_awards(root / "vendor", home, cwd=root) == ["dan", "shihan", "renshi"]
 
 
-def test_ac4_installed_copy_writes_to_documents(tmp_path, fake_tools):
+@pytest.mark.render
+def test_ac4_installed_copy_writes_to_documents(tmp_path):
     home, site = tmp_path / "home", tmp_path / "site"
     home.mkdir(exist_ok=True)
     support.copy_package(site)
@@ -143,14 +144,13 @@ def test_ac4_installed_copy_writes_to_documents(tmp_path, fake_tools):
          "from menkyo.build_diploma import cli; cli(sys.argv[2:])",
          str(site), "-c", str(support.EXAMPLE), "-a", "dan", "-v", "overlay-flat",
          "-d", ""],
-        env=fake_tools.env(home), cwd=str(tmp_path), capture_output=True, text=True)
+        env=support.isolated_env(home), cwd=str(tmp_path), capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
     target = home / "Documents" / "Menkyo" / "dan-overlay-flat-sample.pdf"
     assert r.stdout.splitlines()[0] == f"wrote {target}"
     assert target.exists()
-    # Inkscape is pointed at the copy's own fonts
-    call = fake_tools.calls("inkscape")[0]
-    assert call["fontconfig"] and call["font_dirs"][0] == str(site / "menkyo" / "fonts")
+    # That the copy reads its own fonts is render-without-inkscape's AC-10:
+    # remove one from a copy and the run fails, naming the copy's file.
 
 
 def test_ac4_fonts_and_example_are_package_resources():

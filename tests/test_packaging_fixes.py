@@ -1,8 +1,8 @@
 """Developer tests for the packaging review fixes (R-1 .. R-3, F-3).
 
 --json failures beyond AC-9's list, what counts as a checkout, and the
-xlink:href the inked composite needs for Inkscape 1.2.  Runs use the
-stand-in inkscape and the shipped example only.
+xlink:href the inked composite needs for Inkscape 1.2 (which may still open
+the SVG).  Runs use the shipped example only, and render for real.
 """
 
 import json
@@ -37,18 +37,18 @@ def _one_error(code, ev):
 
 # ---------------------------------------------------------------- --json ----
 @pytest.mark.parametrize("flag", ["--js", "--jso", "--json"])
-def test_json_abbreviation_still_wraps_failures(flag, fake_tools, tmp_path, capsys):
+def test_json_abbreviation_still_wraps_failures(flag, tmp_path, capsys):
     code, ev, _ = _cli(["-c", EX, "-a", "nope", f"--out={tmp_path}", flag], capsys)
     assert _one_error(code, ev).startswith("unknown award: nope")
 
 
-def test_rejected_flag_message(fake_tools, tmp_path, capsys):
+def test_rejected_flag_message(tmp_path, capsys):
     code, ev, err = _cli(["-c", EX, "--dpi", "abc", f"--out={tmp_path}", "--json"], capsys)
     assert _one_error(code, ev) == "argument --dpi: invalid int value: 'abc'"
     assert err == ""
 
 
-def test_rejected_flag_without_json_is_plain_argparse(fake_tools, tmp_path, capsys):
+def test_rejected_flag_without_json_is_plain_argparse(tmp_path, capsys):
     code, ev, err = _cli(["-c", EX, "--dpi", "abc", f"--out={tmp_path}"], capsys)
     assert code == 2 and ev == []
     assert err.startswith("usage: menkyo") and "invalid int value" in err
@@ -64,7 +64,7 @@ def test_malformed_toml_is_a_message(tmp_path, capsys):
     assert _one_error(code, ev).startswith(f"{bad}: ")
 
 
-def test_unexpected_exception_is_an_error_event(fake_tools, tmp_path, monkeypatch, capsys):
+def test_unexpected_exception_is_an_error_event(tmp_path, monkeypatch, capsys):
     def boom(*a, **k):
         raise RuntimeError("simulated")
     monkeypatch.setattr(bd, "build_one", boom)
@@ -108,7 +108,8 @@ def test_checkout_needs_this_projects_pyproject(pyproject, is_checkout, tmp_path
 
 
 # ---------------------------------------------------------------- xlink ----
-def test_inked_svg_places_its_text_with_xlink_href(fake_tools, tmp_path, capsys):
+@pytest.mark.render
+def test_inked_svg_places_its_text_with_xlink_href(tmp_path, capsys):
     out = tmp_path / "out"
     bd.cli(["-c", EX, "-a", "dan", "-v", "overlay,overlay-flat", "-f", "svg",
             "-n", "", "-r", "", "-d", "", f"--out={out}"])
@@ -120,3 +121,22 @@ def test_inked_svg_places_its_text_with_xlink_href(fake_tools, tmp_path, capsys)
     # only the composite's root declares xlink; the flat sheet is as before
     flat = (out / "dan-overlay-flat.svg").read_text(encoding="utf-8")
     assert "xlink" not in flat
+
+
+# ------------------------------------------------------- --dpi, glyphs -----
+def test_dpi_out_of_range_under_list_json(tmp_path, capsys):
+    """--dpi is checked for every run, --list included: one error event."""
+    code, ev, err = _cli(["-c", EX, "--list", "--dpi=0", f"--out={tmp_path}", "--json"],
+                         capsys)
+    assert _one_error(code, ev) == "--dpi 0: use a resolution from 1 to 2400"
+    assert len(ev) == 1 and err == ""
+
+
+@pytest.mark.parametrize("ch, shown", [("\t", "'\\t'"), ("\n", "'\\n'")])
+def test_a_control_character_is_named_on_one_line(ch, shown, tmp_path, capsys):
+    code, ev, _ = _cli(["-c", EX, "-a", "dan", "-v", "overlay-flat", f"--name=ヤン{ch}ヤンセン",
+                        "--rank=", "--date=", f"--out={tmp_path / 'out'}", "--json"], capsys)
+    msg = _one_error(code, ev)
+    assert "\n" not in msg and "\t" not in msg, msg
+    assert f"the character {shown} (U+{ord(ch):04X}) in --name" in msg
+    assert not (tmp_path / "out").exists()

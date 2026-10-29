@@ -5,8 +5,14 @@ and proof on plain white paper.
 See docs/work/plain-white/acceptance.md.  The AC numbers here are that
 item's (as agreed, see its "Agreement").  AC-8 is
 tests/regression/test_golden.py, AC-19 is
-test_ac_render.py and AC-22 is the rest of the suite.  Runs use the stand-in
-inkscape and the shipped example or a configuration the test writes.
+test_ac_render.py and AC-22 is the rest of the suite.  Runs use the shipped
+example or a configuration the test writes.
+
+Migrated for render-without-inkscape (its acceptance.md, "Changes to the
+existing suite"): runs render for real instead of through a stand-in
+inkscape, and the assertions that pinned Inkscape itself (the tool list,
+Inkscape in the README, CLAUDE.md and pyproject, the apt packages of the
+test image and the workflow, version 0.2.0) give way to that item's.
 
 This file is the one place that spells out the words the rest of the
 repository may no longer contain, so it excludes itself from that scan.
@@ -133,7 +139,7 @@ def test_ac1_all_flag_lists_every_award_and_variant(home, tmp_path):
     assert got == [f"{a}-{v}-sample.pdf" for a in AWARDS for v in PLAIN]
 
 
-def test_ac1_all_writes_what_the_explicit_list_writes(fake_tools, tmp_path):
+def test_ac1_all_writes_what_the_explicit_list_writes(tmp_path):
     common = ["-c", EX, "--no-ink", "-f", "svg", "-d", "2026-09-05"]
     bd.main(common + ["--all", f"--out={tmp_path / 'a'}"])
     bd.main(common + ["-a", "dan,shihan,renshi", "-v", ",".join(PLAIN),
@@ -151,19 +157,18 @@ REMOVED = [
 
 
 @pytest.mark.parametrize("variants, bad", REMOVED, ids=[r[0] for r in REMOVED])
-def test_ac2_removed_variants_are_rejected(variants, bad, fake_tools, home, tmp_path):
+def test_ac2_removed_variants_are_rejected(variants, bad, home, tmp_path):
     out = tmp_path / "out"
     r = support.run_menkyo(["-c", EX, "-a", "dan", "-v", variants, "-d", "",
-                            f"--out={out}"], fake_tools.env(home), tmp_path)
+                            f"--out={out}"], support.isolated_env(home), tmp_path)
     assert r.returncode == 1 and r.stdout == ""
     assert f"unknown variant: {bad}\n{CHOOSE}" in r.stderr
     assert "Traceback" not in r.stderr
     assert not out.exists(), "nothing may be written before the error"
-    assert fake_tools.calls() == []
 
 
 @pytest.mark.parametrize("variants, bad", REMOVED, ids=[r[0] for r in REMOVED])
-def test_ac2_removed_variants_are_json_errors(variants, bad, fake_tools, tmp_path, capsys):
+def test_ac2_removed_variants_are_json_errors(variants, bad, tmp_path, capsys):
     out = tmp_path / "out"
     code, ev, err = _cli(["-c", EX, "-a", "dan", "-v", variants, "-d", "",
                           f"--out={out}", "--json"], capsys)
@@ -174,19 +179,18 @@ def test_ac2_removed_variants_are_json_errors(variants, bad, fake_tools, tmp_pat
 
 # ------------------------------------------------------------------ AC-3 ----
 @pytest.mark.parametrize("flag", ["--press", "--pre", "--pr"])
-def test_ac3_press_is_rejected(flag, fake_tools, home, tmp_path):
+def test_ac3_press_is_rejected(flag, home, tmp_path):
     out = tmp_path / "out"
     r = support.run_menkyo(["-c", EX, "-a", "dan", "-v", "overlay-flat", flag, "-d", "",
-                            f"--out={out}"], fake_tools.env(home), tmp_path)
+                            f"--out={out}"], support.isolated_env(home), tmp_path)
     assert r.returncode == 2 and r.stdout == ""
     assert r.stderr.startswith("usage: menkyo")
     assert f"unrecognized arguments: {flag}" in r.stderr
     assert not out.exists()
-    assert fake_tools.calls() == []
 
 
 @pytest.mark.parametrize("flag", ["--press", "--pre"])
-def test_ac3_press_is_a_json_error(flag, fake_tools, tmp_path, capsys):
+def test_ac3_press_is_a_json_error(flag, tmp_path, capsys):
     out = tmp_path / "out"
     code, ev, err = _cli(["-c", EX, "-a", "dan", "-v", "overlay-flat", flag, "-d", "",
                           f"--out={out}", "--json"], capsys)
@@ -213,10 +217,11 @@ def test_ac4_default_list(home, tmp_path):
     assert listing([], home, tmp_path) == [f"{a}-overlay-sample.pdf" for a in AWARDS]
 
 
-def test_ac4_default_run(fake_tools, home, tmp_path):
+@pytest.mark.render
+def test_ac4_default_run(home, tmp_path):
     out = tmp_path / "out"
     r = support.run_menkyo(["-c", EX, "-d", "2026-09-05", f"--out={out}", "--json"],
-                           fake_tools.env(home), tmp_path)
+                           support.isolated_env(home), tmp_path)
     assert r.returncode == 0, r.stderr
     ev = support.events(r.stdout)
     progress = [e for e in ev if e["event"] == "progress"]
@@ -228,13 +233,17 @@ def test_ac4_default_run(fake_tools, home, tmp_path):
 
 
 # ------------------------------------------------------------------ AC-5 ----
-def test_ac5_a_full_run_needs_only_inkscape(fake_tools, home, tmp_path):
-    """Every variant, every format, with nothing but (a stand-in) Inkscape."""
+@pytest.mark.render
+def test_ac5_a_full_run_needs_no_program(home, tmp_path):
+    """Every variant, every format, with no program on PATH at all (was:
+    nothing but Inkscape; render-without-inkscape removed that too)."""
     out = tmp_path / "out"
+    empty = tmp_path / "emptybin"
+    empty.mkdir()
     r = support.run_menkyo(["-c", EX, "--all", "-f", "pdf,png,svg", "-d", "2026-09-05",
-                            f"--out={out}", "--json"], fake_tools.env(home), tmp_path)
+                            f"--out={out}", "--json"],
+                           support.isolated_env(home, path=str(empty)), tmp_path)
     assert r.returncode == 0, r.stdout + r.stderr
-    assert {c["tool"] for c in fake_tools.calls()} == {"inkscape"}
     names = sorted(os.listdir(out))
     assert not [n for n in names if n.endswith(("-K.pdf", "-CMYK.pdf"))], names
     expected = set()
@@ -246,8 +255,8 @@ def test_ac5_a_full_run_needs_only_inkscape(fake_tools, home, tmp_path):
 
 
 def test_ac5_ghostscript_is_not_a_known_tool():
-    assert "gs" not in paths._INSTALL_HINT
-    assert set(paths._INSTALL_HINT) == {"inkscape"}
+    """There is no tool list at all since render-without-inkscape."""
+    assert not hasattr(paths, "_INSTALL_HINT")
 
 
 # ------------------------------------------------------------------ AC-6 ----
@@ -267,11 +276,12 @@ TOTALS = [
 ]
 
 
+@pytest.mark.render
 @pytest.mark.parametrize("flags, total, nfiles", TOTALS, ids=[" ".join(t[0]) for t in TOTALS])
-def test_ac6_step_totals(flags, total, nfiles, fake_tools, home, tmp_path):
+def test_ac6_step_totals(flags, total, nfiles, home, tmp_path):
     out = tmp_path / "out"
     r = support.run_menkyo(["-c", EX, *flags, "-d", "2026-09-05", f"--out={out}", "--json"],
-                           fake_tools.env(home), tmp_path)
+                           support.isolated_env(home), tmp_path)
     assert r.returncode == 0, r.stderr
     ev = support.events(r.stdout)
     progress = [e for e in ev if e["event"] == "progress"]
@@ -315,7 +325,7 @@ COLOURS = ['"#8a6a33"', '"#ff0000"', '"not a colour"', '""', "5"]
 
 
 @pytest.mark.parametrize("value", COLOURS)
-def test_ac9_colour_is_accepted_and_ignored(value, fake_tools, tmp_path):
+def test_ac9_colour_is_accepted_and_ignored(value, tmp_path):
     plain = tmp_path / "plain.toml"
     plain.write_text(_example_without_colour(), encoding="utf-8")
     coloured = tmp_path / "coloured.toml"
@@ -333,12 +343,13 @@ def test_ac9_colour_is_accepted_and_ignored(value, fake_tools, tmp_path):
     assert len(_tree(tmp_path / "a")) == 9
 
 
-def test_ac9_colour_draws_no_warning(fake_tools, home, tmp_path):
+@pytest.mark.render
+def test_ac9_colour_draws_no_warning(home, tmp_path):
     coloured = tmp_path / "coloured.toml"
     coloured.write_text(_with_colour('"#8a336f"'), encoding="utf-8")
     out = tmp_path / "out"
     r = support.run_menkyo(["-c", coloured, "-a", "dan", "-v", "overlay-flat", "-d", "",
-                            f"--out={out}", "--json"], fake_tools.env(home), tmp_path)
+                            f"--out={out}", "--json"], support.isolated_env(home), tmp_path)
     assert r.returncode == 0 and r.stderr == ""
     assert [e["event"] for e in support.events(r.stdout)] == ["progress", "file", "done"]
 
@@ -376,7 +387,7 @@ def test_ac10_example_config_still_round_trips(home, tmp_path):
 
 
 # ----------------------------------------------------------------- AC-11 ----
-def test_ac11_paper_keys_still_drive_the_proof(fake_tools, tmp_path):
+def test_ac11_paper_keys_still_drive_the_proof(tmp_path):
     cfg = tmp_path / "paper.toml"
     cfg.write_text(_example_without_colour().replace("border = 22.0", "border = 10.0")
                    .replace("safe_inset = 38.0", "safe_inset = 20.0"), encoding="utf-8")
@@ -513,7 +524,8 @@ def test_ac15_readme_stages_and_requirements():
     package = _section(readme, "As a package")
     stage_line = next(l for l in package.splitlines() if l.startswith("`stage` is one of"))
     assert re.findall(r"`(\w+)`", stage_line)[1:] == ["text", "ink", "pdf", "png"]
-    assert "Inkscape" in _section(readme, "Quick start")
+    # was: Inkscape is named in Quick start; render-without-inkscape removed it
+    assert "Inkscape" not in _section(readme, "Quick start")
     headings = [l for l in readme.splitlines() if l.startswith("## ")]
     printing = [h[3:] for h in headings if "printing" in h.lower()]
     assert printing, headings
@@ -570,55 +582,41 @@ def test_ac16_open_items_retired():
     items = re.findall(r"^- \*\*(.+?)\*\*", open_, re.M)
     for gone in ("Plain white only", "press files", "drawn border", "Source the 賞状用紙"):
         assert not [i for i in items if gone in i], (gone, items)
-    for kept in ("Render without Inkscape", "An annotated version in Dutch"):
+    # "Render without Inkscape" was kept here; render-without-inkscape closed it
+    for kept in ("An annotated version in Dutch",):
         assert [i for i in items if i.startswith(kept)], (kept, items)
 
 
 # ----------------------------------------------------------------- AC-17 ----
 def test_ac17_claude_md_pyproject_and_tests_readme():
-    claude = (support.REPO / "CLAUDE.md").read_text(encoding="utf-8")
-    assert "Inkscape renders" in claude
-    pyproject = (support.REPO / "pyproject.toml").read_text(encoding="utf-8")
-    comment = next(l for l in pyproject.splitlines() if "system programs" in l)
-    assert "inkscape" in comment.lower()
-    marker = next(l for l in pyproject.splitlines() if l.strip().startswith('"render:'))
-    assert "Inkscape" in marker
+    """Its CLAUDE.md, pyproject-comment and marker assertions named Inkscape
+    as the one program; render-without-inkscape (AC-2, AC-36, Q-5)
+    supersedes them."""
     tests_readme = (support.TESTS / "README.md").read_text(encoding="utf-8")
     assert "823af58" in tests_readme
 
 
 # ----------------------------------------------------------------- AC-18 ----
-def _apt_packages(text):
-    m = re.search(r"apt-get install -y --no-install-recommends \\\s*\n((?:.*\\\s*\n)*.*)",
-                  text)
-    assert m, "no apt-get install"
-    return set(re.findall(r"[a-z][\w.+-]+", m.group(1).split("&&")[0]))
-
-
+# Was: the apt packages are exactly Inkscape's, without Ghostscript.  Since
+# render-without-inkscape there is no apt-get at all (its AC-32, AC-33).
 def test_ac18_test_image_has_no_ghostscript():
     df = (support.TESTS / "docker" / "Dockerfile").read_text(encoding="utf-8")
-    pkgs = _apt_packages(df)
-    assert {"inkscape", "poppler-utils", "fontconfig", "fonts-noto-cjk"} <= pkgs, pkgs
-    assert "ghostscript" not in pkgs
-    assert "REQUIRE_RENDER=1" in df
+    assert "ghostscript" not in df.lower() and "apt-get" not in df
 
 
 def test_ac18_workflow_has_no_ghostscript():
     wf = (support.REPO / ".github" / "workflows" / "package.yml").read_text(encoding="utf-8")
-    pkgs = _apt_packages(wf)
-    assert {"inkscape", "poppler-utils", "fontconfig", "fonts-noto-cjk"} <= pkgs, pkgs
-    assert "ghostscript" not in pkgs
+    assert "ghostscript" not in wf.lower() and "apt-get" not in wf
     smoke = wf.split("Smoke test the installed wheel", 1)[1]
     assert re.search(r"-v overlay,overlay-flat\b", smoke)
-    assert "pdffonts out/dan-overlay-flat-sample.pdf" in smoke
 
 
 # ----------------------------------------------------------------- AC-20 ----
 @pytest.mark.slow
-def test_ac20_installed_wheel(installed, fake_tools, home, tmp_path):
+def test_ac20_installed_wheel(installed, home, tmp_path):
     """From outside the checkout: the same contract as from the checkout."""
     exe = [str(installed["menkyo"])]
-    env = fake_tools.env(home)
+    env = support.isolated_env(home)
     site = next(installed["venv"].glob("lib/python*/site-packages"))
     assert not (site / "menkyo" / "border.py").exists()
 
@@ -641,7 +639,6 @@ def test_ac20_installed_wheel(installed, fake_tools, home, tmp_path):
                            tmp_path, exe=exe)
     assert "--press" not in r.stdout
     assert "overlay,overlay-flat,proof (default: overlay)" in r.stdout
-    assert fake_tools.calls() == []
 
 
 # ----------------------------------------------------------------- AC-21 ----
@@ -688,15 +685,5 @@ def test_ac21_readme_image_is_plain_white():
 
 
 # ----------------------------------------------------------------- AC-23 ----
-def test_ac23_version_is_0_2_0(home, tmp_path):
-    assert support.project_version() == "0.2.0"
-    r = support.run_menkyo(["--version"], support.isolated_env(home), tmp_path)
-    assert (r.returncode, r.stdout) == (0, "menkyo 0.2.0\n")
-
-
-@pytest.mark.slow
-def test_ac23_wheel_is_0_2_0(dist, installed, home, tmp_path):
-    assert dist["wheel"].name == "menkyo-0.2.0-py3-none-any.whl"
-    r = support.run_menkyo(["--version"], support.isolated_env(home), tmp_path,
-                           exe=[str(installed["menkyo"])])
-    assert (r.returncode, r.stdout) == (0, "menkyo 0.2.0\n")
+# The version check (0.2.0) is superseded by render-without-inkscape's AC-37,
+# which carries the version the user chooses for that item.

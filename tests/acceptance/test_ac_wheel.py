@@ -40,7 +40,7 @@ def test_ac2_wheel_holds_the_package_and_its_data(dist):
     for m in MODULES:
         assert f"menkyo/{m}.py" in names
     for data in ("menkyo/example.toml", "menkyo/fonts/YujiBoku-Regular.ttf",
-                 "menkyo/fonts/OFL.txt"):
+                 "menkyo/fonts/NotoSerifJP-SemiBold.otf", "menkyo/fonts/OFL.txt"):
         assert data in names
     with zipfile.ZipFile(dist["wheel"]) as z:
         assert z.read("menkyo/example.toml") == support.EXAMPLE.read_bytes()
@@ -67,7 +67,7 @@ def test_ac2_metadata(dist):
         entry = z.read(_dist_info(names, "entry_points.txt")).decode()
     assert f"Version: {support.project_version()}" in meta
     assert "Requires-Python: >=3.11" in meta
-    for dep in ("pillow", "numpy", "scipy"):
+    for dep in ("pillow", "numpy", "scipy", "fonttools", "pypdfium2"):
         assert f"Requires-Dist: {dep}" in meta
     assert "[console_scripts]" in entry
     assert "menkyo = menkyo.build_diploma:cli" in entry
@@ -101,19 +101,21 @@ def test_ac3_example_config(installed, home, tmp_path):
     assert r.stdout.encode("utf-8") == support.EXAMPLE.read_bytes()
 
 
-def test_ac3_runs_from_outside_the_checkout(installed, fake_tools, home, tmp_path):
+@pytest.mark.render
+def test_ac3_runs_from_outside_the_checkout(installed, home, tmp_path):
     """With a trap dojo.toml in the cwd: an installed copy never reads it."""
     (tmp_path / "dojo.toml").write_text(
         'schema = 1\n[[awards]]\nslug = "trap"\nheading = "免許状"\nformula = "右免許ス"\n',
         encoding="utf-8")
     exe = [str(installed["menkyo"])]
-    r = support.run_menkyo(["--list", "-v", "overlay"], fake_tools.env(home), tmp_path, exe=exe)
+    env = support.isolated_env(home)
+    r = support.run_menkyo(["--list", "-v", "overlay"], env, tmp_path, exe=exe)
     assert r.returncode == 0, r.stderr
     assert r.stdout.splitlines() == ["dan-overlay-sample.pdf", "shihan-overlay-sample.pdf",
                                      "renshi-overlay-sample.pdf"]
 
     r = support.run_menkyo(["-a", "dan", "-v", "overlay,overlay-flat", "-d", "",
-                            "--json"], fake_tools.env(home), tmp_path, exe=exe)
+                            "--json"], env, tmp_path, exe=exe)
     assert r.returncode == 0, r.stderr
     ev = support.events(r.stdout)
     docs = home / "Documents" / "Menkyo"
@@ -121,16 +123,18 @@ def test_ac3_runs_from_outside_the_checkout(installed, fake_tools, home, tmp_pat
         str(docs / "dan-overlay-sample.pdf"), str(docs / "dan-overlay-flat-sample.pdf")]}
     site = next(installed["venv"].glob("lib/python*/site-packages"))
     fonts = site / "menkyo" / "fonts"
-    for call in fake_tools.calls("inkscape"):
-        assert call["fontconfig"] and call["font_dirs"][0] == str(fonts)
     assert (fonts / "YujiBoku-Regular.ttf").is_file()
+    assert (fonts / "NotoSerifJP-SemiBold.otf").is_file()
 
 
 @pytest.mark.render
-def test_ac3_installed_wheel_renders_with_the_font(installed, inkscape, home, tmp_path):
-    """Like the CI workflow's smoke test: a font missing from the wheel fails here."""
-    from conftest import require_program
-    pdffonts = require_program("pdffonts")
+def test_ac3_installed_wheel_renders_with_the_font(installed, home, tmp_path):
+    """Like the CI workflow's smoke test: a font missing from the wheel fails
+    here.  Since render-without-inkscape the text is outlines drawn from the
+    wheel's own font files, so a missing font fails the run itself (that
+    item's AC-10), and the PDF carries paths, not a font."""
+    sys.path.insert(0, str(support.TESTS / "acceptance" / "render_without_inkscape"))
+    import refkit
     exe = [str(installed["menkyo"])]
     env = support.isolated_env(home)
     ex = support.run_menkyo(["--example-config"], env, tmp_path, exe=exe)
@@ -139,7 +143,5 @@ def test_ac3_installed_wheel_renders_with_the_font(installed, inkscape, home, tm
                             "--json", "--out", "out"], env, tmp_path, exe=exe)
     assert r.returncode == 0, r.stdout + r.stderr
     assert support.events(r.stdout)[-1]["event"] == "done"
-    import subprocess
-    fonts = subprocess.run([pdffonts, str(tmp_path / "out" / "dan-overlay-flat-sample.pdf")],
-                           capture_output=True, text=True).stdout
-    assert "yuji" in fonts.lower(), fonts
+    s = refkit.pdf_summary(tmp_path / "out" / "dan-overlay-flat-sample.pdf")
+    assert s["font_objects"] == 0 and s["path_ops"] > 1000, s

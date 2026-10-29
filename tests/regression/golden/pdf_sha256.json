@@ -1,0 +1,19 @@
+{
+ "note": "The sha256 of the flat and proof PDFs (render-without-inkscape, Q-7). They are drawn by menkyo's own PDF writer from fontTools' glyph outlines, without pdfium, so they are byte for byte the same on every platform. A fontTools release may change the outlines and so these hashes: look at the PDFs, then refresh with make_golden.py --pdf-hashes.",
+ "source": "working tree",
+ "fonttools": "4.68.0",
+ "cases": {
+  "inked": {
+   "dan-overlay-flat.pdf": "f9679293dc045c2cc164188ce76edf9d98f52dd3243a72ebc399edfaeca97589",
+   "dan-proof.pdf": "b7649e479a4fc009df5c38b04dec29007fc71eebbcbb004d341b86d98363e18c",
+   "renshi-overlay-flat.pdf": "eb7880d5276bcea94d150624c41ff74c8b8f5a1ed4f5971d7b3f24b25a36046a",
+   "renshi-proof.pdf": "e5fde16b133344ae9ca2f81142fc36d267fe0207d3eb478926d29ea39db9c3a5",
+   "shihan-overlay-flat.pdf": "0ba5a04d452e1583b433af6a61b0fe2fcb0b6c4ea445aa6620de24a57af89b29",
+   "shihan-proof.pdf": "97da4154d561a7428d8e2fe457b7811c65949eabf0f3dea1eb3faaea167cad50"
+  },
+  "flat-pdf": {
+   "dan-overlay-flat-sample.pdf": "d3e0cfe86a5ffabdd900ebb705f3813cd902e9a602b44958f4e0b3804da15aa1",
+   "dan-proof-sample.pdf": "85fd174ac7b8628a202f17ccfe91b4a5a80cd88f388feace7bd86dd64d7322c1"
+  }
+ }
+}

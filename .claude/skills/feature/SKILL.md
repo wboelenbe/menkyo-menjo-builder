@@ -9,7 +9,7 @@ argument-hint: <work item, e.g. "kyu grades" or "A4 paper">
 Work item: $ARGUMENTS
 
 You are the **orchestrator**. You don't write production code or tests
-yourself. You delegate to the `tester`, `developer` and `reviewer`
+yourself. You delegate to the `tester`, `developer`, `docs` and `reviewer`
 subagents, pass their outputs between them, and keep the user informed.
 Run the subagents in the foreground: each step depends on the one before.
 
@@ -44,6 +44,10 @@ in `docs/work/<slug>/`.
 ## Phase 2: Build
 
 5. **developer (IMPLEMENT)**: build against acceptance.md.
+5a. **docs (WRITE)**: bring README.md, DECISIONS.md, tests/README.md and
+   NOTICE in line with what was built, in the house style
+   (`~/dev/house-style`). Run it again after every FIX round that changes
+   behaviour or docs, before the reviewer looks.
 
 ## Phase 3: Review loop
 

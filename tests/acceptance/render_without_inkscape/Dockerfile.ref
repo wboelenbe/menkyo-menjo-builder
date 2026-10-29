@@ -1,0 +1,15 @@
+# The Inkscape reference for render-without-inkscape: the test image's
+# toolchain as of 8509b85 (Debian bookworm, Inkscape 1.2.2, fonts-noto-cjk)
+# plus fonts-noto-cjk-extra, which holds the crest's Noto Serif CJK JP
+# SemiBold, as a real installation (and dojo-portal's image) has it.
+# make_reference.sh mounts the menkyo source; nothing is copied in but the
+# pinned Python packages.
+FROM python:3.13-slim-bookworm
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      inkscape fontconfig fonts-noto-cjk fonts-noto-cjk-extra \
+ && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir --root-user-action=ignore \
+      pillow==13.0.0 numpy==2.5.4 scipy==1.18.1 pypdfium2==5.14.0
+ENV HOME=/tmp/home XDG_CONFIG_HOME=/tmp/home/.config PYTHONDONTWRITEBYTECODE=1

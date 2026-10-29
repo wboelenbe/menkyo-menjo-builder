@@ -33,10 +33,11 @@ uv run menkyo --list                 # what a default build would write
 uv run menkyo                        # write it
 ```
 
-Needs Python 3.11+ (for `tomllib`), Inkscape, and Pillow / NumPy / SciPy;
-`uv run` installs the Python side. Without uv, `pip install -e .` and then
-plain `menkyo`. From a checkout, files land in `build/` as
-`<award>-<variant>.<ext>`.
+Needs Python 3.11+ (for `tomllib`) and nothing else: `uv run` installs
+Pillow, NumPy, SciPy, fontTools and pypdfium2, and the fonts ship inside the
+package. No other program and no system font is used. Without uv,
+`pip install -e .` and then plain `menkyo`. From a checkout, files land in
+`build/` as `<award>-<variant>.<ext>`.
 
 ## As a package
 
@@ -50,7 +51,7 @@ Build the wheel from a checkout:
 uv build --wheel                     # dist/menkyo-<version>-py3-none-any.whl
 ```
 
-It holds the generator, its font, the example configuration and the `menkyo`
+It holds the generator, its fonts, the example configuration and the `menkyo`
 command. The consumer installs that file, for example as a uv path source or
 with pip:
 
@@ -75,14 +76,14 @@ An installed copy has no checkout to sit in, so it writes to
 `~/Library/Application Support/Menkyo/dojo.toml` (`~/.config/Menkyo/` on
 Linux) when no `--config` is given.
 
-Inkscape must be on the host as well. On Debian:
-`apt-get install inkscape fontconfig fonts-noto-cjk` (the Noto fonts set the
-crest ring).
+Nothing needs installing besides the wheel and its own dependencies: no
+program, no font, no system library. The text is drawn from the two fonts
+inside the package, and pdfium (pypdfium2) draws the PNGs.
 
 Run it as a command, not as a library: the generator keeps its state in module
-globals, and a render can take a couple of GB, which a separate process gives
-back when it ends. Write the dōjō's settings to a TOML file
-(`menkyo --example-config` prints the template), then:
+globals, and an inked certificate takes a couple of hundred MB, which a
+separate process gives back when it ends. Write the dōjō's settings to a TOML
+file (`menkyo --example-config` prints the template), then:
 
 ```
 menkyo --config=dojo.toml --awards=dan --variants=overlay --formats=pdf \
@@ -111,12 +112,23 @@ The command above writes, in part:
 ```
 
 and a failure ends in one line such as
-`{"event": "error", "message": "inkscape failed.", "detail": "…"}`.
+`{"event": "error", "message": "unknown award: nope …"}`.
+
+A character the fonts do not have is a failure too, found before anything
+is written. Only what will be drawn is checked, each string against the
+font it is printed in: the selected awards, the honorific only with a name,
+a `[sample]` grade only where there is a grade column, and the art's name
+against both fonts, since it is also set on the crest ring. The `error`
+event names the character, its code point and where it came from, and asks
+for a replacement, for example
+`the character 𠮷 (U+20BB7) in --name is not in Yuji Boku, …`. There is
+no fallback face: a kanji from another font among brush strokes would be
+visibly wrong. Ask the dōjō for a variant the font has (吉 for 𠮷).
 
 `stage` is one of `text`, `ink`, `pdf` or `png`, for a caller that
 wants its own wording; `label` says the same in English. `total` is known from
-the first event, so `step / total` is a progress bar. A certificate takes
-tens of seconds, most of it in `text` and `ink`. Without `--json`, the same
+the first event, so `step / total` is a progress bar. A certificate takes a
+few seconds, most of it in `ink`. Without `--json`, the same
 progress goes to stderr when that is a terminal, and stdout keeps its `wrote`
 lines.
 
@@ -219,7 +231,7 @@ constants at the top of `src/menkyo/build_diploma.py`.
 | `-d`, `--date YYYY-MM-DD` | print the award date in kanji; `today` also works |
 | `--honorific TEXT` | appended to a printed name (default from the config; `''` to omit) |
 | `--suffix TEXT` | tag for output filenames (defaults to the name) |
-| `--dpi N` | resolution for PNG output (default: 300) |
+| `--dpi N` | resolution for PNG output, 1–2400 (default: 300) |
 | `--all` | shorthand for `--awards all --variants all` |
 | `--clean` | empty `build/` first |
 | `--list` | list what would be written, then stop |
@@ -287,13 +299,19 @@ a greyscale raster; a home laser halftones grey, and some printers mishandle
 its transparency. If the 12 mm columns come out mottled, the `-flat` files are
 the same layout in solid black, pure vector. Nothing else differs.
 
+The PDFs are print files: the text is drawn as glyph outlines, so it cannot
+be searched or copied, and no font is embedded. The overlays are
+pure grey (DeviceGray), with no colour at all.
+
 ## How it looks the way it does
 
 The printed text is set in **Yuji Boku** (佑字 木), a genuinely brush-written
 kaisho, then graded by `src/menkyo/ink.py` so the ink thins toward grey where the
-brush lifts — a real brush never lays down flat black. The font ships in
-`src/menkyo/fonts/` and the build points fontconfig at it, so nothing needs installing and
-nothing on your machine changes.
+brush lifts — a real brush never lays down flat black. The crest ring is set
+in **Noto Serif JP SemiBold**, a mincho (the printed serif style), since a
+mon is a carved seal rather than brushwork. Both fonts ship in
+`src/menkyo/fonts/` and are read from there by file, never looked up by name,
+so nothing needs installing and nothing on your machine changes or is used.
 
 `DECISIONS.md` records why each line reads as it does, and how the ink was
 arrived at.
@@ -303,12 +321,14 @@ arrived at.
 ```
 src/menkyo/             the package: everything the wheel ships
   build_diploma.py      generator and CLI; typography constants at the top
+  render.py             the SVG as PDF (glyph outlines) and PNG (pdfium)
+  png.py                PNGs written and read a band of rows at a time
   config.py             the TOML configuration
-  paths.py              where things live: checkout or installed, tools
+  paths.py              where things live: checkout or installed
   ink.py                the sumi grading
   example.toml          placeholder configuration, the shipped default
-  fonts/                Yuji Boku + its OFL licence, used without installing
-tests/                  the suite; tests/docker/ runs it with real renders
+  fonts/                Yuji Boku and Noto Serif JP SemiBold + their OFL licences
+tests/                  the suite; tests/docker/ runs it on Linux
 docs/                   templates explaining each document to the person
                         who receives it, plus the image above
 build/                  generated; git-ignored
@@ -341,5 +361,5 @@ you are actually entitled to issue.
 ## Licence
 
 MIT — see [LICENSE](LICENSE). Two things are not covered by it: the bundled
-font, which is under the SIL Open Font License, and crests and school names,
+fonts, which are under the SIL Open Font License, and crests and school names,
 which are nobody's to grant. See [NOTICE](NOTICE).

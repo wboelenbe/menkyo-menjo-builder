@@ -1,6 +1,7 @@
 """AC-7 .. AC-10: the --json event contract (README, "As a package").
 
-Runs use the stand-in inkscape (tests/fakes), so they need no Inkscape.
+Runs render for real: since render-without-inkscape the package needs no
+program on the host (docs/work/render-without-inkscape/acceptance.md).
 
 Rewritten for plain-white (docs/work/plain-white/acceptance.md): the press
 conversions, their progress stage, their files and their failure cases are
@@ -8,15 +9,12 @@ gone.  What the defaults and `--all` add up to is pinned in
 test_ac_plain_white.py.
 """
 
-import json
 import os
-import sys
 
 import pytest
 
 import support
 from menkyo import build_diploma as bd
-from menkyo import paths
 
 EX = str(support.EXAMPLE)
 STAGES = {"text", "ink", "pdf", "png"}
@@ -24,18 +22,19 @@ LABELS = {"text": "rendering the text", "ink": "grading the ink",
           "pdf": "writing the PDF", "png": "writing the PNG"}
 
 
-def run_json(args, fake_tools, home, tmp_path, **env):
+def run_json(args, home, tmp_path, **env):
     out = tmp_path / "out"
     r = support.run_menkyo(["-c", EX, *args, f"--out={out}", "--json"],
-                           env=fake_tools.env(home, **env), cwd=tmp_path)
+                           env=support.isolated_env(home, **env), cwd=tmp_path)
     return r, support.events(r.stdout), out
 
 
 # ------------------------------------------------------------------ AC-7 ----
-def test_ac7_success_stream(fake_tools, home, tmp_path):
+@pytest.mark.render
+def test_ac7_success_stream(home, tmp_path):
     r, ev, out = run_json(["-a", "dan", "-v", "overlay,proof", "-f", "pdf,png",
                            "-n", "ヤン・ヤンセン", "-r", "2", "-d", "2026-09-05"],
-                          fake_tools, home, tmp_path)
+                          home, tmp_path)
     assert r.returncode == 0, r.stderr
     assert r.stderr == ""                      # stderr is not a terminal here
     kinds = [e["event"] for e in ev]
@@ -64,15 +63,17 @@ def test_ac7_success_stream(fake_tools, home, tmp_path):
     assert ev[-1] == {"event": "done", "out": str(out), "files": files}
 
 
-def test_ac7_a_file_event_follows_its_progress(fake_tools, home, tmp_path):
+@pytest.mark.render
+def test_ac7_a_file_event_follows_its_progress(home, tmp_path):
     """Files for a variant are reported before the next variant's progress."""
     r, ev, _ = run_json(["-a", "dan,shihan", "-v", "overlay-flat", "-d", ""],
-                        fake_tools, home, tmp_path)
+                        home, tmp_path)
     assert r.returncode == 0
     assert [e["event"] for e in ev] == ["progress", "file", "progress", "file", "done"]
 
 
-def test_ac7_progress_callback_in_process(fake_tools, tmp_path):
+@pytest.mark.render
+def test_ac7_progress_callback_in_process(tmp_path):
     seen = []
     bd.main(["-c", EX, "-a", "dan", "-v", "overlay", "-d", "", f"--out={tmp_path}"],
             progress=seen.append)
@@ -97,10 +98,11 @@ TOTALS = [
 ]
 
 
+@pytest.mark.render
 @pytest.mark.parametrize("flags, total, nfiles", TOTALS,
                          ids=[" ".join(t[0]) or "defaults" for t in TOTALS])
-def test_ac8_step_totals(flags, total, nfiles, fake_tools, home, tmp_path):
-    r, ev, _ = run_json([*flags, "-d", "2026-09-05"], fake_tools, home, tmp_path)
+def test_ac8_step_totals(flags, total, nfiles, home, tmp_path):
+    r, ev, _ = run_json([*flags, "-d", "2026-09-05"], home, tmp_path)
     assert r.returncode == 0, r.stderr
     progress = [e for e in ev if e["event"] == "progress"]
     assert len(progress) == total
@@ -137,64 +139,46 @@ def _assert_one_error(code, ev, contains, detail=None):
     (["-r", "11"], "--rank 11: dan grades run from 1 to 10"),
     (["-d", "2026-13-01"], "--date 2026-13-01: use YYYY-MM-DD"),
 ])
-def test_ac9_user_errors(flags, contains, fake_tools, tmp_path, capsys):
+def test_ac9_user_errors(flags, contains, tmp_path, capsys):
     code, ev, _ = _cli_error(["-c", EX, *flags, f"--out={tmp_path}", "--json"], capsys)
     _assert_one_error(code, ev, contains)
 
 
-def test_ac9_missing_config(fake_tools, tmp_path, capsys):
+def test_ac9_missing_config(tmp_path, capsys):
     code, ev, _ = _cli_error(["-c", str(tmp_path / "none.toml"), "--json"], capsys)
     _assert_one_error(code, ev, "no configuration at")
 
 
-def test_ac9_invalid_config(fake_tools, tmp_path, capsys):
+def test_ac9_invalid_config(tmp_path, capsys):
     bad = tmp_path / "bad.toml"
     bad.write_text("schema = 9\n", encoding="utf-8")
     code, ev, _ = _cli_error(["-c", str(bad), "--json"], capsys)
     _assert_one_error(code, ev, "schema = 9")
 
 
-def test_ac9_inkscape_missing(no_tools, tmp_path, capsys):
-    code, ev, _ = _cli_error(["-c", EX, "-a", "dan", "-v", "overlay", "-d", "",
-                              f"--out={tmp_path}", "--json"], capsys)
-    _assert_one_error(code, ev, "inkscape was not found. Please install Inkscape")
+# test_ac9_inkscape_missing and test_ac9_inkscape_fails went with Inkscape:
+# a renderer failure is now render-without-inkscape's AC-10 (a missing or
+# corrupt font file) and AC-24 (an SVG the writer does not handle).
 
 
-@pytest.mark.parametrize("stage", ["query", "png", "pdf"])
-def test_ac9_inkscape_fails(stage, fake_tools, tmp_path, monkeypatch, capsys):
-    monkeypatch.setenv("FAKE_INKSCAPE_FAIL", stage)
-    code, ev, _ = _cli_error(["-c", EX, "-a", "dan", "-v", "overlay", "-f", "pdf", "-d", "",
-                              f"--out={tmp_path}", "--json"], capsys)
-    _assert_one_error(code, ev, "inkscape failed.", detail="fake inkscape: simulated")
-    assert ev[-1]["message"] == "inkscape failed."
-
-
-def test_ac9_error_exit_code_from_the_real_command(fake_tools, home, tmp_path):
+def test_ac9_error_exit_code_from_the_real_command(home, tmp_path):
     """The same, through the installed console entry point, as a process."""
-    r, ev, _ = run_json(["-a", "nope"], fake_tools, home, tmp_path)
+    r, ev, _ = run_json(["-a", "nope"], home, tmp_path)
     assert r.returncode == 1
     assert ev == [{"event": "error", "message": ev[0]["message"]}]
     assert ev[0]["message"].startswith("unknown award: nope")
     assert "Traceback" not in r.stderr
 
-    r, ev, _ = run_json(["-a", "dan", "-v", "overlay", "-d", ""], fake_tools, home, tmp_path,
-                        FAKE_INKSCAPE_FAIL="pdf")
-    assert r.returncode == 1
-    assert [e["event"] for e in ev][-1] == "error"
-    assert ev[-1]["message"] == "inkscape failed."
-    assert "simulated pdf export failure" in ev[-1]["detail"]
-    assert "Traceback" not in r.stderr
-
 
 @pytest.mark.parametrize("flags", [["--dpi", "abc"], ["--no-such-flag"]],
                          ids=["bad-flag-value", "unknown-flag"])
-def test_ac9_bad_flags_are_error_events(flags, fake_tools, tmp_path, capsys):
+def test_ac9_bad_flags_are_error_events(flags, tmp_path, capsys):
     """A caller that only reads stdout must learn about a rejected flag too."""
     code, ev, _ = _cli_error(["-c", EX, *flags, f"--out={tmp_path}", "--json"], capsys)
     _assert_one_error(code, ev, "")
 
 
-def test_ac9_unwritable_out_is_an_error_event(fake_tools, tmp_path, capsys):
+def test_ac9_unwritable_out_is_an_error_event(tmp_path, capsys):
     blocker = tmp_path / "a-file"
     blocker.write_text("x")
     code, ev, _ = _cli_error(["-c", EX, "-a", "dan", "-v", "overlay-flat", "-d", "",
@@ -203,7 +187,7 @@ def test_ac9_unwritable_out_is_an_error_event(fake_tools, tmp_path, capsys):
 
 
 @pytest.mark.parametrize("flag", ["--js", "--jso"])
-def test_ac9_abbreviated_json_is_json(flag, fake_tools, tmp_path, capsys):
+def test_ac9_abbreviated_json_is_json(flag, tmp_path, capsys):
     """Agreement 2: --json is decided the way argparse parses it."""
     code, ev, err = _cli_error(["-c", EX, "-a", "nope", f"--out={tmp_path}", flag], capsys)
     _assert_one_error(code, ev, "unknown award: nope")
@@ -212,14 +196,14 @@ def test_ac9_abbreviated_json_is_json(flag, fake_tools, tmp_path, capsys):
 
 @pytest.mark.parametrize("argv", [["-c", EX, "--json=1"], ["--json", "-c"], ["-c", EX, "--json", "--out"]],
                          ids=["json-with-value", "config-without-value", "out-without-value"])
-def test_ac9_odd_argv_is_an_error_event(argv, fake_tools, tmp_path, capsys):
+def test_ac9_odd_argv_is_an_error_event(argv, tmp_path, capsys):
     code, ev, err = _cli_error(argv, capsys)
     _assert_one_error(code, ev, "argument ")
     assert err == ""
 
 
 @pytest.mark.parametrize("kind", ["malformed", "not-utf8", "directory"])
-def test_ac9_unreadable_config_is_an_error_event(kind, fake_tools, tmp_path, capsys):
+def test_ac9_unreadable_config_is_an_error_event(kind, tmp_path, capsys):
     """Agreement 1: any failure, including a config that cannot be read."""
     bad = tmp_path / "bad.toml"
     if kind == "malformed":
@@ -233,7 +217,7 @@ def test_ac9_unreadable_config_is_an_error_event(kind, fake_tools, tmp_path, cap
     assert err == ""
 
 
-def test_ac9_informational_flags_stay_plain(fake_tools, home, tmp_path):
+def test_ac9_informational_flags_stay_plain(home, tmp_path):
     """Agreement 3: --help, --version and --example-config ignore --json."""
     env = support.isolated_env(home)
     for flags, start in ((["--help"], "usage: menkyo"), (["--version"], "menkyo "),

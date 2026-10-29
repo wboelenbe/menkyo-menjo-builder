@@ -21,11 +21,14 @@ Thickness is then normalised per connected stroke, so the award formula at
 
 Used by build_diploma.py: the text layer is rendered on its own, inked here,
 and placed back on the page as a raster beside the vector crest.
+
+NumPy and SciPy are imported when the grading runs, not with the module: a
+run without ink, the flat and proof variants, never needs them.
 """
 
-import numpy as np
 from PIL import Image
-from scipy import ndimage
+
+from . import png
 
 # How pale a fully lifted brush tip is allowed to get.  Tuned by sweeping
 # against the 2002 diploma: real sumi is very black, with the variation living
@@ -61,6 +64,8 @@ def _edt(mask, within=None):
     once, at about 40 bytes a pixel; here they come a band of rows at a time,
     with the same arithmetic, so only the indices are held whole.
     """
+    import numpy as np
+    from scipy import ndimage
     ft = ndimage.distance_transform_edt(
         mask, return_distances=False, return_indices=True)
     out = np.empty(mask.shape, dtype=np.float64 if within is None else bool)
@@ -76,12 +81,10 @@ def _edt(mask, within=None):
 
 def coverage(png_path):
     """The alpha of the render at `png_path`, as an L image: the glyph
-    coverage, which is all the grading needs. The rest is let go at once."""
-    im = Image.open(png_path)
-    im.load()
-    if im.mode != "RGBA":
-        im = im.convert("RGBA")
-    return im.getchannel("A")
+    coverage, which is all the grading needs.  The renderer's own LA file
+    is read a band at a time and only its alpha kept; any other PNG goes
+    through Pillow, whole."""
+    return png.alpha(png_path)
 
 
 def local_thickness(mask, steps=26):
@@ -94,6 +97,7 @@ def local_thickness(mask, steps=26):
     smoothly, with no seams, because it is a union of discs rather than a
     nearest-neighbour partition.
     """
+    import numpy as np
     dist = _edt(mask)
     dmax = float(dist.max())
     if dmax <= 0:
@@ -118,6 +122,8 @@ def _per_stroke_reference(mask, thickness):
     on its own terms — so normalising per component is both physically right
     and what makes a 12 mm kanji and a 40 mm one read as the same hand.
     """
+    import numpy as np
+    from scipy import ndimage
     lab, n = ndimage.label(mask, structure=np.ones((3, 3)))
     ref = np.zeros(mask.shape, dtype=np.float32)
     if n == 0:
@@ -138,13 +144,18 @@ def _per_stroke_reference(mask, thickness):
 def ink_layer(png_path, out_path, dpi, seed=11):
     """Turn a flat-black text render into graded sumi.
 
-    `png_path` is an RGBA render of the text alone on transparency; its alpha
-    carries glyph coverage, so the renderer's antialiasing survives intact.
+    `png_path` is a render of the text alone on transparency, LA or RGBA;
+    its alpha carries glyph coverage, so the renderer's antialiasing
+    survives intact.
 
     Only that alpha is kept, and the result is rebuilt as the ink colour under
     the graded alpha. An A3 text layer is 109 MB a copy as RGBA; carrying it,
-    and float copies of it, through the grading cost about a GB.
+    and float copies of it, through the grading cost about a GB.  The result
+    is written a band of rows at a time (png.write), never as a whole RGBA
+    image.
     """
+    import numpy as np
+    from scipy import ndimage
     cov = coverage(png_path)
     # Nothing at more than half coverage: no stroke to grade.
     if cov.getextrema()[1] < 128:
@@ -156,6 +167,10 @@ def ink_layer(png_path, out_path, dpi, seed=11):
     scale = min(1.0, WORK_DPI / float(dpi))
     small = (max(1, int(size[0] * scale)), max(1, int(size[1] * scale)))
     m = np.array(cov.resize(small, Image.BILINEAR)) > 128
+    # Let the full-size coverage go while the field is worked out, and read
+    # it again for the product below: nothing has been written yet, so it is
+    # the same bytes, and the peak is 27 MB lower at 600 dpi.
+    del cov
 
     thick = local_thickness(m)
     ref = _per_stroke_reference(m, thick)
@@ -187,6 +202,7 @@ def ink_layer(png_path, out_path, dpi, seed=11):
     density = ndimage.gaussian_filter(np.clip(density, 0.4, 1.0), 1.2)
 
     # --- back up to full resolution ---------------------------------------
+    cov = coverage(png_path)            # before the density is scaled up
     dens = Image.fromarray(
         (np.clip(density, 0, 1) * 255).astype(np.uint8)).resize(size, Image.BICUBIC)
     del density
@@ -203,7 +219,16 @@ def ink_layer(png_path, out_path, dpi, seed=11):
             np.clip(c * k * 255.0, 0, 255).astype(np.uint8)), box)
     del dens
 
-    out = Image.new("RGBA", size, INK + (0,))
-    out.putalpha(cov)
-    out.save(out_path)
-    return out_path
+    # The ink colour under the graded alpha, row by row.
+    ink = bytes(INK)
+
+    def rows():
+        for y in range(0, h, _BAND):
+            band = cov.crop((0, y, w, min(h, y + _BAND))).tobytes()
+            out = []
+            for i in range(0, len(band), w):
+                r = bytearray((ink + b"\0") * w)
+                r[3::4] = band[i:i + w]
+                out.append(r)
+            yield out
+    return png.write(out_path, size, "RGBA", rows())

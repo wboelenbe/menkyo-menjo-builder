@@ -93,8 +93,9 @@ def test_ac1_removed_paths_are_gone():
 
 # ------------------------------------------------------------------ AC-2 ----
 # What may no longer be mentioned.  Case-insensitive unless (?-i:...).
-# Deliberately allowed: `uv ... --frozen` (a uv flag), Inkscape.app and the
-# Homebrew *tool* directories paths.find_tool() searches (see open question 2).
+# Deliberately allowed: `uv ... --frozen` (a uv flag).  Inkscape.app and the
+# Homebrew tool directories were too, until render-without-inkscape removed
+# paths.find_tool().
 FORBIDDEN = [
     r"gui\.py", r"menkyo-gui", r"(?-i:\bTk\b)", r"\btkinter\b", r"python-tk",
     r"pyinstaller", r"_MEIPASS", r"(?<!-)\bfrozen\b",
@@ -161,9 +162,11 @@ def test_ac3_frozen_flag_no_longer_matters(tmp_path):
 
 
 def test_ac3_paths_api_kept():
+    """The tool helpers (find_tool, require_tool, tool_env,
+    system_font_dirs) were kept here; render-without-inkscape removed them
+    with Inkscape (its AC-4)."""
     from menkyo import paths
-    for name in ("checkout_root", "resource", "user_data_dir", "default_output_dir",
-                 "find_tool", "require_tool", "tool_env", "system_font_dirs"):
+    for name in ("checkout_root", "resource", "user_data_dir", "default_output_dir"):
         assert callable(getattr(paths, name)), name
     src = (support.PACKAGE / "paths.py").read_text(encoding="utf-8")
     assert "sys.frozen" not in src and '"frozen"' not in src and "_MEIPASS" not in src
@@ -216,8 +219,10 @@ def test_ac5_dev_group_is_pytest_only():
 
 
 def test_ac5_runtime_dependencies_unchanged():
+    """pillow, numpy and scipy as they were; render-without-inkscape added
+    fonttools and pypdfium2 (its AC-2, which pins the full set)."""
     deps = _pyproject()["project"]["dependencies"]
-    assert deps == ["pillow>=9.0", "numpy>=1.22", "scipy>=1.8"]
+    assert deps[:3] == ["pillow>=9.0", "numpy>=1.22", "scipy>=1.8"]
     assert _pyproject()["project"]["scripts"] == {"menkyo": "menkyo.build_diploma:cli"}
 
 

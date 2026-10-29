@@ -56,11 +56,12 @@ def test_ac6_example_config_round_trips(home, tmp_path):
 
 
 # ----------------------------------------------------------------- AC-11 ----
-def test_ac11_plain_stdout(fake_tools, home, tmp_path):
+@pytest.mark.render
+def test_ac11_plain_stdout(home, tmp_path):
     out = tmp_path / "out"
     r = support.run_menkyo(["-c", EX, "-a", "dan", "-v", "overlay,proof", "-f", "pdf,png",
                             "-d", "", f"--out={out}"],
-                           fake_tools.env(home), tmp_path)
+                           support.isolated_env(home), tmp_path)
     assert r.returncode == 0
     assert r.stderr == ""                      # not a terminal: no progress
     assert r.stdout == (
@@ -71,15 +72,16 @@ def test_ac11_plain_stdout(fake_tools, home, tmp_path):
         f"\n4 file(s) in {out}/\n")
     assert sorted(os.listdir(out)) == sorted(
         ["dan-overlay-sample.pdf", "dan-overlay-sample.png",
-         "dan-proof-sample.pdf", "dan-proof-sample.png"])   # no .work, no .fontconfig
+         "dan-proof-sample.pdf", "dan-proof-sample.png"])   # no .work left behind
 
 
-def test_ac11_progress_on_a_terminal(fake_tools, home, tmp_path):
+@pytest.mark.render
+def test_ac11_progress_on_a_terminal(home, tmp_path):
     master, slave = pty.openpty()
     p = subprocess.Popen([sys.executable, "-m", "menkyo", "-c", EX, "-a", "dan",
                           "-v", "overlay", "-d", "", f"--out={tmp_path / 'out'}"],
                          stdout=subprocess.PIPE, stderr=slave,
-                         env=fake_tools.env(home), cwd=tmp_path)
+                         env=support.isolated_env(home), cwd=tmp_path)
     os.close(slave)
     chunks = []
     while True:
@@ -105,36 +107,29 @@ def test_ac11_progress_on_a_terminal(fake_tools, home, tmp_path):
     (["-r", "0"], "--rank 0: dan grades run from 1 to 10"),
     (["-d", "yesterday"], "--date yesterday: use YYYY-MM-DD, or 'today'"),
 ])
-def test_ac11_plain_errors(flags, message, fake_tools, home, tmp_path):
+def test_ac11_plain_errors(flags, message, home, tmp_path):
     r = support.run_menkyo(["-c", EX, *flags, f"--out={tmp_path / 'o'}"],
-                           fake_tools.env(home), tmp_path)
+                           support.isolated_env(home), tmp_path)
     assert r.returncode == 1 and r.stdout == ""
     assert message in r.stderr and "Traceback" not in r.stderr
 
 
-def test_ac11_plain_missing_inkscape(home, tmp_path):
-    if any(os.path.exists(os.path.join(d, "inkscape"))
-           for d in __import__("menkyo.paths").paths._EXTRA_BIN):
-        pytest.skip("an Inkscape outside PATH would be found")
-    r = support.run_menkyo(["-c", EX, "-a", "dan", "-v", "overlay", "-d", "",
-                            f"--out={tmp_path / 'o'}"],
-                           support.isolated_env(home, path=str(tmp_path)), tmp_path)
-    assert r.returncode == 1 and r.stdout == ""
-    assert "inkscape was not found. Please install Inkscape" in r.stderr
+# test_ac11_plain_missing_inkscape went with Inkscape: a run with nothing on
+# PATH now succeeds (render-without-inkscape, AC-1).
 
 
-def test_ac11_clean_empties_the_output_first(fake_tools, home, tmp_path):
+def test_ac11_clean_empties_the_output_first(home, tmp_path):
     out = tmp_path / "out"
     out.mkdir()
     (out / "stale.pdf").write_text("old")
     r = support.run_menkyo(["-c", EX, "-a", "dan", "-v", "overlay-flat", "-f", "svg",
-                            "-d", "", "--clean", f"--out={out}"], fake_tools.env(home), tmp_path)
+                            "-d", "", "--clean", f"--out={out}"], support.isolated_env(home), tmp_path)
     assert r.returncode == 0
     assert os.listdir(out) == ["dan-overlay-flat-sample.svg"]
 
 
 # ----------------------------------------------------------------- AC-17 ----
-def test_ac17_console_script_and_module_agree(fake_tools, home, tmp_path):
+def test_ac17_console_script_and_module_agree(home, tmp_path):
     script = Path(sys.executable).parent / "menkyo"
     assert script.exists(), "the menkyo console script is not installed in this env"
     args = ["-c", EX, "--list", "-a", "all", "-v", "overlay,overlay-flat,proof",

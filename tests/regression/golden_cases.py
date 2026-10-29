@@ -2,8 +2,9 @@
 
 Every case is run by golden_driver.py, once against the baseline (or the
 current code, when refreshing) by make_golden.py and once against the current
-code by test_golden.py.  The driver adds `-c <config>` and `--out <dir>`, and
-puts the stand-in inkscape first on PATH.
+code by test_golden.py.  The driver adds `-c <config>` and `--out <dir>`.
+Every case renders for real (render-without-inkscape); there is no stand-in
+program any more.
 
 Every case that renders passes --date explicitly: the example's [sample]
 date is `today`, which would make the output depend on the day it ran.
@@ -47,8 +48,8 @@ CASES = [
          argv=["-a", "all", "-v", PLAIN, "--no-ink", "-f", "svg"]),
     dict(id="dropped-config-rank", config="dropped.toml",
          argv=["-v", "overlay-flat,proof", "-f", "svg", "-r", "4", "-d", ""]),
-    # --- through the stand-in inkscape: the inked composite, the text layer
-    #     handed to Inkscape, and every call made to it ---------------------
+    # --- rendering runs: the inked composite and the text layer it draws
+    #     (the Inkscape calls they made are in the manifest as history) ------
     dict(id="inked", config="example",
          argv=["-a", "all", "-v", PLAIN, "-f", "pdf,png,svg",
                "-n", "", "-r", "", "-d", "2026-09-05"]),

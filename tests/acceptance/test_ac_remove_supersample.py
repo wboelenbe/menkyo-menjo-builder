@@ -3,9 +3,10 @@ path are gone; output without the flag is what it was.
 
 Contract: docs/work/remove-supersample/acceptance.md.  AC-6 is also
 tests/regression/test_golden.py (the `inked-svg` case took the place of
-`supersample`) and AC-12 is the rest of the suite.  Runs use the stand-in
-inkscape and the shipped example, except the render test, which uses the
-real Inkscape and the shipped example.
+`supersample`) and AC-12 is the rest of the suite.  Runs use the shipped
+example.  Migrated for render-without-inkscape: there is no stand-in inkscape
+any more, runs render for real, and AC-6 checks the text layer's pixel size
+instead of the Inkscape call that asked for 600 dpi.
 
 This file and tests/regression/golden_cases.py are the only places outside
 DECISIONS.md and docs/work/ that may still spell the flag's name; AC-11
@@ -89,10 +90,10 @@ def _sections(text):
 
 # ------------------------------------------------------------------ AC-1 ----
 @pytest.mark.parametrize("form", FORMS, ids=FORM_IDS)
-def test_ac1_flag_is_unrecognized(form, fake_tools, home, tmp_path):
+def test_ac1_flag_is_unrecognized(form, home, tmp_path):
     out = tmp_path / "out"
     r = support.run_menkyo(["-c", EX, "-a", "dan", "-v", "overlay", "-f", "svg", *form,
-                            "-d", "", f"--out={out}"], fake_tools.env(home), tmp_path)
+                            "-d", "", f"--out={out}"], support.isolated_env(home), tmp_path)
     assert r.returncode == 2, (r.returncode, r.stderr)
     assert r.stdout == ""
     assert r.stderr.startswith("usage: menkyo")
@@ -100,7 +101,6 @@ def test_ac1_flag_is_unrecognized(form, fake_tools, home, tmp_path):
     assert "Traceback" not in r.stderr
     assert "must be between" not in r.stderr
     assert not out.exists(), "nothing may be written before the error"
-    assert fake_tools.calls() == []
 
 
 def test_ac1_flag_is_unrecognized_by_list_too(home, tmp_path):
@@ -114,7 +114,7 @@ def test_ac1_flag_is_unrecognized_by_list_too(home, tmp_path):
 
 # ------------------------------------------------------------------ AC-2 ----
 @pytest.mark.parametrize("form", FORMS, ids=FORM_IDS)
-def test_ac2_flag_is_a_json_error(form, fake_tools, tmp_path, capsys):
+def test_ac2_flag_is_a_json_error(form, tmp_path, capsys):
     out = tmp_path / "out"
     code, ev, err = _cli(["-c", EX, "-a", "dan", "-v", "overlay", "-f", "svg", *form,
                           "-d", "", f"--out={out}", "--json"], capsys)
@@ -124,15 +124,14 @@ def test_ac2_flag_is_a_json_error(form, fake_tools, tmp_path, capsys):
     assert "must be between" not in ev[0]["message"]
     assert err == ""
     assert not out.exists()
-    assert fake_tools.calls() == []
 
 
-def test_ac2_json_error_from_a_subprocess(fake_tools, home, tmp_path):
+def test_ac2_json_error_from_a_subprocess(home, tmp_path):
     """What the portal would see: one JSON line on stdout, exit 1."""
     out = tmp_path / "out"
     r = support.run_menkyo(["-c", EX, "--awards=dan", "--variants=overlay", "--formats=pdf",
                             "--name=", "--rank=", "--date=", "--supersample=2",
-                            f"--out={out}", "--json"], fake_tools.env(home), tmp_path)
+                            f"--out={out}", "--json"], support.isolated_env(home), tmp_path)
     assert r.returncode == 1
     ev = support.events(r.stdout)
     assert len(ev) == 1 and ev[0]["event"] == "error"
@@ -166,8 +165,12 @@ def test_ac4_help(home):
 
 # ------------------------------------------------------------------ AC-5 ----
 def test_ac5_no_supersample_parameter():
-    assert list(inspect.signature(bd._inked_text_image).parameters) == [
-        "base", "verb", "heading", "kw", "env"]
+    # Was pinned to (base, verb, heading, kw, env); render-without-inkscape
+    # dropped env (there is no tool environment), so only the substance is
+    # kept: the text layer takes no supersampling parameter.
+    params = list(inspect.signature(bd._inked_text_image).parameters)
+    assert params[:4] == ["base", "verb", "heading", "kw"], params
+    assert not any(WORD.search(p) for p in params), params
     for fn in (bd.build_one, bd.main, bd.cli, bd.render, bd.document):
         assert not any(WORD.search(p) for p in inspect.signature(fn).parameters), fn.__name__
 
@@ -186,18 +189,24 @@ def test_ac5_package_never_mentions_it():
 
 
 # ------------------------------------------------------------------ AC-6 ----
-def test_ac6_text_layer_exported_at_600_dpi(fake_tools, tmp_path):
-    """Every inked overlay asks Inkscape for the text layer at 600 dpi, as a
-    run without the flag always did (the goldens pin the full calls)."""
+@pytest.mark.render
+def test_ac6_text_layer_exported_at_600_dpi(tmp_path):
+    """Every inked overlay's text layer is the 600 dpi render of its box, as
+    a run without the flag always was.  (Was: the Inkscape call asked for
+    --export-dpi=600; render-without-inkscape has no Inkscape call.)"""
+    from PIL import Image
     out = tmp_path / "out"
     bd.main(["-c", EX, "-a", "all", "-v", "overlay", "-f", "svg", "-d", "",
              f"--out={out}"])
-    exports = [c["argv"] for c in fake_tools.calls("inkscape")
-               if "--export-type=png" in c["argv"]
-               and any(a.endswith("-textlayer.png") for a in c["argv"])]
-    assert len(exports) == 3
-    for argv in exports:
-        assert [a for a in argv if a.startswith("--export-dpi=")] == ["--export-dpi=600"]
+    layers = sorted(out.glob("*-textlayer.png"))
+    assert len(layers) == 3
+    for png in layers:
+        svg = (out / png.name.replace("-textlayer.png", ".svg")).read_text(encoding="utf-8")
+        m = re.search(r'<image x="[\d.]+" y="[\d.]+" width="([\d.]+)" height="([\d.]+)"', svg)
+        w_mm, h_mm = float(m.group(1)), float(m.group(2))
+        with Image.open(png) as im:
+            w, h = im.size
+        assert abs(w - w_mm * 600 / 25.4) <= 1 and abs(h - h_mm * 600 / 25.4) <= 1, png.name
     assert bd.INK_DPI == 600.0
 
 
@@ -223,8 +232,8 @@ def test_ac7_golden_case_replaced():
 
 # ------------------------------------------------------------------ AC-8 ----
 @pytest.mark.render
-def test_ac8_real_render_text_layer_is_600_dpi(inkscape, session_home, tmp_path):
-    """Real Inkscape: the shipped text layer is the 600 dpi render of the
+def test_ac8_real_render_text_layer_is_600_dpi(session_home, tmp_path):
+    """A real render: the shipped text layer is the 600 dpi render of the
     <image> box, graded, RGBA, and nothing resampled it."""
     from PIL import Image
     import numpy as np
@@ -254,10 +263,11 @@ def test_ac8_real_render_text_layer_is_600_dpi(inkscape, session_home, tmp_path)
 
 # ------------------------------------------------------------------ AC-9 ----
 @pytest.mark.slow
-def test_ac9_installed_wheel(installed, fake_tools, home, tmp_path):
+@pytest.mark.render
+def test_ac9_installed_wheel(installed, home, tmp_path):
     """From outside the checkout: the same contract as from the checkout."""
     exe = [str(installed["menkyo"])]
-    env = fake_tools.env(home)
+    env = support.isolated_env(home)
     site = next(installed["venv"].glob("lib/python*/site-packages"))
     for p in (site / "menkyo").rglob("*.py"):
         assert not WORD.search(p.read_text(encoding="utf-8")), p
@@ -275,7 +285,6 @@ def test_ac9_installed_wheel(installed, fake_tools, home, tmp_path):
 
     assert not WORD.search(_help(home, exe=exe, cwd=tmp_path))
     assert not out.exists()
-    assert fake_tools.calls() == []
 
     # and a run without it still works
     r = support.run_menkyo(["-c", EX, "-a", "dan", "-v", "overlay", "-f", "svg", "-d", "",

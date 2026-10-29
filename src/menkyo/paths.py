@@ -1,13 +1,12 @@
-"""Where things live: bundled resources, the user's files, external tools.
+"""Where things live: bundled resources and the user's files.
 
-The same code runs from a checkout and installed as a wheel (pip, uv), and
-a caller's subprocess may not inherit the shell's PATH.  Everything that
-depends on which of those it is happens here, so the rest of the code can ask
-for a path and not care.
+The same code runs from a checkout and installed as a wheel (pip, uv).
+Everything that depends on which of those it is happens here, so the rest of
+the code can ask for a path and not care.  No external program is needed,
+so none is looked for.
 """
 
 import os
-import shutil
 import sys
 import tomllib
 
@@ -59,54 +58,3 @@ def default_output_dir():
     if root:
         return os.path.join(root, "build")
     return os.path.join(os.path.expanduser("~/Documents"), APP_NAME)
-
-
-# Where Homebrew, the Inkscape disk image and MacPorts put things.  A process
-# started by launchd or a service manager may see only /usr/bin:/bin.
-_EXTRA_BIN = [
-    "/opt/homebrew/bin",
-    "/usr/local/bin",
-    "/opt/local/bin",
-    "/Applications/Inkscape.app/Contents/MacOS",
-]
-
-_INSTALL_HINT = {
-    "inkscape": "Inkscape (https://inkscape.org/release/, or: brew install --cask inkscape)",
-}
-
-
-def find_tool(name):
-    """Absolute path of an external program, or None."""
-    found = shutil.which(name)
-    if found:
-        return found
-    for d in _EXTRA_BIN:
-        cand = os.path.join(d, name)
-        if os.path.isfile(cand) and os.access(cand, os.X_OK):
-            return cand
-    return None
-
-
-def require_tool(name):
-    """Like find_tool, but a missing program ends the run with instructions."""
-    found = find_tool(name)
-    if not found:
-        raise SystemExit(
-            f"{name} was not found. Please install {_INSTALL_HINT.get(name, name)} "
-            f"and try again.")
-    return found
-
-
-def tool_env(base=None):
-    """An environment whose PATH can see the tools find_tool would."""
-    env = dict(base if base is not None else os.environ)
-    parts = env.get("PATH", "").split(os.pathsep) if env.get("PATH") else []
-    env["PATH"] = os.pathsep.join(parts + [d for d in _EXTRA_BIN if d not in parts])
-    return env
-
-
-def system_font_dirs():
-    """Font directories fontconfig should see on top of the vendored font."""
-    dirs = ["/System/Library/Fonts", "/Library/Fonts",
-            os.path.expanduser("~/Library/Fonts")]
-    return [d for d in dirs if os.path.isdir(d)]

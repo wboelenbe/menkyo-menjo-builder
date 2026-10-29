@@ -20,7 +20,8 @@ def test_ac14_workflow_tests_every_push_with_renders():
     wf = WORKFLOW.read_text(encoding="utf-8")
     on = wf.split("\non:", 1)[1].split("\njobs:", 1)[0]
     assert re.search(r"^  push:", on, re.M) and re.search(r"^  pull_request:", on, re.M)
-    assert re.search(r"REQUIRE_RENDER[:=]\s*\"?1", wf), "the suite must run with REQUIRE_RENDER=1"
+    # REQUIRE_RENDER=1 was required here; since render-without-inkscape the
+    # render tests cannot skip, so the variable is gone (that item's AC-31).
     assert re.search(r"uv run[^\n]*pytest", wf)
     assert "Smoke test the installed wheel" in wf
     build = re.search(r"^\s*-?\s*run: uv build\b", wf, re.M)
@@ -44,7 +45,6 @@ def test_ac15_docker_context_excludes_personal_data():
     for entry in ("dojo.toml", "crest", "ref", "build", "dist", ".venv"):
         assert entry in ignored or f"**/{entry}" in ignored, entry
     df = DOCKERFILE.read_text(encoding="utf-8")
-    assert "REQUIRE_RENDER=1" in df
     assert "test ! -e dojo.toml" in df
 
 

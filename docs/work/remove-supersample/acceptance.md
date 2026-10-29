@@ -230,6 +230,17 @@ there.
 These edits pass both before and after the change; with them and without the
 new file the suite is green today (351 passed, 11 skipped locally).
 
+Later, by render-without-inkscape (2026-10-29, tester):
+
+- `test_ac5_no_supersample_parameter` pinned `_inked_text_image`'s whole
+  signature, `(base, verb, heading, kw, env)`. `env` carried the Inkscape tool
+  environment, which no longer exists. The test now pins the first four
+  parameters and checks that none of the parameters is a supersampling one,
+  which is this AC's substance. The contract is unchanged; only the
+  incidental `env` is released.
+- The tests that used the stand-in inkscape now render for real (see that
+  item's acceptance.md, "Changes to the existing suite").
+
 ## Open questions
 
 1. **DECISIONS.md's own rule.** (Settled as recommended, round 2.) Its preamble says decisions later

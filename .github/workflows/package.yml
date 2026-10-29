@@ -5,7 +5,8 @@
 # The test suite (tests/, with real renders) and the smoke test, which
 # renders with the installed wheel from outside the checkout, run the same
 # checks as `uv run pytest` and scripts/test-docker.sh do locally: a file left
-# out of the package fails here rather than in the portal.
+# out of the package fails here rather than in the portal.  Nothing is
+# installed from the system: the package needs no program and no font.
 name: package
 
 on:
@@ -25,17 +26,8 @@ jobs:
 
       - run: uv build
 
-      - name: Install Inkscape and the crest font
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            inkscape poppler-utils fontconfig fonts-noto-cjk
-
-      # The whole suite, with real renders: REQUIRE_RENDER=1 turns a render
-      # test that would skip (no Inkscape) into a failure.
+      # The whole suite, with real renders.
       - name: Test suite
-        env:
-          REQUIRE_RENDER: "1"
         run: uv run --frozen pytest
 
       - name: Smoke test the installed wheel
@@ -49,6 +41,7 @@ jobs:
           "$menkyo" -c example.toml -a dan -v overlay,overlay-flat \
             --json --out out | tee events.jsonl
           tail -n 1 events.jsonl | grep -q '"event": "done"'
-          # The flat overlay keeps its text as vectors, so the vendored font
-          # must have reached Inkscape and been embedded.
-          pdffonts out/dan-overlay-flat-sample.pdf | grep -qi yuji
+          # The text is drawn as outlines from the fonts inside the package,
+          # so a font left out of the wheel fails the render above; this
+          # checks the PDFs hold no font of their own either.
+          if grep -alq "/FontFile" out/*.pdf; then exit 1; fi

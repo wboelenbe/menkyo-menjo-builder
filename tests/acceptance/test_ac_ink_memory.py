@@ -304,10 +304,12 @@ def test_ac12_not_much_slower(measured):
 
 # ---------------------------------------------------------------- AC-13 ---
 def test_ac13_no_new_dependencies():
+    """This item added none; render-without-inkscape added fonttools and
+    pypdfium2 later (its AC-2 pins the set), so only these three are checked."""
     import tomllib
     deps = tomllib.loads((support.REPO / "pyproject.toml").read_text())["project"]["dependencies"]
     names = sorted(d.split(">")[0].split("=")[0].split("<")[0].strip().lower() for d in deps)
-    assert names == ["numpy", "pillow", "scipy"]
+    assert {"numpy", "pillow", "scipy"} <= set(names)
 
 
 # ---------------------------------------------------------- render: AC-1, 3
@@ -327,7 +329,7 @@ def _build(which, args, tmp_path, home):
 
 
 @pytest.mark.render
-def test_ac1_menkyo_process_peak_c1(inkscape, tmp_path, session_home):
+def test_ac1_menkyo_process_peak_c1(tmp_path, session_home):
     """The menkyo process's own peak (Inkscape excluded) for C-1, against the
     same build with the reference ink_layer swapped in."""
     args = C1 + ["-f", "pdf,png"]
@@ -339,9 +341,10 @@ def test_ac1_menkyo_process_peak_c1(inkscape, tmp_path, session_home):
 
 
 @pytest.mark.render
-def test_ac3_real_c1_text_layer(inkscape, tmp_path, session_home):
-    """Real Inkscape text layer: the current grading against the reference's
-    on the very raster Inkscape wrote."""
+def test_ac3_real_c1_text_layer(tmp_path, session_home):
+    """The real C-1 text layer: the current grading against the reference's
+    on the very raster the renderer wrote (Inkscape's when this was written,
+    pdfium's since render-without-inkscape)."""
     rep = _build("current", C1 + ["-f", "svg"], tmp_path, session_home)
     assert len(rep["calls"]) == 1
     pre = rep["capture"] / "preink-0.png"
