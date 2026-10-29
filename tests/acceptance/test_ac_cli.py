@@ -149,5 +149,5 @@ def test_ac17_help(home, tmp_path):
     r = support.run_menkyo(["-c", EX, "--help"], support.isolated_env(home), tmp_path)
     assert r.returncode == 0 and r.stdout.startswith("usage: menkyo ")
     for flag in ("--json", "--version", "--example-config", "--no-ink",
-                 "--list", "--out", "--suffix", "--honorific", "--supersample"):
+                 "--list", "--out", "--suffix", "--honorific"):
         assert flag in r.stdout

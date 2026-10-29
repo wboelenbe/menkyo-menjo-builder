@@ -2,8 +2,8 @@
 
 The acceptance tests compare ink_layer's output and memory with the pinned
 823af58 copy; these pin the assumptions that make the output identical:
-ink._edt gives SciPy's distances exactly, and scaling the alpha alone gives
-the alpha Pillow's RGBA resize gave.
+ink._edt gives SciPy's distances exactly, and the graded raster is the ink
+colour under the graded alpha.
 """
 
 import numpy as np
@@ -46,20 +46,6 @@ def test_edt_within_is_the_same_comparison(r):
 
 def test_ink_colour_is_the_generators():
     assert "#%02x%02x%02x" % ink.INK == bd.INK.lower()
-
-
-def test_alpha_alone_resizes_as_rgba_did():
-    """--supersample used to resize the RGBA render; it now resizes the alpha
-    alone. Pillow resizes RGBA premultiplied, channel by channel, so the alpha
-    is the same either way."""
-    rng = np.random.default_rng(7)
-    a = rng.integers(0, 256, (301, 517, 4), dtype=np.uint8)
-    a[..., 3] = np.where(rng.random((301, 517)) < 0.3, 0, a[..., 3])
-    im = Image.fromarray(a, "RGBA")
-    target = (517 // 2 + 1, 301 // 2)
-    want = np.array(im.resize(target, Image.LANCZOS))[..., 3]
-    got = np.array(im.getchannel("A").resize(target, Image.LANCZOS))
-    assert np.array_equal(got, want)
 
 
 def test_graded_raster_is_the_ink_under_the_alpha(tmp_path):

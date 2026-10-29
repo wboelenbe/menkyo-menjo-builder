@@ -24,7 +24,7 @@ import sys
 import zlib
 
 # What `inkscape --query-x --query-y --query-width --query-height` answers,
-# in CSS px.  Small on purpose: --supersample scales the raster to this box.
+# in CSS px.  Arbitrary; the box only places the <image>, and the goldens pin it.
 QUERY = ("100.0", "200.0", "40.0", "30.0")
 
 

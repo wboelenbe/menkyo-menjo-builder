@@ -505,23 +505,18 @@ INK_DPI = 600.0         # resolution of the inked text raster
 CSS_PX_PER_MM = 96.0 / 25.4
 
 
-def _inked_text_image(base, verb, heading, kw, env, supersample=1):
+def _inked_text_image(base, verb, heading, kw, env):
     """Render the text layer alone, ink it, and return an <image> element.
 
     Rendered to the text's own bounding box rather than the page: a full A3 at
-    600 dpi is mostly empty, and cropping is what makes supersampling
-    affordable at all.
-
-    `supersample` renders at N times the resolution and averages back down.
-    Inkscape (via cairo) already antialiases analytically, so measurably this
-    changes almost nothing — see DECISIONS.md — but the knob is here. Cairo
-    refuses image surfaces wider than 32767 px, which caps the factor at 4 for
-    an A3 text block.
+    600 dpi is mostly empty, and cropping keeps the raster, and the memory the
+    ink pass needs for it, to the part that carries text.
     """
     from PIL import Image
 
-    # Our own render, a few hundred megapixels at the higher factors. The
-    # decompression-bomb guard is meant for untrusted input; it is not one here.
+    # Our own render, a few tens of megapixels for an A3 text block, more for
+    # a larger sheet. The decompression-bomb guard is meant for untrusted
+    # input; it is not one here.
     Image.MAX_IMAGE_PIXELS = None
 
     PROGRESS("text")
@@ -538,24 +533,10 @@ def _inked_text_image(base, verb, heading, kw, env, supersample=1):
 
     subprocess.run(
         [paths.require_tool("inkscape"), tmp + ".svg", "--export-type=png", "--export-area-drawing",
-         f"--export-dpi={INK_DPI * supersample:g}",
+         f"--export-dpi={INK_DPI:g}",
          "--export-background-opacity=0",
          "--export-filename=" + tmp + ".png"],
         check=True, capture_output=True, env=env)
-
-    if supersample > 1:
-        # Only the alpha is scaled down: ink_layer grades the coverage and
-        # lays the ink colour under it, so the render's RGB, and the
-        # premultiplied copy Pillow's resize would make of it (1.7 GB at 4x),
-        # are never needed.
-        cov = ink.coverage(tmp + ".png")
-        target = (max(1, round(w * INK_DPI / 25.4)),
-                  max(1, round(h * INK_DPI / 25.4)))
-        layer = Image.new("RGBA", target, ink.INK + (0,))
-        layer.putalpha(cov.resize(target, Image.LANCZOS))
-        del cov
-        layer.save(tmp + ".png")
-        del layer
 
     PROGRESS("ink")
     ink.ink_layer(tmp + ".png", tmp + ".png", INK_DPI)
@@ -681,7 +662,7 @@ def _suffix_for(name):
 
 
 def build_one(slug, heading, verb, variant, formats, dpi=300, inked=True,
-              work=None, supersample=1, name=None, honorific="殿", rank=None,
+              work=None, name=None, honorific="殿", rank=None,
               date=None, suffix="", rank_column=True):
     kw = dict(VARIANTS[variant])
     kw["rank_column"] = rank_column or bool(rank)
@@ -701,7 +682,7 @@ def build_one(slug, heading, verb, variant, formats, dpi=300, inked=True,
     svg_path = os.path.join(work, stem + ".svg")
     if use_ink:
         img = _inked_text_image(os.path.join(work, stem), verb, heading,
-                                kw, _font_env(), supersample=supersample)
+                                kw, _font_env())
         svg = document(verb, heading, layer="chrome", **kw)
         svg = svg.replace("</svg>", img + "</svg>")
     else:
@@ -849,11 +830,6 @@ def main(argv=None, progress=None):
                          "files never overwrite another's"
                          + (f" (config: {CFG.sample_suffix})"
                             if CFG.sample_suffix else ""))
-    ap.add_argument("--supersample", type=int, default=1, metavar="N",
-                    help="render the sumi text layer at N times resolution and "
-                         "average down (1-4, default: 1). Inkscape already "
-                         "antialiases analytically, so this measurably changes "
-                         "very little; 4 costs ~2 GB and about a minute.")
     ap.add_argument("--all", action="store_true",
                     help="shorthand for --awards all --variants all")
     ap.add_argument("-o", "--out", metavar="DIR",
@@ -875,12 +851,6 @@ def main(argv=None, progress=None):
     awards = _csv(args.awards, slugs, "award")
     variants = _csv(args.variants, list(VARIANTS), "variant")
     formats = _csv(args.formats, ["pdf", "png", "svg"], "format")
-    if not 1 <= args.supersample <= 4:
-        raise SystemExit(
-            "--supersample must be between 1 and 4. Cairo, which Inkscape "
-            "renders through, refuses image surfaces wider than 32767 px, and "
-            "the A3 text block is 6622 px wide at 600 dpi — so 5x and beyond "
-            "abort in the renderer, whatever the machine has.")
 
     # A flag left off falls back to the config's [sample]; a flag given as ''
     # clears that fallback for this run and leaves the slot blank again.
@@ -944,7 +914,6 @@ def main(argv=None, progress=None):
         for variant in variants:
             written = build_one(slug, heading, verb, variant, formats,
                                 dpi=args.dpi, inked=not args.no_ink, work=work,
-                                supersample=args.supersample,
                                 name=name, honorific=args.honorific,
                                 rank=None if sample_rank and not rank_column
                                      else rank,

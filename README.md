@@ -220,7 +220,6 @@ constants at the top of `src/menkyo/build_diploma.py`.
 | `--honorific TEXT` | appended to a printed name (default from the config; `''` to omit) |
 | `--suffix TEXT` | tag for output filenames (defaults to the name) |
 | `--dpi N` | resolution for PNG output (default: 300) |
-| `--supersample N` | render the sumi text at N× and average down (1–4, default 1) |
 | `--all` | shorthand for `--awards all --variants all` |
 | `--clean` | empty `build/` first |
 | `--list` | list what would be written, then stop |

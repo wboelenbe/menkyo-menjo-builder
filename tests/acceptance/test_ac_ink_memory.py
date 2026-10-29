@@ -36,7 +36,7 @@ DRIVER = HERE / "ink_driver.py"
 
 INK_RGB = (17, 17, 17)            # build_diploma.INK, "#111111"
 C1_SIZE = (7299, 3733)            # C-1's text layer at 600 dpi, Inkscape 1.2
-MEMORY_RATIO = 0.40               # AC-2, AC-9
+MEMORY_RATIO = 0.40               # AC-2
 TIME_RATIO = 2.0                  # AC-12 guard; the target (1.25) is reported
 C1 = ["-a", "dan", "-v", "overlay", "-n", "ヤン・ヤンセン", "-r", "2",
       "-d", "2024-07-01"]
@@ -269,7 +269,7 @@ def _blank(path, mode, alpha):
 def test_ac8_nothing_to_grade(tmp_path, alpha, mode, in_place):
     """No pixel above half coverage: the raster comes back as it went in, as
     RGBA. In place is what _inked_text_image does, e.g. with a blank text
-    layer at --supersample (review R-4)."""
+    layer (review R-4)."""
     src = _blank(tmp_path / "blank.png", mode, alpha)
     want = _rgba(src)
     assert want[..., 3].max() == alpha
@@ -310,7 +310,7 @@ def test_ac13_no_new_dependencies():
     assert names == ["numpy", "pillow", "scipy"]
 
 
-# ------------------------------------------------------- render: AC-1, 3, 9
+# ---------------------------------------------------------- render: AC-1, 3
 def _build(which, args, tmp_path, home):
     tmp_path.mkdir(parents=True, exist_ok=True)
     report, capture = tmp_path / f"{which}.json", tmp_path / f"{which}-capture"
@@ -354,19 +354,3 @@ def test_ac3_real_c1_text_layer(inkscape, tmp_path, session_home):
     # what --formats svg ships next to the SVG is that same graded raster
     side = next(rep["out"].glob("*-textlayer.png"))
     assert (_rgba(side) == cur).all()
-
-
-@pytest.mark.render
-def test_ac9_supersample_2(inkscape, tmp_path, session_home):
-    """--supersample 2 still gives a C-1-sized raster that matches 1x closely."""
-    one = _build("current", C1 + ["-f", "svg"], tmp_path / "ss1", session_home)
-    two = _build("current", C1 + ["-f", "svg", "--supersample", "2"],
-                 tmp_path / "ss2", session_home)
-    a = _rgba(one["capture"] / "inked-0.png")
-    b = _rgba(two["capture"] / "inked-0.png")
-    assert a.shape == b.shape
-    assert Image.open(two["capture"] / "inked-0.png").mode == "RGBA"
-    mean = np.abs(a[..., 3].astype(int) - b[..., 3].astype(int)).mean()
-    print(f"\n--supersample 2 against 1: mean |d alpha| {mean:.4f}; "
-          f"process peak {two['peak_rss'] / 1e6:.0f} MB")
-    assert mean <= 0.5

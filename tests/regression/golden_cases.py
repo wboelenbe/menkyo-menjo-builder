@@ -54,9 +54,11 @@ CASES = [
                "-n", "", "-r", "", "-d", "2026-09-05"]),
     dict(id="inked-sample", config="example",
          argv=["-v", "overlay", "-d", "2026-09-05"]),
-    dict(id="supersample", config="example",
-         argv=["-a", "dan", "-v", "overlay", "-f", "svg", "--supersample", "2",
-               "-d", ""]),
+    # Was `supersample` (the same run with --supersample 2) until
+    # remove-supersample took the flag away; see that item's acceptance.md.
+    # The SVG and the text layer are the ones that case pinned.
+    dict(id="inked-svg", config="example",
+         argv=["-a", "dan", "-v", "overlay", "-f", "svg", "-d", ""]),
     dict(id="png-dpi", config="example",
          argv=["-a", "renshi", "-v", "proof,overlay-flat", "-f", "png",
                "--dpi", "150", "-d", ""]),

@@ -675,7 +675,7 @@
     }
    ]
   },
-  "supersample": {
+  "inked-svg": {
    "argv": [
     "-a",
     "dan",
@@ -683,8 +683,6 @@
     "overlay",
     "-f",
     "svg",
-    "--supersample",
-    "2",
     "-d",
     ""
    ],
@@ -716,7 +714,7 @@
       "<OUT>/.work/dan-overlay-sample-textlayer.svg",
       "--export-type=png",
       "--export-area-drawing",
-      "--export-dpi=1200",
+      "--export-dpi=600",
       "--export-background-opacity=0",
       "--export-filename=<OUT>/.work/dan-overlay-sample-textlayer.png"
      ],

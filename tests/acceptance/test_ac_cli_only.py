@@ -290,7 +290,8 @@ def test_ac7_cli_help_unchanged(tmp_path):
     Superseded in part by plain-white (docs/work/plain-white/acceptance.md,
     "Contract changes to earlier items"): that item removes one flag and
     rewords the variant help, so this now checks the flags only.  No flag but
-    the one plain-white removes may disappear, and none may appear.
+    the ones plain-white and the later flag-removal item remove may
+    disappear, and none may appear.
     """
     if _git("cat-file", "-e", f"{BEFORE}^{{commit}}") is None:
         pytest.skip(f"{BEFORE} not available (no git, or a shallow clone)")
@@ -304,8 +305,10 @@ def test_ac7_cli_help_unchanged(tmp_path):
     home = tmp_path / "help-home"
     home.mkdir()
     removed_by_plain_white = {"--pr" + "ess"}
+    removed_later = {"--super" + "sample"}
     assert _flags(_help(support.SRC, home)) == \
-        _flags(_help(old / "src", home)) - removed_by_plain_white
+        _flags(_help(old / "src", home)) - removed_by_plain_white \
+        - removed_later
 
 
 # ------------------------------------------------------------------ AC-8 ----
@@ -352,6 +355,21 @@ def test_ac10_claude_md_layout():
 
 
 # ----------------------------------------------------------------- AC-11 ----
+# The item that removed the flag (its acceptance.md, AC-10, user-approved) rewords the last two bullets of the 2026-09-05 "Output, and
+# the ... cap" entry into the past tense.  Those bullets, and nothing else,
+# are left out of the byte-for-byte history comparison.  The flag's name is
+# spelled in two halves: that item's AC-11 bans it from the repository.
+_REWORDED_BULLETS = re.compile(
+    r"^- \*\*`--super" r"sample` .*?(?=\n\n## 2026-09-05 — Printing the three hand slots\n)",
+    re.M | re.S)
+
+
+def _without_reworded_bullets(text):
+    stripped, n = _REWORDED_BULLETS.subn("<reworded bullets>", text, count=1)
+    assert n == 1, "the reworded 2026-09-05 bullets were not found"
+    return stripped
+
+
 CLI_ONLY_HEADING = "2026-10-28 — The command is the product"
 
 
@@ -366,7 +384,8 @@ def test_ac11_decisions_entry_appended_history_untouched():
     old = _git("show", f"{BEFORE}:DECISIONS.md")
     if old is not None:
         old_entries = old.stdout.split("\n## Open\n", 1)[0]
-        assert entries.startswith(old_entries), "an earlier entry was changed"
+        assert _without_reworded_bullets(entries).startswith(
+            _without_reworded_bullets(old_entries)), "an earlier entry was changed"
         assert CLI_ONLY_HEADING not in old_entries
     blocks = re.split(r"^(?=## )", entries, flags=re.M)
     mine = [b for b in blocks if b.startswith("## " + CLI_ONLY_HEADING)]

@@ -151,18 +151,20 @@ ink. Uniform black is what no brush ever does.
   cache, so `build/` can be wiped freely — hence `--clean`. One wrinkle: an
   inked SVG references its raster by relative path, so `--formats svg` copies
   the raster out alongside it.
-- **`--supersample` is capped at 4 and defaults to 1.** Cairo, which Inkscape
+- **`--supersample` was capped at 4 and defaulted to 1**, until it was
+  removed (see "Supersampling removed", 2026-10-29). Cairo, which Inkscape
   renders through, refuses image surfaces wider than 32767 px and the A3 text
-  block is 6622 px at 600 dpi, so 5× and beyond abort in the renderer whatever
-  the machine has. It defaults to 1 because cairo antialiases analytically
-  rather than by sampling: 2× differs from 1× by 0.0121/255 and 4× by 0.0123,
-  saturating immediately and never becoming visible, at double and quadruple
-  the build time. The knob is exposed because it is honest to, not because it
-  helps.
+  block is 6622 px at 600 dpi, so 5× and beyond aborted in the renderer
+  whatever the machine had. It defaulted to 1 because cairo antialiases
+  analytically rather than by sampling: 2× differed from 1× by 0.0121/255 and
+  4× by 0.0123, saturating immediately and never becoming visible, at double
+  and quadruple the build time.
 - The text layer renders with `--export-area-drawing` and is placed from
-  Inkscape's own bbox query, in CSS px (hence the 96/25.4 conversion), which
-  is what makes any supersampling affordable; Pillow's decompression-bomb
-  guard has to be lifted for our own multi-hundred-megapixel render.
+  Inkscape's own bbox query, in CSS px (hence the 96/25.4 conversion), so the
+  raster covers the text and not the empty page around it. Pillow's
+  decompression-bomb guard is lifted for that render: it is our own, not
+  untrusted input. While the supersampling knob existed, the crop was what
+  made it affordable at all.
 
 ## 2026-09-05 — Printing the three hand slots
 
@@ -509,11 +511,11 @@ graded alpha is bit for bit what it was.
   SciPy's computes its distances from the nearest-background indices in one
   go, at about 40 bytes a pixel; on the 200 dpi field that made the
   local-thickness sweep the peak. Same arithmetic, so the same values.
-- **`--supersample` scales the alpha alone.** Pillow resizes RGBA
-  premultiplied, channel by channel, so the alpha comes out as before, and
-  the RGB and its premultiplied copy (1.7 GB each at 4×) are never made.
-  The decoded render itself is still the floor at 4×: Pillow has no way to
-  read a PNG in strips.
+- **`--supersample` scaled the alpha alone**, until the flag was removed
+  later the same day (see "Supersampling removed"). Pillow resizes RGBA
+  premultiplied, channel by channel, so the alpha came out as before, and
+  the RGB and its premultiplied copy (1.7 GB each at 4×) were never made.
+  The `--supersample` rows of the table below are history.
 
 | measured | before | after |
 |---|---|---|
@@ -531,6 +533,27 @@ The whole run now peaks in Inkscape, not here: with the grading replaced
 by a file copy it still reaches 435 MB, so the target of 40 % (370 MB) is
 out of reach for the ink pass, and the run sits within 1 % of that floor
 (the contract's fallback allows 15 %).
+
+## 2026-10-29 — Supersampling removed
+
+`--supersample` is gone, with every code path behind it: the range check,
+the resize of the alpha to the 600 dpi box, and the parameters that carried
+the factor. The text layer is rendered at 600 dpi and nothing else, and a
+run without the flag writes exactly what it wrote before.
+
+- **Why: it never helped.** Cairo antialiases analytically, so 2× and 4×
+  differed from 1× by about 0.012/255 (see "Output, and the supersampling
+  cap"), at two and four times the build time and up to 2 GB more memory.
+  A knob that changes nothing visible is one more thing to explain, test
+  and keep working.
+- **No shim.** `--supersample` is now an unknown flag like any other: exit
+  2 with argparse's "unrecognized arguments", or one `error` event under
+  `--json`. dojo-portal never passed it, so its contract is untouched; the
+  version stays 0.2.0. A side effect: `--su` used to be ambiguous between
+  `--suffix` and `--supersample` and now abbreviates `--suffix`.
+- **Nothing to port.** The no-Inkscape renderer (see Open) has no
+  supersampling to reproduce: it only has to render the text layer at
+  600 dpi, as Inkscape does now.
 
 ## Open
 

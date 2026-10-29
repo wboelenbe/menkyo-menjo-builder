@@ -136,7 +136,6 @@ def _assert_one_error(code, ev, contains, detail=None):
     (["-f", "jpg"], "unknown format: jpg"),
     (["-r", "11"], "--rank 11: dan grades run from 1 to 10"),
     (["-d", "2026-13-01"], "--date 2026-13-01: use YYYY-MM-DD"),
-    (["--supersample", "5"], "--supersample must be between 1 and 4"),
 ])
 def test_ac9_user_errors(flags, contains, fake_tools, tmp_path, capsys):
     code, ev, _ = _cli_error(["-c", EX, *flags, f"--out={tmp_path}", "--json"], capsys)
