@@ -65,14 +65,14 @@ def test_ac11_plain_stdout(home, tmp_path):
     assert r.returncode == 0
     assert r.stderr == ""                      # not a terminal: no progress
     assert r.stdout == (
-        f"wrote {out}/dan-overlay-sample.pdf\n"
-        f"wrote {out}/dan-overlay-sample.png\n"
-        f"wrote {out}/dan-proof-sample.pdf\n"
-        f"wrote {out}/dan-proof-sample.png\n"
+        f"wrote {out}/dan-overlay-a3-sample.pdf\n"
+        f"wrote {out}/dan-overlay-a3-sample.png\n"
+        f"wrote {out}/dan-proof-a3-sample.pdf\n"
+        f"wrote {out}/dan-proof-a3-sample.png\n"
         f"\n4 file(s) in {out}/\n")
     assert sorted(os.listdir(out)) == sorted(
-        ["dan-overlay-sample.pdf", "dan-overlay-sample.png",
-         "dan-proof-sample.pdf", "dan-proof-sample.png"])   # no .work left behind
+        ["dan-overlay-a3-sample.pdf", "dan-overlay-a3-sample.png",
+         "dan-proof-a3-sample.pdf", "dan-proof-a3-sample.png"])   # no .work left behind
 
 
 @pytest.mark.render
@@ -125,7 +125,7 @@ def test_ac11_clean_empties_the_output_first(home, tmp_path):
     r = support.run_menkyo(["-c", EX, "-a", "dan", "-v", "overlay-flat", "-f", "svg",
                             "-d", "", "--clean", f"--out={out}"], support.isolated_env(home), tmp_path)
     assert r.returncode == 0
-    assert os.listdir(out) == ["dan-overlay-flat-sample.svg"]
+    assert os.listdir(out) == ["dan-overlay-flat-a3-sample.svg"]
 
 
 # ----------------------------------------------------------------- AC-17 ----

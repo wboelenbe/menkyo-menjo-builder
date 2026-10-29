@@ -41,7 +41,7 @@ def rendered(session_home, tmp_path_factory):
 
 
 def f(rendered, variant, ext="pdf"):
-    return rendered["out"] / f"dan-{variant}-{TAG}.{ext}"
+    return rendered["out"] / f"dan-{variant}-a3-{TAG}.{ext}"
 
 
 def test_ac13_every_file_written(rendered):
@@ -144,12 +144,12 @@ def test_ac13_inked_svg_carries_its_raster(session_home, tmp_path):
                             "-d", "", f"--out={out}"], support.isolated_env(session_home),
                            tmp_path, timeout=900)
     assert r.returncode == 0, r.stderr
-    svg = (out / "shihan-overlay-sample.svg").read_text(encoding="utf-8")
+    svg = (out / "shihan-overlay-a3-sample.svg").read_text(encoding="utf-8")
     # xlink:href with xlink declared on the root, so the SVG still opens in
     # Inkscape 1.2, which ignores a plain href (packaging, F-3).
-    assert 'xlink:href="shihan-overlay-sample-textlayer.png"' in svg
+    assert 'xlink:href="shihan-overlay-a3-sample-textlayer.png"' in svg
     assert svg.startswith('<svg xmlns="http://www.w3.org/2000/svg" '
                           'xmlns:xlink="http://www.w3.org/1999/xlink" ')
     from PIL import Image
-    with Image.open(out / "shihan-overlay-sample-textlayer.png") as im:
+    with Image.open(out / "shihan-overlay-a3-sample-textlayer.png") as im:
         assert im.mode == "RGBA" and im.size[0] > 1000

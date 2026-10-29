@@ -35,6 +35,12 @@ EXAMPLE_CONFIG = paths.resource("example.toml")
 
 SCHEMA = 1
 
+# The sheets a certificate can be printed on, landscape.  `[paper] size`
+# picks the dōjō's default and --paper overrides it for a run; build_diploma
+# knows their millimetres.
+PAPER_SIZES = ("a3", "a4")
+DEFAULT_PAPER = "a3"
+
 
 @dataclass
 class Award:
@@ -55,6 +61,11 @@ class Config:
     signer_name: str = ""
     honorific: str = "殿"
     motto: str = ""
+    # The sheet, a key of PAPER_SIZES.  The margins below are millimetres of
+    # the A3 layout; on A4 they scale with everything else.
+    paper_size: str = DEFAULT_PAPER
+    # Whether the file says so, for --help; a3 either way when it does not.
+    paper_size_set: bool = False
     stock_border: float = 22.0
     safe_inset: float = 38.0
     # Fraction of the page height added to every printed column's starting
@@ -142,6 +153,16 @@ def load(path=None):
         source=path,
     )
 
+    # Case does not matter ("A4" is how everybody writes it); the file names
+    # and everything after this say it in lower case.
+    size = paper.get("size", Config.paper_size)
+    if not isinstance(size, str) or size.lower() not in PAPER_SIZES:
+        raise SystemExit(
+            f"{path}: [paper] size = {json.dumps(size, ensure_ascii=False)} is "
+            f"not a paper size; use " + " or ".join(f'"{s}"' for s in PAPER_SIZES))
+    cfg.paper_size = size.lower()
+    cfg.paper_size_set = "size" in paper
+
     awards = raw.get("awards", [])
     if not awards:
         raise SystemExit(f"{path}: no [[awards]] defined -- there is nothing to print")
@@ -197,6 +218,7 @@ def save(cfg, path=USER_CONFIG):
         "[recipient]", f"honorific = {_q(cfg.honorific)}", "",
         "[motto]", f"text = {_q(cfg.motto)}", "",
         "[paper]",
+        f"size = {_q(cfg.paper_size)}",
         f"border = {cfg.stock_border}",
         f"safe_inset = {cfg.safe_inset}",
         f"text_drop = {cfg.text_drop}", "",

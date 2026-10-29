@@ -113,13 +113,13 @@ def test_inked_svg_places_its_text_with_xlink_href(tmp_path, capsys):
     out = tmp_path / "out"
     bd.cli(["-c", EX, "-a", "dan", "-v", "overlay,overlay-flat", "-f", "svg",
             "-n", "", "-r", "", "-d", "", f"--out={out}"])
-    inked = ET.parse(out / "dan-overlay.svg").getroot()
+    inked = ET.parse(out / "dan-overlay-a3.svg").getroot()
     images = inked.findall("{http://www.w3.org/2000/svg}image")
     assert len(images) == 1
-    assert images[0].get(XLINK) == "dan-overlay-textlayer.png"
+    assert images[0].get(XLINK) == "dan-overlay-a3-textlayer.png"
     assert images[0].get("href") is None
     # only the composite's root declares xlink; the flat sheet is as before
-    flat = (out / "dan-overlay-flat.svg").read_text(encoding="utf-8")
+    flat = (out / "dan-overlay-flat-a3.svg").read_text(encoding="utf-8")
     assert "xlink" not in flat
 
 

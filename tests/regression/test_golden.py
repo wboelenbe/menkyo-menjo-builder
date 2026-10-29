@@ -18,6 +18,11 @@ The flat and proof PDFs are compared by sha256 too (golden/pdf_sha256.json,
 made with make_golden.py --pdf-hashes; that item's Q-7).  They depend on our
 PDF writer and on fontTools' glyph outlines, so a fontTools bump may change
 them: look at the PDFs, then refresh the hashes.
+
+Since paper-format every output name carries the sheet size (its AC-7).  The
+goldens keep 823af58's names and are compared through golden_lib.sized():
+names, stdout, the PDF-hash keys and the side raster's name in an inked
+SVG's xlink:href get `-a3` after the variant; every byte else is as before.
 """
 
 import difflib
@@ -26,7 +31,7 @@ import pytest
 
 import support
 from golden_cases import CASES, LIST_CASES
-from golden_lib import (blob, load_manifest, load_pdf_hashes, pinned_pdf, run_case,
+from golden_lib import (blob, load_manifest, load_pdf_hashes, pinned_pdf, run_case, sized,
                         without_image_box)
 
 MANIFEST = load_manifest()
@@ -46,6 +51,7 @@ def _svg_diff(expected_sha, actual_text, name):
     expected = blob(expected_sha)
     if expected is None:
         return f"(no stored blob for {name})"
+    expected = sized(expected)
     if without_image_box(expected) == without_image_box(actual_text):
         return None
     diff = difflib.unified_diff(
@@ -81,13 +87,14 @@ def test_output_matches_baseline(case, tmp_path):
     got, _ = run_case(support.REPO, case, tmp_path)
 
     assert got["exit"] == golden["exit"]
-    assert got["stdout"] == golden["stdout"]
-    assert sorted(got["files"]) == sorted(golden["files"]), "different files written"
+    assert got["stdout"] == sized(golden["stdout"])
+    files = {sized(n): sha for n, sha in golden["files"].items()}
+    assert sorted(got["files"]) == sorted(files), "different files written"
 
     out = tmp_path / "out"
     mismatched = []
-    for name, sha in golden["files"].items():
-        if sha is not None and got["files"][name] != sha:
+    for name, sha in files.items():
+        if sha is not None and support.sha256(sized(blob(sha) or "")) != got["files"][name]:
             mismatched.append(_svg_diff(sha, (out / name).read_text(encoding="utf-8"), name))
     mismatched = [m for m in mismatched if m is not None]
     assert not mismatched, "\n\n".join(mismatched)
@@ -96,7 +103,7 @@ def test_output_matches_baseline(case, tmp_path):
         "the text layers drawn differ from the baseline's"
     # every flat and proof PDF written is pinned, byte for byte
     PDF_HASHES = _pdf_hashes()
-    pinned = PDF_HASHES["cases"].get(case["id"], {})
+    pinned = {sized(n): sha for n, sha in PDF_HASHES["cases"].get(case["id"], {}).items()}
     assert sorted(n for n in got["files"] if pinned_pdf(n)) == sorted(pinned), \
         "different flat/proof PDFs written: run make_golden.py --pdf-hashes"
     changed = [n for n, sha in pinned.items()
@@ -110,5 +117,5 @@ def test_list_matches_baseline(case, tmp_path):
     golden = MANIFEST["lists"][case["id"]]
     got, _ = run_case(support.REPO, dict(case, argv=["--list", *case["argv"]]), tmp_path)
     assert got["exit"] == golden["exit"]
-    assert got["stdout"] == golden["stdout"]
+    assert got["stdout"] == sized(golden["stdout"])
     assert not (tmp_path / "out").exists(), "--list must not write anything"

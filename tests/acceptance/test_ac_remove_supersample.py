@@ -248,12 +248,12 @@ def test_ac8_real_render_text_layer_is_600_dpi(session_home, tmp_path):
     ev = support.events(r.stdout)
     assert ev[-1]["event"] == "done"
     assert [e["stage"] for e in ev if e["event"] == "progress"] == ["text", "ink", "pdf"]
-    svg = (out / "dan-overlay-sample.svg").read_text(encoding="utf-8")
+    svg = (out / "dan-overlay-a3-sample.svg").read_text(encoding="utf-8")
     m = re.search(r'<image x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)" '
-                  r'xlink:href="dan-overlay-sample-textlayer\.png"', svg)
+                  r'xlink:href="dan-overlay-a3-sample-textlayer\.png"', svg)
     assert m, "no <image> for the text layer"
     w_mm, h_mm = float(m.group(3)), float(m.group(4))
-    with Image.open(out / "dan-overlay-sample-textlayer.png") as im:
+    with Image.open(out / "dan-overlay-a3-sample-textlayer.png") as im:
         assert im.mode == "RGBA"
         w, h = im.size
         a = np.asarray(im)

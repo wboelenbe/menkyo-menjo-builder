@@ -13,9 +13,9 @@
 > software, that is the part to trust.
 
 Generates print-ready dan-grade certificates (段位免状) and teaching licences
-(免許状) for a martial-arts dōjō: A3 landscape, vertical Japanese, in the
-manner of a traditional 賞状 (award certificate). The grade, the recipient and
-the date can each be printed or left blank for a calligrapher to brush in.
+(免許状) for a martial-arts dōjō: A3 or A4 landscape, vertical Japanese, in
+the manner of a traditional 賞状 (award certificate). The grade, the recipient
+and the date can each be printed or left blank for a calligrapher to brush in.
 
 <p align="center"><img src="docs/three_up.png" alt="the three certificates, unconfigured" width="880"></p>
 
@@ -31,13 +31,17 @@ certificate that grants nothing.
 ```
 uv run menkyo --list                 # what a default build would write
 uv run menkyo                        # write it
+uv run menkyo --paper a4             # the same certificates on A4
 ```
 
 Needs Python 3.11+ (for `tomllib`) and nothing else: `uv run` installs
 Pillow, NumPy, SciPy, fontTools and pypdfium2, and the fonts ship inside the
 package. No other program and no system font is used. Without uv,
-`pip install -e .` and then plain `menkyo`. From a checkout, files land in
-`build/` as `<award>-<variant>.<ext>`.
+`pip install -e .` and then plain `menkyo`.
+
+From a checkout, files land in `build/` as `<award>-<variant>-<size>.<ext>`.
+The size is `a3` or `a4`, and any suffix comes after it, so the example
+writes `dan-overlay-a3-sample.pdf`.
 
 ## As a package
 
@@ -107,8 +111,8 @@ The command above writes, in part:
 
 ```
 {"event": "progress", "step": 1, "total": 3, "award": "dan", "variant": "overlay", "stage": "text", "label": "dan overlay: rendering the text"}
-{"event": "file", "path": "/tmp/xyz/dan-overlay-二段-ヤン-ヤンセン.pdf"}
-{"event": "done", "out": "/tmp/xyz", "files": ["/tmp/xyz/dan-overlay-二段-ヤン-ヤンセン.pdf"]}
+{"event": "file", "path": "/tmp/xyz/dan-overlay-a3-二段-ヤン-ヤンセン.pdf"}
+{"event": "done", "out": "/tmp/xyz", "files": ["/tmp/xyz/dan-overlay-a3-二段-ヤン-ヤンセン.pdf"]}
 ```
 
 and a failure ends in one line such as
@@ -167,6 +171,7 @@ name = ""                    # the signatory, in katakana
 text = ""                    # an optional school precept, in its own column
 
 [paper]
+size = "a3"                  # or "a4"; --paper overrides it for a run
 border = 22.0                # mm, the margin kept clear all round — see "Printing"
 safe_inset = 38.0            # mm, where the text may begin
 text_drop = 0.05              # fraction of page height — see "Where the columns start"
@@ -232,6 +237,7 @@ constants at the top of `src/menkyo/build_diploma.py`.
 | `-d`, `--date YYYY-MM-DD` | print the award date in kanji; `today` also works |
 | `--honorific TEXT` | appended to a printed name (default from the config; `''` to omit) |
 | `--suffix TEXT` | tag for output filenames (defaults to the name) |
+| `--paper SIZE` | the sheet, `a3` or `a4`, landscape (default: `[paper] size`, else `a3`) |
 | `--dpi N` | resolution for PNG output, 1–2400 (default: 300) |
 | `--all` | shorthand for `--awards all --variants all` |
 | `--clean` | empty `build/` first |
@@ -288,17 +294,23 @@ hardest.
 
 ## Printing
 
-1. Plain white A3 paper.
-2. Print `<award>-overlay.pdf` at **100 %** – no ‘fit to page’, no scaling.
-   The page is exactly 420 × 297 mm; check with a ruler on the first sheet.
-3. `border` and `safe_inset` under `[paper]` are margins on that sheet:
+1. Plain white paper, A3 or A4.
+2. Print `<award>-overlay-<size>.pdf` at **100 %** – no ‘fit to page’, no
+   scaling. An A3 page is exactly 420 × 297 mm, an A4 page 297 × 210 mm;
+   check with a ruler on the first sheet.
+3. `border` and `safe_inset` under `[paper]` are margins on the A3 sheet:
    `border` is kept clear all round (22 mm by default), `safe_inset` is where
    the text may begin (38 mm). Nothing prints them; `-v proof` draws both, so
    you can check a layout against your printer's own unprintable edge.
 
+A4 is the A3 certificate scaled by 1/√2 (about 0.71): the same layout,
+crest and margins, all proportionally smaller, so `border` is 15.6 mm on A4
+and the 12 mm columns are 8.5 mm. Choose it with `--paper a4`, or with
+`size = "a4"` under `[paper]` as the dōjō's default.
+
 **Print a `-flat` variant alongside your first real print.** The graded text is
 a greyscale raster; a home laser halftones grey, and some printers mishandle
-its transparency. If the 12 mm columns come out mottled, the `-flat` files are
+its transparency. If the columns come out mottled, the `-flat` files are
 the same layout in solid black, pure vector. Nothing else differs.
 
 The PDFs are print files: the text is drawn as glyph outlines, so it cannot

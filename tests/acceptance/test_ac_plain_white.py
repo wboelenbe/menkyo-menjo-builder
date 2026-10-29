@@ -134,12 +134,12 @@ def test_ac1_the_variants_are_the_plain_three():
 @pytest.mark.parametrize("flags", [["-v", "all"], ["-v", " ALL "], ["--variants=all"]])
 def test_ac1_all_means_the_plain_three(flags, home, tmp_path):
     got = listing(["-a", "dan", *flags, "-f", "pdf"], home, tmp_path)
-    assert got == [f"dan-{v}-sample.pdf" for v in PLAIN]
+    assert got == [f"dan-{v}-a3-sample.pdf" for v in PLAIN]
 
 
 def test_ac1_all_flag_lists_every_award_and_variant(home, tmp_path):
     got = listing(["--all"], home, tmp_path)
-    assert got == [f"{a}-{v}-sample.pdf" for a in AWARDS for v in PLAIN]
+    assert got == [f"{a}-{v}-a3-sample.pdf" for a in AWARDS for v in PLAIN]
 
 
 def test_ac1_all_writes_what_the_explicit_list_writes(tmp_path):
@@ -148,7 +148,7 @@ def test_ac1_all_writes_what_the_explicit_list_writes(tmp_path):
     bd.main(common + ["-a", "dan,shihan,renshi", "-v", ",".join(PLAIN),
                       f"--out={tmp_path / 'b'}"])
     a, b = _tree(tmp_path / "a"), _tree(tmp_path / "b")
-    assert sorted(a) == sorted(f"{x}-{v}-sample.svg" for x in AWARDS for v in PLAIN)
+    assert sorted(a) == sorted(f"{x}-{v}-a3-sample.svg" for x in AWARDS for v in PLAIN)
     assert a == b
 
 
@@ -217,7 +217,7 @@ def test_ac4_default_variants():
 
 
 def test_ac4_default_list(home, tmp_path):
-    assert listing([], home, tmp_path) == [f"{a}-overlay-sample.pdf" for a in AWARDS]
+    assert listing([], home, tmp_path) == [f"{a}-overlay-a3-sample.pdf" for a in AWARDS]
 
 
 @pytest.mark.render
@@ -232,7 +232,7 @@ def test_ac4_default_run(home, tmp_path):
         (a, "overlay", s) for a in AWARDS for s in ("text", "ink", "pdf")]
     assert all(p["total"] == 9 for p in progress)
     assert ev[-1] == {"event": "done", "out": str(out),
-                      "files": [str(out / f"{a}-overlay-sample.pdf") for a in AWARDS]}
+                      "files": [str(out / f"{a}-overlay-a3-sample.pdf") for a in AWARDS]}
 
 
 # ------------------------------------------------------------------ AC-5 ----
@@ -252,8 +252,8 @@ def test_ac5_a_full_run_needs_no_program(home, tmp_path):
     expected = set()
     for a in AWARDS:
         for v in PLAIN:
-            expected |= {f"{a}-{v}-sample.{e}" for e in ("pdf", "png", "svg")}
-        expected.add(f"{a}-overlay-sample-textlayer.png")
+            expected |= {f"{a}-{v}-a3-sample.{e}" for e in ("pdf", "png", "svg")}
+        expected.add(f"{a}-overlay-a3-sample-textlayer.png")
     assert set(names) == expected
 
 
@@ -298,7 +298,7 @@ def test_ac6_step_totals(flags, total, nfiles, home, tmp_path):
 # ------------------------------------------------------------------ AC-7 ----
 def test_ac7_list_every_format(home, tmp_path):
     got = listing(["--all", "-f", "pdf,png,svg"], home, tmp_path)
-    assert got == [f"{a}-{v}-sample.{e}" for a in AWARDS for v in PLAIN
+    assert got == [f"{a}-{v}-a3-sample.{e}" for a in AWARDS for v in PLAIN
                    for e in ("pdf", "png", "svg")]
 
 
@@ -397,7 +397,7 @@ def test_ac11_paper_keys_still_drive_the_proof(tmp_path):
     assert config_mod.load(str(cfg)).stock_border == 10.0
     bd.main(["-c", str(cfg), "-a", "dan", "-v", "proof", "-f", "svg", "-d", "",
              f"--out={tmp_path / 'o'}"])
-    svg = (tmp_path / "o" / "dan-proof-sample.svg").read_text(encoding="utf-8")
+    svg = (tmp_path / "o" / "dan-proof-a3-sample.svg").read_text(encoding="utf-8")
     assert '<rect x="10.0" y="10.0" width="400.0" height="277.0"' in svg
     assert '<rect x="20.0" y="20.0" width="380.0" height="257.0"' in svg
 
@@ -616,10 +616,10 @@ def test_ac20_installed_wheel(installed, home, tmp_path):
 
     r = support.run_menkyo(["--list", "--all"], env, tmp_path, exe=exe)
     assert r.returncode == 0, r.stderr
-    assert r.stdout.splitlines() == [f"{a}-{v}-sample.pdf" for a in AWARDS for v in PLAIN]
+    assert r.stdout.splitlines() == [f"{a}-{v}-a3-sample.pdf" for a in AWARDS for v in PLAIN]
 
     r = support.run_menkyo(["--list"], env, tmp_path, exe=exe)
-    assert r.stdout.splitlines() == [f"{a}-overlay-sample.pdf" for a in AWARDS]
+    assert r.stdout.splitlines() == [f"{a}-overlay-a3-sample.pdf" for a in AWARDS]
 
     r = support.run_menkyo(["-a", "dan", "-v", "full", "--json"], env, tmp_path, exe=exe)
     assert r.returncode == 1

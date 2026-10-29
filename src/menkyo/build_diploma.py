@@ -1,10 +1,11 @@
 """
 Japanese martial-arts certificates: dan grades and teaching licences.
 
-Generates the certificate's text and crest, to be printed on plain white A3
-paper, landscape.  The three things a
-calligrapher would brush in — the rank, the recipient, the date numerals —
-can each be printed or left empty; ``--rank``, ``--name`` and ``--date``
+Generates the certificate's text and crest, to be printed on plain white
+paper, landscape: A3, or A4 with ``--paper a4`` (the same layout scaled by
+1/√2), the configuration's ``[paper] size`` choosing which by default.  The
+three things a calligrapher would brush in — the rank, the recipient, the
+date numerals — can each be printed or left empty; ``--rank``, ``--name`` and ``--date``
 decide, falling back to the ``[sample]`` stand-ins in the configuration and
 cleared for a run by passing ``''``.
 
@@ -12,8 +13,9 @@ Which documents exist, and whose name goes on them, is configuration: see
 ``example.toml`` and ``config.py``.  Nothing in this file names a
 school.
 
-One file per award per variant, written as ``<award>-<variant>.<ext>`` into
-./build from a checkout, ~/Documents/Menkyo otherwise.  The variants are one
+One file per award per variant, written as ``<award>-<variant>-<size>.<ext>``
+(``dan-overlay-a3.pdf``, with any suffix after the size) into ./build from a
+checkout, ~/Documents/Menkyo otherwise.  The variants are one
 layout, plus a fallback and a check:
 
     overlay        the certificate, its text graded like sumi — the one to print
@@ -33,6 +35,7 @@ object per line -- progress, files, errors -- for a program running this one.
 
 import argparse
 import json
+import math
 import os
 import re
 import shutil
@@ -51,7 +54,17 @@ BUILD = paths.default_output_dir()
 CFG = config_mod.Config()
 
 # ---------------------------------------------------------------- page ------
-PAGE_W, PAGE_H = 420.0, 297.0          # A3 landscape, mm
+PAGE_W, PAGE_H = 420.0, 297.0          # A3 landscape, mm: the layout's own units
+
+# The sheets it prints on, landscape, in mm (config.PAPER_SIZES names them).
+# A4 is not a layout of its own: it is the A3 one scaled by 1/√2, every
+# column, margin and the crest alike (DECISIONS.md).  A4 is not exactly A3
+# over √2 (297/420 against 210/297), so the scaled layout, anchored at the
+# top left, is 0.02 mm short of the A4 width and 0.01 mm over its height:
+# both at the edges, inside the margins, where nothing prints.
+PAPERS = {"a3": (420.0, 297.0), "a4": (297.0, 210.0)}
+SCALE = {"a3": 1.0, "a4": 1 / math.sqrt(2)}
+DEFAULT_PAPER = config_mod.DEFAULT_PAPER
 
 INK = "#111111"                        # near-black, reads as sumi in print
 INK_GREY = int(INK[1:3], 16)           # the same, as a grey level (it is one)
@@ -344,8 +357,14 @@ def date_column(value):
 
 def document(verb, heading, crest_kind="full", guides=False,
              layer="all", name=None, honorific="殿", rank=None, date=None,
-             rank_column=True):
-    """One certificate. `verb` is the four-character award formula."""
+             rank_column=True, sheet=DEFAULT_PAPER):
+    """One certificate. `verb` is the four-character award formula.
+
+    Everything below is drawn in the A3 layout's millimetres.  On another
+    `sheet` (a key of PAPERS) the root is that sheet and the layout sits
+    inside a scale(); an A3 sheet has no wrapper, so its SVG is what it
+    always was.
+    """
     # `[paper] text_drop` (a fraction of the page height) shifts every printed
     # column's starting point down by the same amount, giving the whole
     # reading order more air above it without re-tuning each Y_* constant by
@@ -362,10 +381,17 @@ def document(verb, heading, crest_kind="full", guides=False,
     # as an <image xlink:href> (_inked_text_image), so it declares xlink.
     xlink = (' xmlns:xlink="http://www.w3.org/1999/xlink"'
              if layer == "chrome" else "")
+    sheet_w, sheet_h = PAPERS[sheet]
     o.append(
         f'<svg xmlns="http://www.w3.org/2000/svg"{xlink} '
-        f'width="{PAGE_W}mm" height="{PAGE_H}mm" viewBox="0 0 {PAGE_W} {PAGE_H}">'
+        f'width="{sheet_w}mm" height="{sheet_h}mm" viewBox="0 0 {sheet_w} {sheet_h}">'
     )
+    # The closing tag; build_one() puts the inked text just before "</svg>",
+    # outside the scale, since its box is in the sheet's own millimetres.
+    end = "</svg>"
+    if SCALE[sheet] != 1.0:
+        o.append(f'<g transform="scale({SCALE[sheet]:.10f})">')
+        end = "</g>\n</svg>"
     if guides and layer != "text":
         sb, si = CFG.stock_border, CFG.safe_inset
         o.append(
@@ -417,7 +443,7 @@ def document(verb, heading, crest_kind="full", guides=False,
                        ring_top=CFG.art))
 
     if layer == "chrome":                       # ink layer supplies the text
-        o.append("</svg>")
+        o.append(end)
         return "\n".join(o)
 
     # printed columns
@@ -442,7 +468,7 @@ def document(verb, heading, crest_kind="full", guides=False,
     o.append(vcol(list(CFG.signer_name), X_SIGNER, y_block, SZ_SIGNER, W_MED)[0])
     o.append(vcol(list(CFG.motto), X_MOTTO, y_block, SZ_MOTTO, W_MED)[0])
 
-    o.append("</svg>")
+    o.append(end)
     return "\n".join(o)
 
 
@@ -517,7 +543,9 @@ def _inked_text_image(base, verb, heading, kw):
 
     Rendered to the text's own outline box rather than the page: a full A3
     at 600 dpi is mostly empty, and cropping keeps the raster, and the memory
-    the ink pass needs for it, to the part that carries text.
+    the ink pass needs for it, to the part that carries text.  The box is in
+    the sheet's millimetres, so on A4 the layer is 600 dpi of the A4 sheet
+    and the ink keeps its physical grain (DECISIONS.md).
     """
     from PIL import Image
 
@@ -598,7 +626,7 @@ VARIANTS = {
     # the certificate, its text graded like sumi: what you print
     "overlay": dict(inked=True),
     # solid-black fallback: the graded text is a greyscale raster, and a home
-    # laser halftones grey.  If the 12 mm columns come out mottled, print this.
+    # laser halftones grey.  If the columns come out mottled, print this.
     "overlay-flat": dict(),
     # safe areas and the zones the calligrapher fills
     "proof": dict(guides=True),
@@ -635,11 +663,19 @@ def _suffix_for(name):
     return "".join(c for c in out if c not in '/\\:*?"<>|')
 
 
+def _stem(slug, variant, sheet, suffix):
+    """An output's name without its extension: <award>-<variant>-<size>, then
+    the suffix.  The award, variant and size are fixed vocabularies and the
+    suffix is free text, so it goes last, where it always was."""
+    return f"{slug}-{variant}-{sheet}" + (f"-{suffix}" if suffix else "")
+
+
 def build_one(slug, heading, verb, variant, formats, dpi=300, inked=True,
               work=None, name=None, honorific="殿", rank=None,
-              date=None, suffix="", rank_column=True):
+              date=None, suffix="", rank_column=True, sheet=DEFAULT_PAPER):
     kw = dict(VARIANTS[variant])
     kw["rank_column"] = rank_column or bool(rank)
+    kw["sheet"] = sheet
     if date:
         kw["date"] = date
     if name:
@@ -652,7 +688,7 @@ def build_one(slug, heading, verb, variant, formats, dpi=300, inked=True,
     use_ink = kw.pop("inked", False)
     PROGRESS.award, PROGRESS.variant = slug, variant
 
-    stem = f"{slug}-{variant}" + (f"-{suffix}" if suffix else "")
+    stem = _stem(slug, variant, sheet, suffix)
     svg_path = os.path.join(work, stem + ".svg")
     if use_ink:
         img = _inked_text_image(os.path.join(work, stem), verb, heading, kw)
@@ -798,8 +834,9 @@ def main(argv=None, progress=None):
         description="Generate Japanese dan-grade and teaching-licence artwork.",
         epilog=(
             "By default this writes only what you would actually print: the\n"
-            "overlay, for plain white A3, for every award your config defines.\n"
-            "Everything else is opt-in.\n"
+            "overlay, on plain white A3 or A4, for every award your config\n"
+            "defines. Everything else is opt-in. Each file is named\n"
+            "<award>-<variant>-<size>[-<suffix>].<ext>, the size a3 or a4.\n"
             "\n"
             f"configuration: {os.path.relpath(CFG.source, os.getcwd())}\n"
             "  start from `menkyo --example-config > dojo.toml` and edit it,\n"
@@ -831,6 +868,15 @@ def main(argv=None, progress=None):
     ap.add_argument("--no-ink", action="store_true",
                     help="skip the sumi grading and set solid black; the same "
                          "thing the -flat variant gives you")
+    ap.add_argument("--paper", type=str.lower, choices=config_mod.PAPER_SIZES,
+                    metavar="SIZE",
+                    help="the sheet, landscape: a3 or a4, the A4 being the A3 "
+                         "layout scaled down to fit (default: "
+                         f"{CFG.paper_size}, "
+                         + ("from [paper] size in the configuration"
+                            if CFG.paper_size_set else
+                            "as the configuration has no [paper] size")
+                         + ")")
     ap.add_argument("--dpi", type=int, default=300, metavar="N",
                     help=f"resolution for PNG output, 1-{MAX_DPI} (default: 300)")
     ap.add_argument("-n", "--name", metavar="KATAKANA",
@@ -874,7 +920,8 @@ def main(argv=None, progress=None):
                          "or an error. See the README for the events.")
     args = ap.parse_args(argv)
     # A PNG of zero or fewer pixels is nothing to draw, and at MAX_DPI an A3
-    # page is already over a gigapixel.  Checked for every run, --list too.
+    # page is already over a gigapixel.  Checked for every run, --list too,
+    # and the same range at either size: --dpi is per inch of the sheet.
     if not 1 <= args.dpi <= MAX_DPI:
         raise SystemExit(f"--dpi {args.dpi}: use a resolution from 1 to {MAX_DPI}")
     if args.out:
@@ -912,13 +959,14 @@ def main(argv=None, progress=None):
         parts = [_suffix_for(args.rank) if args.rank else "",
                  _suffix_for(args.name) if args.name else ""]
         suffix = "-".join(p for p in parts if p)
-    tail = f"-{suffix}" if suffix else ""
+    # The flag wins over the configuration's [paper] size.
+    sheet = args.paper or CFG.paper_size
 
     if args.list:
         for slug in awards:
             for v in variants:
                 for ext in formats:
-                    n = f"{slug}-{v}{tail}.{ext}"
+                    n = f"{_stem(slug, v, sheet, suffix)}.{ext}"
                     if args.json:
                         _emit("planned", file=n)
                     else:
@@ -965,7 +1013,7 @@ def main(argv=None, progress=None):
                                     rank=None if sample_rank and not rank_column
                                          else rank,
                                     date=date, suffix=suffix,
-                                    rank_column=rank_column)
+                                    rank_column=rank_column, sheet=sheet)
                 for w in written:
                     if args.json:
                         _emit("file", path=w)

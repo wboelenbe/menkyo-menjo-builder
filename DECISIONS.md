@@ -685,12 +685,83 @@ The version went to 0.3.0. The CLI flags, the `--json` events and their
 stages are unchanged. dojo-portal's image can drop `inkscape fontconfig
 fonts-noto-cjk fonts-noto-cjk-extra` once it takes this wheel.
 
+## 2026-10-29 – A4 as well as A3
+
+The certificates print on A4 as well as on A3, landscape either way, still
+on plain white paper. This overrides ‘Plain white paper only’ where it says
+the certificates print on ‘plain white A3 and nothing else’, and the
+`<award>-<variant>.<ext>` names the earlier entries use; those entries are
+left as they were written.
+
+- **A4 is the A3 layout scaled by 1/√2**, on a 297 × 210 mm sheet: the
+  columns, the crest, the margins and the text, all proportionally smaller.
+  There is no A4 layout of its own and no minimum text size. A4 is not
+  exactly A3 over √2 (297/420 is 0.707143, 210/297 is 0.707071), so the
+  scaled layout is 0.02 mm short of the sheet's width and 0.01 mm over its
+  height, at the bottom, inside the margins where nothing prints. The SVG's
+  root is the A4 sheet, and the layout sits inside
+  `<g transform="scale(0.7071067812)">`. An A3 sheet has no wrapper, so A3
+  output is byte for byte what it was, apart from its name.
+- **`--paper a3|a4` and `[paper] size`.** The key is the dōjō's default and
+  the flag overrides it for one run; A3 is the default when neither says.
+  The key sits in the existing `[paper]` table because a top-level
+  `paper = "a4"` would clash with that table. Both are case-insensitive
+  (`A4`), and the names say `a4`. A bad `--paper` is argparse's own error;
+  a bad `size` names the file, `[paper] size` and both values, and is
+  reported even when `--paper` is given. `config.save()` writes the key,
+  and the example sets `size = "a3"`.
+- **The margins scale.** `border` and `safe_inset` are millimetres of the
+  A3 layout; on A4, 22 mm becomes 15.6 mm and 38 mm becomes 26.9 mm.
+  Keeping them physical would put the 38 mm safe inset over the A4 text.
+  `text_drop` is a fraction of the page and scales anyway.
+- **Every output name carries the size**:
+  `<award>-<variant>-<size>[-<suffix>].<ext>`, as in
+  `dan-overlay-a3-sample.pdf` or `dan-overlay-a4-2-ヤン-ヤンセン.pdf`, and an
+  inked SVG's side raster is `dan-overlay-a4-sample-textlayer.png`. The size
+  goes after the variant and before the suffix: the award, the variant and
+  the size are fixed vocabularies and the suffix is free text, so a reader
+  splits the fixed part from the free one where it did before, and a
+  listing sorts by award, variant, then size. `--suffix a4` on A3 is
+  allowed (`dan-overlay-a3-a4.pdf`); the size comes first, so it is not
+  ambiguous. The regression goldens keep their names from 823af58 and are
+  compared through a mapping that inserts `-a3`, so they still prove the
+  A3 bytes unchanged.
+- **`--dpi` is per inch of the sheet.** An A4 PNG at 300 dpi is
+  3508 × 2480 px; the range is 1 to 2400 at either size.
+- **The ink keeps its physical grain.** The text layer is rendered at
+  600 dpi of the A4 sheet, so its raster is the A3's scaled by 1/√2, and
+  `ink.py` is unchanged: the grain and the blur stay the same size in mm
+  while the glyphs shrink. Inside the strokes the A4 brush lifts in about a
+  quarter fewer pixels (a share of 0.0227 against 0.0296; 5th percentile
+  237 against 233, mean 251.7 against 251.4), a hair darker at the tips and
+  indistinguishable at screen size. Grading A4 as the A3 (`ink_layer` at
+  600/√2 dpi, the field scaling with the glyphs) came closer, 0.0266, but
+  at the A3's cost: the ink pass takes +194 MB and 1.6 s on the Mac against
+  +119 MB and 0.8 s.
+- **Nothing else changes.** The other flags, the `--json` events, their
+  fields and the progress stages are as they were; only the paths carry the
+  size. dojo-portal reads the `file` events' paths, so it should not
+  notice. The version went to 0.4.0.
+
+Measured in `menkyo-test` on the Mac's native `linux/arm64` Docker, cgroup
+`memory.peak` and wall time, median of 3, with the C-1p and C-4p runs of
+`tests/acceptance/render_without_inkscape/measure.sh` plus `--paper`, in two
+rounds:
+
+| case | A3 | A4 |
+|---|---|---|
+| C-1p, overlay, PDF (the portal's run) | 188 MB, 2.40 s; 187 MB, 2.35 s | 142 MB, 1.45 s; 142 MB, 1.45 s |
+| C-4p, overlay-flat, PDF | 57 MB, 0.21 s; 58 MB, 0.25 s | 57 MB, 0.22 s; 57 MB, 0.22 s |
+
+- The `menkyo` process's own peak on the Mac (`peak_driver.py`, the
+  portal's run): 304 MB at A3, 215 MB at A4 (71 %).
+- A flat run costs the same at either size: its floor is the imports and
+  the fonts, and the difference in wall time is noise.
+
 ## Open
 
 - **Confirm the katakana transcription of any recipient's name** with the
   recipient before printing.
-- **Paper format: A4 as well as A3.** Let the user choose the sheet size;
-  today everything is laid out for A3 landscape (420 × 297 mm).
 - **Kyū grades.** Certificates for the kyū (coloured-belt) grades below
   shodan (first dan), alongside the dan grades.
 - **An annotated version in Dutch (asked 28 October 2026).** Besides the inked

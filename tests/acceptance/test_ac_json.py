@@ -56,9 +56,9 @@ def test_ac7_success_stream(home, tmp_path):
     files = [e["path"] for e in ev if e["event"] == "file"]
     assert all(set(e) == {"event", "path"} for e in ev if e["event"] == "file")
     tag = "2-ヤン-ヤンセン"
-    assert files == [str(out / f"dan-overlay-{tag}.pdf"),
-                     str(out / f"dan-overlay-{tag}.png"), str(out / f"dan-proof-{tag}.pdf"),
-                     str(out / f"dan-proof-{tag}.png")]
+    assert files == [str(out / f"dan-overlay-a3-{tag}.pdf"),
+                     str(out / f"dan-overlay-a3-{tag}.png"), str(out / f"dan-proof-a3-{tag}.pdf"),
+                     str(out / f"dan-proof-a3-{tag}.png")]
     assert all(os.path.isfile(f) for f in files)
     assert ev[-1] == {"event": "done", "out": str(out), "files": files}
 

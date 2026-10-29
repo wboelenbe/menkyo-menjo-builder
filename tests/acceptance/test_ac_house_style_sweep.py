@@ -323,7 +323,8 @@ def test_ac12_open_item_closed():
     assert items, "the Open list is empty"
     assert not [i for i in items if re.search(r"house.style", i, re.I)], items
     # other tests find these by how they start (AC-13); no gloss in a title
-    for start in ("Paper format", "Kyū grades", "An annotated version in Dutch"):
+    # (paper-format closed "Paper format", its AC-21)
+    for start in ("Kyū grades", "An annotated version in Dutch"):
         assert [i for i in items if i.startswith(start)], (start, items)
 
 

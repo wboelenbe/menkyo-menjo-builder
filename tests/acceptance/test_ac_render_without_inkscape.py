@@ -50,9 +50,10 @@ WHEEL_MAX = 11_500_000                            # AC-28
 OPTIONS = {"--all", "--awards", "--clean", "--config", "--date", "--dpi",
            "--example-config", "--formats", "--help", "--honorific", "--json",
            "--list", "--name", "--no-ink", "--out", "--rank", "--suffix",
-           "--variants", "--version"}
+           "--variants", "--version",
+           "--paper"}                     # paper-format added it (its AC-20)
 SHORT = {"-a", "-c", "-d", "-f", "-h", "-n", "-o", "-r", "-v"}
-EXPECTED_VERSION = "0.3.0"                        # AC-37, Q-1: the user decides
+EXPECTED_VERSION = "0.4.0"                        # AC-37; paper-format OQ-6 bumped it
 
 
 # ----------------------------------------------------------------- helpers ---
@@ -474,7 +475,7 @@ def test_ac9_list_is_not_checked(home, tmp_path):
     bad = _run(["-c", EX, "--list", "-a", "dan", "-n", "𠮷田", f"--out={tmp_path / 'o'}"],
                home, tmp_path)
     assert plain.returncode == bad.returncode == 0
-    assert bad.stdout == "dan-overlay-𠮷田.pdf\n"
+    assert bad.stdout == "dan-overlay-a3-𠮷田.pdf\n"
     assert not (tmp_path / "o").exists()
 
 
@@ -1108,7 +1109,8 @@ def test_ac35_open_item_closed():
     _, open_ = _decisions().split("\n## Open\n", 1)
     items = re.findall(r"^- \*\*(.+?)\*\*", open_, re.M)
     assert not [i for i in items if "Inkscape" in i], items
-    for kept in ("Paper format", "Kyū grades", "An annotated version in Dutch"):
+    # paper-format closed "Paper format: A4 as well as A3" (its AC-21).
+    for kept in ("Kyū grades", "An annotated version in Dutch"):
         assert [i for i in items if i.startswith(kept)], (kept, items)
     # This item added an Open item for a house-style sweep of the existing
     # docs; house-style-sweep did it and closed it (its AC-12).

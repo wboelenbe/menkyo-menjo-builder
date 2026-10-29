@@ -116,6 +116,20 @@ def without_image_box(svg):
     return _IMAGE_BOX.sub(r"\1X\2Y\3W\4H\5", svg)
 
 
+# paper-format (its AC-7): every output name carries the sheet size after
+# the variant, `<award>-<variant>-<size>[-<suffix>].<ext>`.  The goldens keep
+# the names 823af58 wrote and are compared through this mapping, so they
+# still prove the A3 bytes; only the names moved.
+_VARIANT = re.compile(r"-(overlay-flat|overlay(?!-flat)|proof)(?!-a[34](?=[-.]))(?=[-.])")
+
+
+def sized(text, size="a3"):
+    """`text` with `-<size>` inserted after the variant of every output name
+    in it: a file name, `wrote` lines, `--list` output, an xlink:href.  A name
+    that already has a size keeps it, so it is idempotent."""
+    return _VARIANT.sub(rf"-\1-{size}", text)
+
+
 def pinned_pdf(name):
     """A flat or proof PDF: drawn by our writer and fontTools alone, no pdfium.
 

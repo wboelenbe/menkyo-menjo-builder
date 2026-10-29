@@ -299,7 +299,7 @@ def test_ac7_cli_help_unchanged(tmp_path):
     "Contract changes to earlier items"): that item removes one flag and
     rewords the variant help, so this now checks the flags only.  No flag but
     the ones plain-white and the later flag-removal item remove may
-    disappear, and none may appear.
+    disappear, and none but paper-format's --paper may appear.
     """
     if _git("cat-file", "-e", f"{BEFORE}^{{commit}}") is None:
         pytest.skip(f"{BEFORE} not available (no git, or a shallow clone)")
@@ -314,9 +314,10 @@ def test_ac7_cli_help_unchanged(tmp_path):
     home.mkdir()
     removed_by_plain_white = {"--pr" + "ess"}
     removed_later = {"--super" + "sample"}
+    added_by_paper_format = {"--paper"}         # paper-format, its AC-20
     assert _flags(_help(support.SRC, home)) == \
-        _flags(_help(old / "src", home)) - removed_by_plain_white \
-        - removed_later
+        (_flags(_help(old / "src", home)) - removed_by_plain_white
+         - removed_later) | added_by_paper_format
 
 
 # ------------------------------------------------------------------ AC-8 ----

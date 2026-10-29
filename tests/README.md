@@ -94,3 +94,10 @@ than render-without-inkscape (anything before 0.3.0, `823af58` included)
 needs a real Inkscape on `/usr/bin:/bin`: run it in an image that has one.
 A commit from render-without-inkscape onwards renders anywhere. Every rendering
 case passes `--date`, because the example's `[sample]` date is `today`.
+
+Since paper-format every output name carries the sheet size. The goldens
+keep the names `823af58` wrote and are compared through
+`golden_lib.sized()`, which inserts `-a3` after the variant in the file
+names, the stdout, the PDF-hash keys and the side raster's name in an inked
+SVG's `xlink:href`. Every other byte is compared as before, so the goldens
+still prove the A3 output unchanged.

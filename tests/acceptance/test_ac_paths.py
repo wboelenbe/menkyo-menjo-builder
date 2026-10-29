@@ -146,7 +146,7 @@ def test_ac4_installed_copy_writes_to_documents(tmp_path):
          "-d", ""],
         env=support.isolated_env(home), cwd=str(tmp_path), capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
-    target = home / "Documents" / "Menkyo" / "dan-overlay-flat-sample.pdf"
+    target = home / "Documents" / "Menkyo" / "dan-overlay-flat-a3-sample.pdf"
     assert r.stdout.splitlines()[0] == f"wrote {target}"
     assert target.exists()
     # That the copy reads its own fonts is render-without-inkscape's AC-10:

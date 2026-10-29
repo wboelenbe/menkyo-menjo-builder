@@ -111,8 +111,8 @@ def test_ac3_runs_from_outside_the_checkout(installed, home, tmp_path):
     env = support.isolated_env(home)
     r = support.run_menkyo(["--list", "-v", "overlay"], env, tmp_path, exe=exe)
     assert r.returncode == 0, r.stderr
-    assert r.stdout.splitlines() == ["dan-overlay-sample.pdf", "shihan-overlay-sample.pdf",
-                                     "renshi-overlay-sample.pdf"]
+    assert r.stdout.splitlines() == ["dan-overlay-a3-sample.pdf", "shihan-overlay-a3-sample.pdf",
+                                     "renshi-overlay-a3-sample.pdf"]
 
     r = support.run_menkyo(["-a", "dan", "-v", "overlay,overlay-flat", "-d", "",
                             "--json"], env, tmp_path, exe=exe)
@@ -120,7 +120,7 @@ def test_ac3_runs_from_outside_the_checkout(installed, home, tmp_path):
     ev = support.events(r.stdout)
     docs = home / "Documents" / "Menkyo"
     assert ev[-1] == {"event": "done", "out": str(docs), "files": [
-        str(docs / "dan-overlay-sample.pdf"), str(docs / "dan-overlay-flat-sample.pdf")]}
+        str(docs / "dan-overlay-a3-sample.pdf"), str(docs / "dan-overlay-flat-a3-sample.pdf")]}
     site = next(installed["venv"].glob("lib/python*/site-packages"))
     fonts = site / "menkyo" / "fonts"
     assert (fonts / "YujiBoku-Regular.ttf").is_file()
@@ -143,5 +143,5 @@ def test_ac3_installed_wheel_renders_with_the_font(installed, home, tmp_path):
                             "--json", "--out", "out"], env, tmp_path, exe=exe)
     assert r.returncode == 0, r.stdout + r.stderr
     assert support.events(r.stdout)[-1]["event"] == "done"
-    s = refkit.pdf_summary(tmp_path / "out" / "dan-overlay-flat-sample.pdf")
+    s = refkit.pdf_summary(tmp_path / "out" / "dan-overlay-flat-a3-sample.pdf")
     assert s["font_objects"] == 0 and s["path_ops"] > 1000, s

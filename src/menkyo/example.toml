@@ -60,9 +60,15 @@ honorific = "殿"
 text = "柔能制剛"
 
 [paper]
-# Millimetres, on plain white A3.  `border` is the margin kept clear all
-# round the sheet; `safe_inset` is where the text is allowed to begin.  Both
-# are drawn on the proof (`menkyo -v proof`), and nothing else prints them.
+# The sheet, landscape: "a3" (420 x 297 mm) or "a4" (297 x 210 mm), which is
+# the same layout scaled down to fit.  This is the dōjō's default; --paper a4
+# or --paper a3 overrides it for one run.
+size = "a3"
+
+# Millimetres of the A3 sheet, plain white; on A4 they scale with everything
+# else.  `border` is the margin kept clear all round the sheet; `safe_inset`
+# is where the text is allowed to begin.  Both are drawn on the proof
+# (`menkyo -v proof`), and nothing else prints them.
 border = 22.0
 safe_inset = 38.0
 
@@ -130,5 +136,5 @@ rank = "5"
 date = "today"
 
 # Filename tag, so a first build is obviously a set of specimens:
-# dan-overlay-sample.pdf rather than dan-overlay.pdf.
+# dan-overlay-a3-sample.pdf rather than dan-overlay-a3.pdf.
 suffix = "sample"
