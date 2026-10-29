@@ -1,8 +1,8 @@
 """
 Japanese martial-arts certificates: dan grades and teaching licences.
 
-Generates a *text-only overlay* meant to be printed onto bought Japanese
-blank certificate stock (賞状用紙), A3 landscape.  The three things a
+Generates the certificate's text and crest, to be printed on plain white A3
+paper, landscape.  The three things a
 calligrapher would brush in — the rank, the recipient, the date numerals —
 can each be printed or left empty; ``--rank``, ``--name`` and ``--date``
 decide, falling back to the ``[sample]`` stand-ins in the configuration and
@@ -13,24 +13,19 @@ Which documents exist, and whose name goes on them, is configuration: see
 school.
 
 One file per award per variant, written as ``<award>-<variant>.<ext>`` into
-./build from a checkout, ~/Documents/Menkyo otherwise.  The variants are two
-ways of printing one layout, plus fallbacks:
+./build from a checkout, ~/Documents/Menkyo otherwise.  The variants are one
+layout, plus a fallback and a check:
 
-    overlay        text only, to print onto bought Japanese 賞状用紙
-    full           our own engraved border (border.py), for cream stock
-    full-cream     the same with the paper tint printed — the one to look at
+    overlay        the certificate, its text graded like sumi — the one to print
     overlay-flat   solid black instead of graded sumi, pure vector
-    full-flat      likewise, with the border
     proof          safe areas and the zones the calligrapher fills
 
-Only ``overlay`` and ``full-cream`` are built by default, as PDF and PNG:
-enough to look at and enough to print, without burying the ones that matter.
-``--press`` adds the colour-converted files a commercial printer wants.
+Only ``overlay`` is built by default, as PDF.
 
     menkyo                        the sensible default
     menkyo --list                 show what that is
     menkyo -a dan -v proof -f png one proof sheet
-    menkyo --all --press          everything
+    menkyo --all -f pdf,png       everything
 
 ``--help`` documents the rest, and ``--json`` turns the output into one JSON
 object per line -- progress, files, errors -- for a program running this one.
@@ -44,7 +39,7 @@ import shutil
 import subprocess
 import sys
 
-from . import __version__, border, ink, paths
+from . import __version__, ink, paths
 from . import config as config_mod
 
 # Output directory; main() replaces it when --out is given.
@@ -59,13 +54,6 @@ CFG = config_mod.Config()
 PAGE_W, PAGE_H = 420.0, 297.0          # A3 landscape, mm
 
 INK = "#111111"                        # near-black, reads as sumi in print
-
-# Fallback for the drawn border (border.py), when an award names no colour of
-# its own. Only relevant to the `full` / `full-cream` variants — the overlay
-# route's border is the bought stock, which we do not control. Giving the
-# teaching licences a second colour is a good way to make them read apart from
-# the grades at a glance; see the `colour` key in the config.
-SEPIA = "#8a6a33"
 
 # Yuji Boku (佑字 木) — a genuinely brush-written kaisho by Kinuta Font
 # Factory, OFL, vendored in fonts/ inside this package.  It is what makes the
@@ -300,7 +288,6 @@ SZ_TITLE = 12.0
 SZ_SIGNER = 12.5
 
 CREST_C = (210.0, 50.0)
-CREST_C_BORDERED = (210.0, 58.0)   # clears the drawn band's inner rule
 CREST_R = 19.0
 
 SEAL_C = (85.0, 236.0)
@@ -349,9 +336,8 @@ def date_column(value):
 
 
 def document(verb, heading, crest_kind="full", guides=False,
-             drawn_border=False, paper=None, layer="all", name=None,
-             honorific="殿", rank=None, date=None, rank_column=True,
-             border_colour=SEPIA):
+             layer="all", name=None, honorific="殿", rank=None, date=None,
+             rank_column=True):
     """One certificate. `verb` is the four-character award formula."""
     # `[paper] text_drop` (a fraction of the page height) shifts every printed
     # column's starting point down by the same amount, giving the whole
@@ -373,12 +359,6 @@ def document(verb, heading, crest_kind="full", guides=False,
         f'<svg xmlns="http://www.w3.org/2000/svg"{xlink} '
         f'width="{PAGE_W}mm" height="{PAGE_H}mm" viewBox="0 0 {PAGE_W} {PAGE_H}">'
     )
-    if layer != "text":
-        if paper:
-            o.append(f'<rect width="{PAGE_W}" height="{PAGE_H}" fill="{paper}"/>')
-        if drawn_border:
-            o.append(border.border_svg(PAGE_W, PAGE_H, colour=border_colour))
-
     if guides and layer != "text":
         sb, si = CFG.stock_border, CFG.safe_inset
         o.append(
@@ -419,15 +399,14 @@ def document(verb, heading, crest_kind="full", guides=False,
 
     # The crest stays out of the ink pass: a mon is a carved seal pressed in
     # one go, not a brushed stroke, so it should not fade at its thin points.
-    cc = CREST_C_BORDERED if drawn_border else CREST_C
     if layer == "text":
         pass
     elif crest_kind == "bare":
-        o.append(crest(*cc, CREST_R))
+        o.append(crest(*CREST_C, CREST_R))
     elif crest_kind == "bottom":
-        o.append(crest(*cc, CREST_R, ring_bottom=CFG.crest_ring))
+        o.append(crest(*CREST_C, CREST_R, ring_bottom=CFG.crest_ring))
     elif crest_kind == "full":
-        o.append(crest(*cc, CREST_R, ring_bottom=CFG.crest_ring,
+        o.append(crest(*CREST_C, CREST_R, ring_bottom=CFG.crest_ring,
                        ring_top=CFG.art))
 
     if layer == "chrome":                       # ink layer supplies the text
@@ -470,7 +449,6 @@ STAGES = {
     "text": "rendering the text",
     "ink": "grading the ink",
     "pdf": "writing the PDF",
-    "press": "converting for the press",
     "png": "writing the PNG",
 }
 
@@ -500,15 +478,13 @@ class _Progress:
 PROGRESS = _Progress()
 
 
-def _stages(variant, formats, press, inked):
+def _stages(variant, formats, inked):
     """The slow steps build_one() will report for one variant, in order."""
     out = []
     if inked and VARIANTS[variant].get("inked"):
         out += ["text", "ink"]
     if "pdf" in formats:
         out.append("pdf")
-        if press and variant != "proof":
-            out.append("press")
     if "png" in formats:
         out.append("png")
     return out
@@ -609,8 +585,7 @@ def _font_env():
     return env
 
 
-def render(svg_path, out_base, formats, press=False, dpi=300,
-           transparent=False, convert="gray"):
+def render(svg_path, out_base, formats, dpi=300, transparent=False):
     """Export one intermediate SVG into `out_base` in the requested formats."""
     env = _font_env()
     written = []
@@ -623,23 +598,6 @@ def render(svg_path, out_base, formats, press=False, dpi=300,
              "--export-filename=" + pdf],
             check=True, capture_output=True, env=env)
         written.append(pdf)
-        if press:
-            # The overlays are black text only, so K-only keeps them from
-            # printing as a muddy four-colour black next to sumi ink; the full
-            # artwork carries a sepia border and must stay in CMYK.
-            if convert == "gray":
-                suffix, strat, model = "-K", "/Gray", "/DeviceGray"
-            else:
-                suffix, strat, model = "-CMYK", "/CMYK", "/DeviceCMYK"
-            PROGRESS("press")
-            subprocess.run(
-                [paths.require_tool("gs"), "-dSAFER", "-dBATCH", "-dNOPAUSE", "-sDEVICE=pdfwrite",
-                 "-dColorConversionStrategy=" + strat,
-                 "-dProcessColorModel=" + model,
-                 "-dPDFSETTINGS=/prepress", "-dEmbedAllFonts=true",
-                 "-o", out_base + suffix + ".pdf", pdf],
-                check=True, capture_output=True)
-            written.append(out_base + suffix + ".pdf")
 
     if "png" in formats:
         PROGRESS("png")
@@ -665,32 +623,25 @@ def render(svg_path, out_base, formats, press=False, dpi=300,
 
 
 # --------------------------------------------------------------- variants ---
-CREAM = "#f7f1e3"
-
 # The awards themselves come from the config ([[awards]]): slug, heading,
-# formula, whether the body states a grade, and the drawn border's colour.
+# formula, and whether the body states a grade.
 # The heading names the document, so several awards read apart at a glance;
 # a grade column is for documents that state a specific grade as well —
 # a dan certificate does, a teaching licence usually does not, since its
 # heading has already named the award.  --rank overrides that either way.
 
+# Every variant prints on plain white paper; see DECISIONS.md.
 VARIANTS = {
-    # what you print onto bought Japanese 賞状用紙
+    # the certificate, its text graded like sumi: what you print
     "overlay": dict(inked=True),
-    # our own engraved border, for printing on cream stock
-    "full": dict(drawn_border=True, inked=True),
-    # the same with the paper tint printed too, for white stock — and the one
-    # to look at on screen, since it shows the finished sheet
-    "full-cream": dict(drawn_border=True, paper=CREAM, inked=True),
-    # solid-black fallbacks: the graded text is a greyscale raster, and a home
-    # laser halftones grey.  If the 12 mm columns come out mottled, print these.
+    # solid-black fallback: the graded text is a greyscale raster, and a home
+    # laser halftones grey.  If the 12 mm columns come out mottled, print this.
     "overlay-flat": dict(),
-    "full-flat": dict(drawn_border=True),
     # safe areas and the zones the calligrapher fills
     "proof": dict(guides=True),
 }
 
-DEFAULT_VARIANTS = ["overlay", "full-cream"]
+DEFAULT_VARIANTS = ["overlay"]
 DEFAULT_FORMATS = ["pdf"]
 
 
@@ -721,13 +672,11 @@ def _suffix_for(name):
     return "".join(c for c in out if c not in '/\\:*?"<>|')
 
 
-def build_one(slug, heading, verb, variant, formats, press=False, dpi=300,
-              inked=True, work=None, supersample=1, name=None, honorific="殿",
-              rank=None, date=None, suffix="", rank_column=True,
-              border_colour=SEPIA):
+def build_one(slug, heading, verb, variant, formats, dpi=300, inked=True,
+              work=None, supersample=1, name=None, honorific="殿", rank=None,
+              date=None, suffix="", rank_column=True):
     kw = dict(VARIANTS[variant])
     kw["rank_column"] = rank_column or bool(rank)
-    kw["border_colour"] = border_colour
     if date:
         kw["date"] = date
     if name:
@@ -751,10 +700,8 @@ def build_one(slug, heading, verb, variant, formats, press=False, dpi=300,
         svg = document(verb, heading, **kw)
     open(svg_path, "w").write(svg)
 
-    return render(svg_path, os.path.join(BUILD, stem), formats,
-                  press=press and variant != "proof", dpi=dpi,
-                  transparent=not kw.get("guides") and not kw.get("paper"),
-                  convert="cmyk" if kw.get("drawn_border") else "gray")
+    return render(svg_path, os.path.join(BUILD, stem), formats, dpi=dpi,
+                  transparent=not kw.get("guides"))
 
 
 def _csv(value, allowed, what):
@@ -831,9 +778,9 @@ def main(argv=None, progress=None):
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="Generate Japanese dan-grade and teaching-licence artwork.",
         epilog=(
-            "By default this writes only what you would actually look at or\n"
-            "print: the overlay for bought stock and the full-cream reference,\n"
-            "for every award your config defines. Everything else is opt-in.\n"
+            "By default this writes only what you would actually print: the\n"
+            "overlay, for plain white A3, for every award your config defines.\n"
+            "Everything else is opt-in.\n"
             "\n"
             f"configuration: {os.path.relpath(CFG.source, os.getcwd())}\n"
             "  start from `menkyo --example-config > dojo.toml` and edit it,\n"
@@ -843,8 +790,7 @@ def main(argv=None, progress=None):
             "  menkyo                                    the sensible default\n"
             "  menkyo --list                             show what that is\n"
             f"  menkyo -a {slugs[0]} -v proof -f png             one proof sheet\n"
-            "  menkyo --press                            add -K / -CMYK for a printer\n"
-            "  menkyo --all --press                      everything, for an archive\n"))
+            "  menkyo --all -f pdf,png                   everything, for an archive\n"))
     ap.add_argument("--version", action="version", version=f"menkyo {__version__}")
     ap.add_argument("-c", "--config", metavar="PATH",
                     help="certificate configuration to use (default: dojo.toml "
@@ -863,13 +809,9 @@ def main(argv=None, progress=None):
                     metavar="LIST",
                     help="comma-separated: pdf,png,svg "
                          f"(default: {','.join(DEFAULT_FORMATS)})")
-    ap.add_argument("--press", action="store_true",
-                    help="also write press-ready colour conversions: -K "
-                         "greyscale for the overlays, -CMYK for the artwork. "
-                         "Wanted by a commercial printer, not by yours.")
     ap.add_argument("--no-ink", action="store_true",
                     help="skip the sumi grading and set solid black; the same "
-                         "thing the -flat variants give you")
+                         "thing the -flat variant gives you")
     ap.add_argument("--dpi", type=int, default=300, metavar="N",
                     help="resolution for PNG output (default: 300)")
     ap.add_argument("-n", "--name", metavar="KATAKANA",
@@ -963,15 +905,11 @@ def main(argv=None, progress=None):
         for slug in awards:
             for v in variants:
                 for ext in formats:
-                    names = [f"{slug}-{v}{tail}.{ext}"]
-                    if args.press and ext == "pdf" and v != "proof":
-                        tag = "-CMYK" if "full" in v else "-K"
-                        names.append(f"{slug}-{v}{tail}{tag}.pdf")
-                    for n in names:
-                        if args.json:
-                            _emit("planned", file=n)
-                        else:
-                            print(n)
+                    n = f"{slug}-{v}{tail}.{ext}"
+                    if args.json:
+                        _emit("planned", file=n)
+                    else:
+                        print(n)
         return
 
     if args.clean and os.path.isdir(BUILD):
@@ -986,7 +924,7 @@ def main(argv=None, progress=None):
     else:
         report = progress or (_stderr_progress if sys.stderr.isatty() else None)
     PROGRESS = _Progress(
-        sum(len(_stages(v, formats, args.press, not args.no_ink)) * len(awards)
+        sum(len(_stages(v, formats, not args.no_ink)) * len(awards)
             for v in variants),
         report)
 
@@ -994,18 +932,16 @@ def main(argv=None, progress=None):
     for slug in awards:
         aw = CFG.award(slug)
         heading, verb = aw.heading, aw.formula
-        rank_column, border_colour = aw.grade_column, aw.colour
+        rank_column = aw.grade_column
         for variant in variants:
             written = build_one(slug, heading, verb, variant, formats,
-                                press=args.press, dpi=args.dpi,
-                                inked=not args.no_ink, work=work,
+                                dpi=args.dpi, inked=not args.no_ink, work=work,
                                 supersample=args.supersample,
                                 name=name, honorific=args.honorific,
                                 rank=None if sample_rank and not rank_column
                                      else rank,
                                 date=date, suffix=suffix,
-                                rank_column=rank_column,
-                                border_colour=border_colour)
+                                rank_column=rank_column)
             for w in written:
                 if args.json:
                     _emit("file", path=w)

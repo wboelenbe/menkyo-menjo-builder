@@ -6,11 +6,12 @@
 
 The goldens pin what the generator writes: the SVG of every case in
 golden_cases.py, the text layer it hands to Inkscape, every call it makes to
-Inkscape and Ghostscript, and its stdout.  test_golden.py fails when the
-current code differs.
+Inkscape, and its stdout.  test_golden.py fails when the current code differs.
 
 They were first made from the last commit before packaging (d96c08d), which
-proves the restructure changed nothing.  After an *intentional* change to the
+proved the restructure changed nothing, and are now made from 823af58, the
+last commit before plain-white, which proves that removing the coloured
+variants left the other three untouched.  After an *intentional* change to the
 layout or the output, refresh them with --current, look at the diff of
 golden/svg/ and say why in the commit.
 

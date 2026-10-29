@@ -1,4 +1,4 @@
-"""Certificate configuration: who is issuing this, and on what paper.
+"""Certificate configuration: who is issuing this, and with what margins.
 
 Everything that identifies a school -- the name of the art, the name of the
 dōjō, the crest ring, the signatory, the awards on offer -- lives in a TOML
@@ -38,12 +38,11 @@ SCHEMA = 1
 
 @dataclass
 class Award:
-    """One kind of document: its heading, its operative sentence, its colour."""
+    """One kind of document: its heading, its operative sentence."""
     slug: str
     heading: str
     formula: str
     grade_column: bool = False
-    colour: str = "#8a6a33"
 
 
 @dataclass
@@ -154,12 +153,13 @@ def load(path=None):
         if a["slug"] in seen:
             raise SystemExit(f"{path}: two awards share the slug '{a['slug']}'")
         seen.add(a["slug"])
+        # Any other key -- an award colour from before the plain white sheet,
+        # say -- is ignored, so an older configuration keeps working.
         cfg.awards.append(Award(
             slug=a["slug"],
             heading=a["heading"],
             formula=a["formula"],
             grade_column=bool(a.get("grade_column", False)),
-            colour=a.get("colour", Award.colour),
         ))
 
     # A crest ring of four characters is what the geometry is spaced for; the
@@ -206,8 +206,7 @@ def save(cfg, path=USER_CONFIG):
                 f"slug = {_q(a.slug)}",
                 f"heading = {_q(a.heading)}",
                 f"formula = {_q(a.formula)}",
-                f"grade_column = {str(a.grade_column).lower()}",
-                f"colour = {_q(a.colour)}", ""]
+                f"grade_column = {str(a.grade_column).lower()}", ""]
     os.makedirs(os.path.dirname(path), exist_ok=True)
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:

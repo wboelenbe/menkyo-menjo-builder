@@ -8,7 +8,6 @@ point at a throwaway directory.
 import hashlib
 import json
 import os
-import re
 import shutil
 import stat
 import subprocess
@@ -23,13 +22,16 @@ TESTS = REPO / "tests"
 FAKE_TOOL = TESTS / "fakes" / "fake_tool.py"
 DATA = TESTS / "data"
 
-# The baseline the packaging work must not change: the last commit before it.
-BASELINE_REF = "d96c08d"
+# The baseline the goldens are generated from: 823af58, the last commit before
+# plain-white.  Its overlay, overlay-flat and proof output is what the current
+# code must still write, byte for byte.  (The packaging item's baseline was
+# d96c08d; 823af58 was itself checked against it.)
+BASELINE_REF = "823af58"
 
 PERSONAL = ("dojo.toml", "crest", "ref")
 
 
-def make_fake_bin(bin_dir, tools=("inkscape", "gs"), python=sys.executable):
+def make_fake_bin(bin_dir, tools=("inkscape",), python=sys.executable):
     """Write shell wrappers named after `tools` that run tests/fakes/fake_tool.py."""
     bin_dir = Path(bin_dir)
     bin_dir.mkdir(parents=True, exist_ok=True)
@@ -86,29 +88,6 @@ def sha256(data):
     if isinstance(data, str):
         data = data.encode("utf-8")
     return hashlib.sha256(data).hexdigest()
-
-
-_BORDER_START = '<defs><clipPath id="bd"'
-
-
-def normalise_svg(text):
-    """The SVG with the 800 kB generated border replaced by a one-line hash.
-
-    Only for storing and diffing goldens; equality is always checked on the
-    raw bytes.  The border runs from its <defs> to the closing tag of its
-    square-capped rules group.
-    """
-    start = text.find(_BORDER_START)
-    if start < 0:
-        return text
-    rules = text.find('stroke-linecap="square">', start)
-    end = text.find("</g>", rules) + len("</g>")
-    block = text[start:end]
-    colour = re.search(r'stroke="(#[0-9a-fA-F]{6})"', block)
-    return (text[:start]
-            + f"<!-- border colour={colour.group(1) if colour else '?'} "
-              f"sha256={sha256(block)} -->"
-            + text[end:])
 
 
 def find_inkscape():

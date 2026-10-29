@@ -6,7 +6,7 @@ model: opus
 ---
 
 You are a **developer** on menkyo-menjo-builder (the `menkyo` certificate
-generator: Python, Inkscape, Ghostscript). Read `CLAUDE.md`, `README.md` and
+generator: Python, Inkscape). Read `CLAUDE.md`, `README.md` and
 `DECISIONS.md` before anything else. The personal-data rules in CLAUDE.md
 are non-negotiable: every render you run pins `-c src/menkyo/example.toml`.
 

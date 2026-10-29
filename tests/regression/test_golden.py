@@ -1,10 +1,10 @@
-"""The current code writes exactly what the baseline (d96c08d) wrote.
+"""The current code writes exactly what the baseline (823af58) wrote.
 
 Goldens: golden/manifest.json and golden/svg/, made by make_golden.py.  Each
-case runs the generator through golden_driver.py with the stand-in inkscape
-and gs, and is compared on: exit status, stdout, the set of files written,
-every SVG byte for byte, the text layer handed to Inkscape, and every call
-made to Inkscape and Ghostscript (paths normalised).
+case runs the generator through golden_driver.py with the stand-in inkscape,
+and is compared on: exit status, stdout, the set of files written, every SVG
+byte for byte, the text layer handed to Inkscape, and every call made to
+Inkscape (paths normalised).
 """
 
 import difflib
@@ -23,7 +23,7 @@ def _svg_diff(expected_sha, actual_text, name):
     if expected is None:
         return f"(no stored blob for {name})"
     diff = difflib.unified_diff(
-        expected.splitlines(), support.normalise_svg(actual_text).splitlines(),
+        expected.splitlines(), actual_text.splitlines(),
         f"golden/{name}", f"current/{name}", lineterm="", n=1)
     return "\n".join(list(diff)[:80])
 
@@ -50,7 +50,7 @@ def test_output_matches_baseline(case, tmp_path):
     assert got["exit"] == golden["exit"]
     assert got["stdout"] == golden["stdout"]
     assert sorted(got["files"]) == sorted(golden["files"]), "different files written"
-    assert got["tools"] == golden["tools"], "different Inkscape / Ghostscript calls"
+    assert got["tools"] == golden["tools"], "different Inkscape calls"
 
     out = tmp_path / "out"
     mismatched = []

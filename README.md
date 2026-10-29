@@ -33,9 +33,9 @@ uv run menkyo --list                 # what a default build would write
 uv run menkyo                        # write it
 ```
 
-Needs Python 3.11+ (for `tomllib`), Inkscape, Ghostscript, and Pillow / NumPy
-/ SciPy; `uv run` installs the Python side. Without uv, `pip install -e .`
-and then plain `menkyo`. From a checkout, files land in `build/` as
+Needs Python 3.11+ (for `tomllib`), Inkscape, and Pillow / NumPy / SciPy;
+`uv run` installs the Python side. Without uv, `pip install -e .` and then
+plain `menkyo`. From a checkout, files land in `build/` as
 `<award>-<variant>.<ext>`.
 
 ## As a package
@@ -75,9 +75,9 @@ An installed copy has no checkout to sit in, so it writes to
 `~/Library/Application Support/Menkyo/dojo.toml` (`~/.config/Menkyo/` on
 Linux) when no `--config` is given.
 
-Inkscape must be on the host as well, and Ghostscript for `--press`. On
-Debian: `apt-get install inkscape ghostscript fontconfig fonts-noto-cjk`
-(the Noto fonts set the crest ring).
+Inkscape must be on the host as well. On Debian:
+`apt-get install inkscape fontconfig fonts-noto-cjk` (the Noto fonts set the
+crest ring).
 
 Run it as a command, not as a library: the generator keeps its state in module
 globals, and a render can take a couple of GB, which a separate process gives
@@ -113,7 +113,7 @@ The command above writes, in part:
 and a failure ends in one line such as
 `{"event": "error", "message": "inkscape failed.", "detail": "…"}`.
 
-`stage` is one of `text`, `ink`, `pdf`, `press` or `png`, for a caller that
+`stage` is one of `text`, `ink`, `pdf` or `png`, for a caller that
 wants its own wording; `label` says the same in English. `total` is known from
 the first event, so `step / total` is a progress bar. A certificate takes
 tens of seconds, most of it in `text` and `ink`. Without `--json`, the same
@@ -155,8 +155,8 @@ name = ""                    # the signatory, in katakana
 text = ""                    # an optional school precept, in its own column
 
 [paper]
-border = 22.0                # mm — see "Printing onto bought stock"
-safe_inset = 38.0
+border = 22.0                # mm, the margin kept clear all round — see "Printing"
+safe_inset = 38.0            # mm, where the text may begin
 text_drop = 0.05              # fraction of page height — see "Where the columns start"
 
 [[awards]]
@@ -164,7 +164,6 @@ slug = "dan"
 heading = "段位免状"         # names the document
 formula = "右授与ス"         # "the above is hereby awarded"
 grade_column = true          # the body also states a grade: 初段, 二段 …
-colour = "#8a6a33"           # the drawn border
 ```
 
 Each `[[awards]]` block becomes one `--awards` slug, so a school with a
@@ -174,9 +173,8 @@ in the body as well as in the heading, whereas a licence has already named
 its award in the heading and would otherwise leave an empty column behind the
 recipient's name. Setting it `false` closes the layout up.
 
-Giving the licences a second `colour` is a good way to make them read apart
-from the grades at a glance — but only on the `full` variants, since the
-overlay route's border is bought paper.
+A `colour` key, which earlier versions read for a drawn frame, is still
+accepted and ignored: the certificates print in black on plain white paper.
 
 ### Where the columns start
 
@@ -213,9 +211,8 @@ constants at the top of `src/menkyo/build_diploma.py`.
 | `-c`, `--config PATH` | which configuration to use (default: `dojo.toml`, else the shipped example) |
 | `--example-config` | print the shipped example configuration and stop |
 | `-a`, `--awards LIST` | which awards, or `all` (default: all) |
-| `-v`, `--variants LIST` | which variants, or `all` (default: `overlay,full-cream`) |
+| `-v`, `--variants LIST` | which variants, or `all` (default: `overlay`) |
 | `-f`, `--formats LIST` | `pdf`, `png`, `svg` (default: `pdf`) |
-| `--press` | also write the colour conversions a commercial printer wants |
 | `--no-ink` | solid black instead of graded sumi |
 | `-n`, `--name KATAKANA` | print the recipient's name instead of leaving it blank |
 | `-r`, `--rank GRADE` | print the grade: `2` or `nidan` → 二段, `1` → 初段, or literal text |
@@ -233,22 +230,20 @@ constants at the top of `src/menkyo/build_diploma.py`.
 ```
 menkyo -a dan -r 5 -n 'ヤン・ヤンセン' -d 2024-07-01
 menkyo -a dan -v proof -f png      # one proof sheet
-menkyo -v full --press             # for the print shop
+menkyo --all -f pdf,png            # every variant, PDF and PNG
 ```
 
 ## Variants
 
 | variant | what it is |
 |---|---|
-| `overlay` | text only, to print onto bought Japanese 賞状用紙 — **the print asset** |
-| `full-cream` | the drawn border plus the paper tint — **the one to look at on screen** |
-| `full` | the drawn border, no printed tint, for real cream stock |
+| `overlay` | the certificate, its text graded like sumi — **the one to print** |
 | `overlay-flat` | solid black instead of graded sumi, pure vector |
-| `full-flat` | likewise, with the border |
 | `proof` | safe areas and the zones the calligrapher fills |
 
-Only `overlay` and `full-cream` are built by default: enough to print and
-enough to look at, without burying them under variants you rarely want.
+Only `overlay` is built by default. All three are the same layout on plain
+white paper. `overlay` and `overlay-flat` are black text and crest, with no
+frame and no background; `proof` adds pale guides.
 
 ## Filling the document in
 
@@ -278,33 +273,20 @@ Japanese equivalent and every choice is a compromise. Agree it with the
 recipient before printing: it is the one word on the sheet they will look at
 hardest.
 
-## Printing — overlay onto bought stock
+## Printing
 
-1. Buy blank A3 **横型** (landscape) 賞状用紙. Much of what is sold is portrait
-   and the border will not rotate. Measure the width of its printed border.
-2. Set `border` and `safe_inset` under `[paper]` to match. **The shipped values
-   (22 mm / 38 mm) are placeholders** — nothing may print inside the band.
-3. Print `<award>-overlay.pdf` at **100 %** — no "fit to page", no scaling. The
-   page is exactly 420 × 297 mm; check with a ruler on the first sheet.
-4. Run one plain sheet first and hold it against the stock at a window to check
-   registration.
-
-## Printing — the drawn border
-
-1. `--variants full` on cream uncoated stock, 200–250 gsm. It has no printed
-   background, so the paper supplies the colour — always better than
-   `full-cream`, which prints the tint and is only for white stock.
-2. For a commercial printer add `--press` and send the `-CMYK` file. Do **not**
-   send the `-K` greyscale route: it would throw the border's colour away.
-3. Test on the real printer first. The border's strokes are 0.11–0.22 mm. A
-   laser at 600 dpi holds them; an inkjet on absorbent stock may thicken them
-   and darken the band. If so, raise `density` in `src/menkyo/border.py` —
-   wider spacing — rather than thinning the strokes.
+1. Plain white A3 paper.
+2. Print `<award>-overlay.pdf` at **100 %** — no "fit to page", no scaling.
+   The page is exactly 420 × 297 mm; check with a ruler on the first sheet.
+3. `border` and `safe_inset` under `[paper]` are margins on that sheet:
+   `border` is kept clear all round (22 mm by default), `safe_inset` is where
+   the text may begin (38 mm). Nothing prints them; `-v proof` draws both, so
+   you can check a layout against your printer's own unprintable edge.
 
 **Print a `-flat` variant alongside your first real print.** The graded text is
-a greyscale raster; a home laser halftones grey, and some commercial RIPs
-mishandle its transparency. If the 12 mm columns come out mottled, the `-flat`
-files are the same layout in solid black, pure vector. Nothing else differs.
+a greyscale raster; a home laser halftones grey, and some printers mishandle
+its transparency. If the 12 mm columns come out mottled, the `-flat` files are
+the same layout in solid black, pure vector. Nothing else differs.
 
 ## How it looks the way it does
 
@@ -314,11 +296,8 @@ brush lifts — a real brush never lays down flat black. The font ships in
 `src/menkyo/fonts/` and the build points fontconfig at it, so nothing needs installing and
 nothing on your machine changes.
 
-`src/menkyo/border.py` draws the engraved border generatively: phoenix plumes with
-herringbone barbs, clipped to an annulus, one half generated and mirrored.
-
-`DECISIONS.md` records why each line reads as it does, and how the border and
-the ink were arrived at.
+`DECISIONS.md` records why each line reads as it does, and how the ink was
+arrived at.
 
 ## Layout
 
@@ -327,7 +306,6 @@ src/menkyo/             the package: everything the wheel ships
   build_diploma.py      generator and CLI; typography constants at the top
   config.py             the TOML configuration
   paths.py              where things live: checkout or installed, tools
-  border.py             the engraved phoenix-plume border
   ink.py                the sumi grading
   example.toml          placeholder configuration, the shipped default
   fonts/                Yuji Boku + its OFL licence, used without installing

@@ -115,13 +115,10 @@ def test_csv_rejects_unknown():
 
 
 # --------------------------------------------------------------- constants --
-def test_variants_and_defaults():
-    assert list(bd.VARIANTS) == ["overlay", "full", "full-cream",
-                                 "overlay-flat", "full-flat", "proof"]
-    assert bd.DEFAULT_VARIANTS == ["overlay", "full-cream"]
+def test_formats_and_page():
+    # The variant set and the default variants are plain-white's contract:
+    # tests/acceptance/test_ac_plain_white.py.
     assert bd.DEFAULT_FORMATS == ["pdf"]
-    assert [v for v, kw in bd.VARIANTS.items() if kw.get("inked")] == \
-        ["overlay", "full", "full-cream"]
     assert (bd.PAGE_W, bd.PAGE_H) == (420.0, 297.0)
 
 
@@ -144,9 +141,12 @@ def test_long_name_shrinks_to_fit():
 
 def test_document_layers():
     """chrome holds no printed columns; text holds no crest; all holds both."""
-    chrome = bd.document("右授与ス", "段位免状", layer="chrome", drawn_border=True)
-    text = bd.document("右授与ス", "段位免状", layer="text", drawn_border=True)
-    full = bd.document("右授与ス", "段位免状", drawn_border=True)
-    assert "段" not in chrome and "<circle" in chrome and 'clipPath id="bd"' in chrome
-    assert "<circle" not in text and 'clipPath' not in text and ">段<" in text
-    assert "<circle" in full and ">段<" in full
+    chrome = bd.document("右授与ス", "段位免状", layer="chrome")
+    text = bd.document("右授与ス", "段位免状", layer="text")
+    whole = bd.document("右授与ス", "段位免状")
+    assert "段" not in chrome and "<circle" in chrome
+    assert "<circle" not in text and ">段<" in text
+    assert "<circle" in whole and ">段<" in whole
+    # plain white: nothing is drawn behind the sheet
+    for svg in (chrome, text, whole):
+        assert "clipPath" not in svg and "<rect" not in svg

@@ -32,8 +32,8 @@ def test_example_loads():
     assert (c.art, c.dojo, c.crest_ring, c.signer_name, c.motto) == \
         ("〇〇流柔術", "〇〇道場", "〇〇道場", "山田太郎", "柔能制剛")
     assert c.text_drop == 0.05
-    assert c.award("dan") == Award("dan", "段位免状", "右授与ス", True, "#8a6a33")
-    assert c.award("shihan") == Award("shihan", "師範免許状", "右免許ス", False, "#8a336f")
+    assert c.award("dan") == Award("dan", "段位免状", "右授与ス", True)
+    assert c.award("shihan") == Award("shihan", "師範免許状", "右免許ス", False)
     assert (c.sample_name, c.sample_rank, c.sample_date, c.sample_suffix) == \
         ("ジョン・ドウ", "5", "today", "sample")
     assert c.source == str(support.EXAMPLE)
@@ -43,7 +43,6 @@ def test_minimal_file_takes_defaults(tmp_path):
     c = config_mod.load(write(tmp_path, AWARD))
     assert c.art == "〇〇流柔術" and c.honorific == "殿" and c.text_drop == 0.0
     assert c.award("dan").grade_column is False
-    assert c.award("dan").colour == "#8a6a33"
 
 
 def test_award_lookup_unknown():
@@ -119,8 +118,8 @@ def test_save_load_round_trip(tmp_path):
     c = Config(art="〇〇流", dojo="〇〇館", crest_ring="〇〇〇館", crest_traced=True,
                signer_title="宗家", signer_name='山田 "花子"', honorific="様",
                motto="〇〇\\〇〇", stock_border=18.5, safe_inset=30.0, text_drop=0.12,
-               awards=[Award("a", "教士免許状", "右免許ス", False, "#335a8a"),
-                       Award("b", "段位免状", "右授与ス", True, "#8a6a33")],
+               awards=[Award("a", "教士免許状", "右免許ス", False),
+                       Award("b", "段位免状", "右授与ス", True)],
                sample_name="タロウ", sample_rank="3")
     path = config_mod.save(c, str(tmp_path / "sub" / "dojo.toml"))
     assert path == str(tmp_path / "sub" / "dojo.toml")

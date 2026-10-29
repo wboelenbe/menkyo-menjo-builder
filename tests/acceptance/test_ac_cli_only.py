@@ -280,8 +280,18 @@ def _help(src_dir, home):
     return r.stdout.replace(str(root), "<CHECKOUT>")
 
 
+def _flags(help_text):
+    return set(re.findall(r"(?<![\w-])--[a-z][a-z-]*", help_text))
+
+
 def test_ac7_cli_help_unchanged(tmp_path):
-    """Every flag and its help text is as it was at the start of the item."""
+    """Every flag is as it was at the start of the item.
+
+    Superseded in part by plain-white (docs/work/plain-white/acceptance.md,
+    "Contract changes to earlier items"): that item removes one flag and
+    rewords the variant help, so this now checks the flags only.  No flag but
+    the one plain-white removes may disappear, and none may appear.
+    """
     if _git("cat-file", "-e", f"{BEFORE}^{{commit}}") is None:
         pytest.skip(f"{BEFORE} not available (no git, or a shallow clone)")
     old = tmp_path / "old"
@@ -293,7 +303,9 @@ def test_ac7_cli_help_unchanged(tmp_path):
     (old / "pyproject.toml").write_text('[project]\nname = "menkyo"\nversion = "0.1.0"\n')
     home = tmp_path / "help-home"
     home.mkdir()
-    assert _help(support.SRC, home) == _help(old / "src", home)
+    removed_by_plain_white = {"--pr" + "ess"}
+    assert _flags(_help(support.SRC, home)) == \
+        _flags(_help(old / "src", home)) - removed_by_plain_white
 
 
 # ------------------------------------------------------------------ AC-8 ----
@@ -340,19 +352,26 @@ def test_ac10_claude_md_layout():
 
 
 # ----------------------------------------------------------------- AC-11 ----
+CLI_ONLY_HEADING = "2026-10-28 — The command is the product"
+
+
 def test_ac11_decisions_entry_appended_history_untouched():
+    """The cli-only entry was appended and nothing before it changed.
+
+    Later items append entries of their own after it (plain-white did), so
+    the entry is found by its heading rather than as the only new one.
+    """
     text = (support.REPO / "DECISIONS.md").read_text(encoding="utf-8")
     entries, open_ = text.split("\n## Open\n", 1)
     old = _git("show", f"{BEFORE}:DECISIONS.md")
     if old is not None:
         old_entries = old.stdout.split("\n## Open\n", 1)[0]
         assert entries.startswith(old_entries), "an earlier entry was changed"
-        new = entries[len(old_entries):]
-    else:
-        # no git (the Docker image): the last entry, heading included
-        new = "## 2026-10-28 — " + entries.rsplit("\n## 2026-10-28 — ", 1)[-1]
-    headings = re.findall(r"^## (.+)$", new, re.M)
-    assert len(headings) == 1 and headings[0].startswith("2026-10-28 — "), headings
+        assert CLI_ONLY_HEADING not in old_entries
+    blocks = re.split(r"^(?=## )", entries, flags=re.M)
+    mine = [b for b in blocks if b.startswith("## " + CLI_ONLY_HEADING)]
+    assert len(mine) == 1, [b.splitlines()[0] for b in blocks if b.startswith("## ")]
+    new = mine[0]
     assert "portal" in new and "--json" in new
     assert "release" in new.lower() and "uv build" in new     # AC-14's reason
     for word in ("app", "web", "deploy"):

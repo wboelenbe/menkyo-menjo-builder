@@ -41,8 +41,8 @@ why things are the way they are; its `## Open` section is the todo list.
   `menkyo` command is the product; there is no other front end here.
 - The generator keeps its state in module globals (`CFG`, `BUILD`,
   `PROGRESS`); one run at a time per process.
-- Inkscape renders, Ghostscript converts for `--press`. Neither is installed
-  on the Mac; use the Docker test image for real renders (see Commands).
+- Inkscape renders. It is not installed on the Mac; use the Docker test
+  image for real renders (see Commands).
 - Python 3.11+ (`tomllib`). Match the surrounding code: its comment density,
   docstring tone and naming. No formatter is applied to existing code.
 - The version lives only in `pyproject.toml`.

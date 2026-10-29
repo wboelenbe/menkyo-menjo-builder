@@ -72,7 +72,6 @@ _EXTRA_BIN = [
 
 _INSTALL_HINT = {
     "inkscape": "Inkscape (https://inkscape.org/release/, or: brew install --cask inkscape)",
-    "gs": "Ghostscript (brew install ghostscript)",
 }
 
 

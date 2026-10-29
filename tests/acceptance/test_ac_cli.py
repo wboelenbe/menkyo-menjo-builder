@@ -59,19 +59,18 @@ def test_ac6_example_config_round_trips(home, tmp_path):
 def test_ac11_plain_stdout(fake_tools, home, tmp_path):
     out = tmp_path / "out"
     r = support.run_menkyo(["-c", EX, "-a", "dan", "-v", "overlay,proof", "-f", "pdf,png",
-                            "--press", "-d", "", f"--out={out}"],
+                            "-d", "", f"--out={out}"],
                            fake_tools.env(home), tmp_path)
     assert r.returncode == 0
     assert r.stderr == ""                      # not a terminal: no progress
     assert r.stdout == (
         f"wrote {out}/dan-overlay-sample.pdf\n"
-        f"wrote {out}/dan-overlay-sample-K.pdf\n"
         f"wrote {out}/dan-overlay-sample.png\n"
         f"wrote {out}/dan-proof-sample.pdf\n"
         f"wrote {out}/dan-proof-sample.png\n"
-        f"\n5 file(s) in {out}/\n")
+        f"\n4 file(s) in {out}/\n")
     assert sorted(os.listdir(out)) == sorted(
-        ["dan-overlay-sample.pdf", "dan-overlay-sample-K.pdf", "dan-overlay-sample.png",
+        ["dan-overlay-sample.pdf", "dan-overlay-sample.png",
          "dan-proof-sample.pdf", "dan-proof-sample.png"])   # no .work, no .fontconfig
 
 
@@ -138,16 +137,17 @@ def test_ac11_clean_empties_the_output_first(fake_tools, home, tmp_path):
 def test_ac17_console_script_and_module_agree(fake_tools, home, tmp_path):
     script = Path(sys.executable).parent / "menkyo"
     assert script.exists(), "the menkyo console script is not installed in this env"
-    args = ["-c", EX, "--list", "--all", "--press"]
+    args = ["-c", EX, "--list", "-a", "all", "-v", "overlay,overlay-flat,proof",
+            "-f", "pdf,png"]
     a = support.run_menkyo(args, support.isolated_env(home), tmp_path, exe=[str(script)])
     b = support.run_menkyo(args, support.isolated_env(home), tmp_path)
     assert a.returncode == b.returncode == 0
-    assert a.stdout == b.stdout and len(a.stdout.splitlines()) == 3 * 6 + 3 * 5
+    assert a.stdout == b.stdout and len(a.stdout.splitlines()) == 3 * 3 * 2
 
 
 def test_ac17_help(home, tmp_path):
     r = support.run_menkyo(["-c", EX, "--help"], support.isolated_env(home), tmp_path)
     assert r.returncode == 0 and r.stdout.startswith("usage: menkyo ")
-    for flag in ("--json", "--version", "--example-config", "--press", "--no-ink",
+    for flag in ("--json", "--version", "--example-config", "--no-ink",
                  "--list", "--out", "--suffix", "--honorific", "--supersample"):
         assert flag in r.stdout

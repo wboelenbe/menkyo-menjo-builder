@@ -1,6 +1,11 @@
 """AC-7 .. AC-10: the --json event contract (README, "As a package").
 
-Runs use the stand-in inkscape / gs (tests/fakes), so they need neither.
+Runs use the stand-in inkscape (tests/fakes), so they need no Inkscape.
+
+Rewritten for plain-white (docs/work/plain-white/acceptance.md): the press
+conversions, their progress stage, their files and their failure cases are
+gone.  What the defaults and `--all` add up to is pinned in
+test_ac_plain_white.py.
 """
 
 import json
@@ -14,10 +19,9 @@ from menkyo import build_diploma as bd
 from menkyo import paths
 
 EX = str(support.EXAMPLE)
-STAGES = {"text", "ink", "pdf", "press", "png"}
+STAGES = {"text", "ink", "pdf", "png"}
 LABELS = {"text": "rendering the text", "ink": "grading the ink",
-          "pdf": "writing the PDF", "press": "converting for the press",
-          "png": "writing the PNG"}
+          "pdf": "writing the PDF", "png": "writing the PNG"}
 
 
 def run_json(args, fake_tools, home, tmp_path, **env):
@@ -30,7 +34,7 @@ def run_json(args, fake_tools, home, tmp_path, **env):
 # ------------------------------------------------------------------ AC-7 ----
 def test_ac7_success_stream(fake_tools, home, tmp_path):
     r, ev, out = run_json(["-a", "dan", "-v", "overlay,proof", "-f", "pdf,png",
-                           "--press", "-n", "ヤン・ヤンセン", "-r", "2", "-d", "2026-09-05"],
+                           "-n", "ヤン・ヤンセン", "-r", "2", "-d", "2026-09-05"],
                           fake_tools, home, tmp_path)
     assert r.returncode == 0, r.stderr
     assert r.stderr == ""                      # stderr is not a terminal here
@@ -48,12 +52,12 @@ def test_ac7_success_stream(fake_tools, home, tmp_path):
         assert p["label"] == f"dan {p['variant']}: {LABELS[p['stage']]}"
     assert [(p["variant"], p["stage"]) for p in progress] == [
         ("overlay", "text"), ("overlay", "ink"), ("overlay", "pdf"),
-        ("overlay", "press"), ("overlay", "png"), ("proof", "pdf"), ("proof", "png")]
+        ("overlay", "png"), ("proof", "pdf"), ("proof", "png")]
 
     files = [e["path"] for e in ev if e["event"] == "file"]
     assert all(set(e) == {"event", "path"} for e in ev if e["event"] == "file")
     tag = "2-ヤン-ヤンセン"
-    assert files == [str(out / f"dan-overlay-{tag}.pdf"), str(out / f"dan-overlay-{tag}-K.pdf"),
+    assert files == [str(out / f"dan-overlay-{tag}.pdf"),
                      str(out / f"dan-overlay-{tag}.png"), str(out / f"dan-proof-{tag}.pdf"),
                      str(out / f"dan-proof-{tag}.png")]
     assert all(os.path.isfile(f) for f in files)
@@ -82,14 +86,14 @@ TOTALS = [
     (["-a", "dan", "-v", "overlay", "-f", "pdf"], 3, 1),
     (["-a", "dan", "-v", "overlay-flat", "-f", "pdf"], 1, 1),
     (["-a", "dan", "-v", "overlay", "--no-ink", "-f", "pdf,png"], 2, 2),
-    (["-a", "dan", "-v", "overlay,full", "--press"], 8, 4),
-    (["-a", "dan", "-v", "proof", "--press", "-f", "pdf,png"], 2, 2),
+    (["-a", "dan", "-v", "overlay,overlay-flat"], 4, 2),
+    (["-a", "dan", "-v", "proof", "-f", "pdf,png"], 2, 2),
     (["-a", "dan,shihan", "-v", "overlay,proof", "-f", "pdf,png,svg"], 12, 2 * (4 + 3)),
     (["-a", "dan", "-v", "overlay-flat", "-f", "svg"], 0, 1),
-    (["-a", "dan", "-v", "full-cream", "-f", "svg"], 2, 2),
-    (["--all", "--press", "-f", "pdf,png"], 69, 51),
-    (["--all", "--no-ink", "--press"], 33, 33),
-    ([], 2 * 3 * 3, 6),                         # the defaults: overlay, full-cream; pdf
+    (["-a", "dan", "-v", "overlay", "-f", "svg"], 2, 2),
+    (["-a", "all", "-v", "overlay,overlay-flat,proof", "-f", "pdf,png"], 24, 18),
+    (["-a", "all", "-v", "overlay,overlay-flat,proof", "--no-ink"], 9, 9),
+    # the defaults, --all and -v all: test_ac_plain_white.py
 ]
 
 
@@ -157,15 +161,6 @@ def test_ac9_inkscape_missing(no_tools, tmp_path, capsys):
     _assert_one_error(code, ev, "inkscape was not found. Please install Inkscape")
 
 
-def test_ac9_ghostscript_missing_with_press(tmp_path, monkeypatch, capsys):
-    fb = support.make_fake_bin(tmp_path / "bin", tools=("inkscape",))
-    monkeypatch.setenv("PATH", str(fb))
-    monkeypatch.setattr(paths, "_EXTRA_BIN", [])
-    code, ev, _ = _cli_error(["-c", EX, "-a", "dan", "-v", "overlay-flat", "--press",
-                              "-d", "", f"--out={tmp_path / 'o'}", "--json"], capsys)
-    _assert_one_error(code, ev, "gs was not found. Please install Ghostscript")
-
-
 @pytest.mark.parametrize("stage", ["query", "png", "pdf"])
 def test_ac9_inkscape_fails(stage, fake_tools, tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("FAKE_INKSCAPE_FAIL", stage)
@@ -173,13 +168,6 @@ def test_ac9_inkscape_fails(stage, fake_tools, tmp_path, monkeypatch, capsys):
                               f"--out={tmp_path}", "--json"], capsys)
     _assert_one_error(code, ev, "inkscape failed.", detail="fake inkscape: simulated")
     assert ev[-1]["message"] == "inkscape failed."
-
-
-def test_ac9_ghostscript_fails(fake_tools, tmp_path, monkeypatch, capsys):
-    monkeypatch.setenv("FAKE_GS_FAIL", "1")
-    code, ev, _ = _cli_error(["-c", EX, "-a", "dan", "-v", "overlay-flat", "--press",
-                              "-d", "", f"--out={tmp_path}", "--json"], capsys)
-    _assert_one_error(code, ev, "gs failed.", detail="fake gs: simulated failure")
 
 
 def test_ac9_error_exit_code_from_the_real_command(fake_tools, home, tmp_path):
@@ -256,7 +244,7 @@ def test_ac9_informational_flags_stay_plain(fake_tools, home, tmp_path):
 
 
 # ----------------------------------------------------------------- AC-10 ----
-@pytest.mark.parametrize("flags", [[], ["--all", "--press", "-f", "pdf,png,svg"],
+@pytest.mark.parametrize("flags", [[], ["--all", "-f", "pdf,png,svg"],
                                    ["-n", "ヤン・ヤンセン", "-r", "2"], ["--suffix", ""]])
 def test_ac10_list_json_matches_plain_list(flags, home, tmp_path):
     env = support.isolated_env(home)

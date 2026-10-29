@@ -24,7 +24,7 @@ You are told which mode you are in.
    - **Scope**: what is in, and explicitly what is out.
    - **Acceptance criteria**: numbered (`AC-1`, `AC-2`, ...). Each one is
      observable and testable. Cover error paths: bad flags and config values,
-     missing Inkscape/Ghostscript, `--json` error events, checkout vs
+     missing Inkscape, `--json` error events, checkout vs
      installed wheel, and that existing output does not change unless the
      item says so.
    - **Test approach per AC**: automated (name of the test), or manual check

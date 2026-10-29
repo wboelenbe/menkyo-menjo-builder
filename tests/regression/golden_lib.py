@@ -77,7 +77,7 @@ def run_case(root, case, work, python=sys.executable):
                 raw = p.read_text(encoding="utf-8")
                 sha = support.sha256(raw)
                 files[rel] = sha
-                blobs[sha] = support.normalise_svg(raw)
+                blobs[sha] = raw
             else:
                 # PNG / PDF here come from the stand-ins (or, for the text
                 # layer, from numpy): their presence is the contract.
@@ -87,7 +87,7 @@ def run_case(root, case, work, python=sys.executable):
             raw = p.read_text(encoding="utf-8")
             sha = support.sha256(raw)
             textlayers[p.name] = sha
-            blobs[sha] = support.normalise_svg(raw)
+            blobs[sha] = raw
     tools = [{"tool": c["tool"], "argv": [_norm(a, out) for a in c["argv"]],
               "fontconfig": c["fontconfig"]}
              for c in support.read_log(log)]

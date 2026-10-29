@@ -12,9 +12,9 @@ import support
 
 pytestmark = pytest.mark.slow
 
-# The front ends' form helper went with them (cli-only item).
-MODULES = ["__init__", "__main__", "border", "build_diploma", "config", "ink",
-           "paths"]
+# The front ends' form helper went with them (cli-only item), and the drawn
+# border with the coloured variants (plain-white item).
+MODULES = ["__init__", "__main__", "build_diploma", "config", "ink", "paths"]
 
 
 def _names(dist):
@@ -112,14 +112,13 @@ def test_ac3_runs_from_outside_the_checkout(installed, fake_tools, home, tmp_pat
     assert r.stdout.splitlines() == ["dan-overlay-sample.pdf", "shihan-overlay-sample.pdf",
                                      "renshi-overlay-sample.pdf"]
 
-    r = support.run_menkyo(["-a", "dan", "-v", "overlay,overlay-flat", "--press", "-d", "",
+    r = support.run_menkyo(["-a", "dan", "-v", "overlay,overlay-flat", "-d", "",
                             "--json"], fake_tools.env(home), tmp_path, exe=exe)
     assert r.returncode == 0, r.stderr
     ev = support.events(r.stdout)
     docs = home / "Documents" / "Menkyo"
     assert ev[-1] == {"event": "done", "out": str(docs), "files": [
-        str(docs / "dan-overlay-sample.pdf"), str(docs / "dan-overlay-sample-K.pdf"),
-        str(docs / "dan-overlay-flat-sample.pdf"), str(docs / "dan-overlay-flat-sample-K.pdf")]}
+        str(docs / "dan-overlay-sample.pdf"), str(docs / "dan-overlay-flat-sample.pdf")]}
     site = next(installed["venv"].glob("lib/python*/site-packages"))
     fonts = site / "menkyo" / "fonts"
     for call in fake_tools.calls("inkscape"):
@@ -128,8 +127,7 @@ def test_ac3_runs_from_outside_the_checkout(installed, fake_tools, home, tmp_pat
 
 
 @pytest.mark.render
-def test_ac3_installed_wheel_renders_with_the_font(installed, inkscape, ghostscript,
-                                                   home, tmp_path):
+def test_ac3_installed_wheel_renders_with_the_font(installed, inkscape, home, tmp_path):
     """Like the CI workflow's smoke test: a font missing from the wheel fails here."""
     from conftest import require_program
     pdffonts = require_program("pdffonts")
@@ -138,7 +136,7 @@ def test_ac3_installed_wheel_renders_with_the_font(installed, inkscape, ghostscr
     ex = support.run_menkyo(["--example-config"], env, tmp_path, exe=exe)
     (tmp_path / "example.toml").write_text(ex.stdout, encoding="utf-8")
     r = support.run_menkyo(["-c", "example.toml", "-a", "dan", "-v", "overlay,overlay-flat",
-                            "--press", "--json", "--out", "out"], env, tmp_path, exe=exe)
+                            "--json", "--out", "out"], env, tmp_path, exe=exe)
     assert r.returncode == 0, r.stdout + r.stderr
     assert support.events(r.stdout)[-1]["event"] == "done"
     import subprocess

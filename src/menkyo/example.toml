@@ -60,10 +60,9 @@ honorific = "殿"
 text = "柔能制剛"
 
 [paper]
-# Millimetres.  If you print onto bought Japanese 賞状用紙, measure the width
-# of its printed border and set `border` to match: nothing may print inside
-# that band.  `safe_inset` is where our own text is allowed to begin.
-# These two are the numbers most worth checking against a real sheet.
+# Millimetres, on plain white A3.  `border` is the margin kept clear all
+# round the sheet; `safe_inset` is where the text is allowed to begin.  Both
+# are drawn on the proof (`menkyo -v proof`), and nothing else prints them.
 border = 22.0
 safe_inset = 38.0
 
@@ -85,7 +84,6 @@ text_drop = 0.05
 #   heading       names the document, in the manner of a letterhead
 #   formula       the operative sentence: 右 "the above" + verb + ス
 #   grade_column  true if the body states a grade as well as the heading
-#   colour        the drawn border's colour (--variants full / full-cream)
 # ---------------------------------------------------------------------------
 
 [[awards]]
@@ -93,21 +91,18 @@ slug = "dan"
 heading = "段位免状"      # Dan Rank Certificate
 formula = "右授与ス"      # the above is hereby awarded
 grade_column = true       # 初段 / 二段 / 三段 …
-colour = "#8a6a33"
 
 [[awards]]
 slug = "shihan"
 heading = "師範免許状"    # Shihan Teaching Licence
 formula = "右免許ス"      # the above is hereby licensed
 grade_column = false      # the heading already names the award
-colour = "#8a336f"
 
 [[awards]]
 slug = "renshi"
 heading = "錬士免許状"    # Renshi Teaching Licence
 formula = "右免許ス"
 grade_column = false
-colour = "#8a336f"
 
 # ---------------------------------------------------------------------------
 # Stand-ins for the three slots a calligrapher would normally fill by hand.
@@ -117,7 +112,7 @@ colour = "#8a336f"
 # can look at.  They are the one part of this file that is there to be
 # *deleted* rather than edited: clear the section and the grade,
 # the recipient and the date go back to being empty, which is what a dōjō
-# printing onto real stock actually wants.
+# printing real certificates actually wants.
 #
 # A flag passed as '' clears one for a single run: -n '' -r '' -d ''.
 # ---------------------------------------------------------------------------

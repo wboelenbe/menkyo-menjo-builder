@@ -5,13 +5,13 @@ build-backend = "hatchling.build"
 [project]
 name = "menkyo"
 # The one place the version lives; `menkyo --version` reports it.
-version = "0.1.0"
+version = "0.2.0"
 description = "Japanese dan-grade and menkyo certificates: A3, vertical, print-ready"
 readme = "README.md"
 license = "MIT AND OFL-1.1"
 license-files = ["LICENSE", "NOTICE", "src/menkyo/fonts/OFL.txt"]
 requires-python = ">=3.11"
-# Also needed, as system programs: inkscape, and ghostscript for --press.
+# The system programs it also needs: inkscape.
 dependencies = [
     "pillow>=9.0",
     "numpy>=1.22",
@@ -42,6 +42,6 @@ testpaths = ["tests"]
 pythonpath = ["tests"]
 addopts = "-ra"
 markers = [
-    "render: needs Inkscape (and Ghostscript for --press); skipped without it, failed instead when REQUIRE_RENDER=1",
+    "render: needs Inkscape; skipped without it, failed instead when REQUIRE_RENDER=1",
     "slow: builds the wheel and installs it into a throwaway virtualenv",
 ]

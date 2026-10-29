@@ -1,4 +1,4 @@
-# The test image: the suite with real Inkscape and Ghostscript renders.
+# The test image: the suite with real Inkscape renders.
 #
 #   scripts/test-docker.sh            builds this and runs the suite in it
 #
@@ -10,7 +10,7 @@ FROM python:3.13-slim-bookworm
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-      inkscape ghostscript poppler-utils fontconfig fonts-noto-cjk \
+      inkscape poppler-utils fontconfig fonts-noto-cjk \
  && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir uv==0.13.1

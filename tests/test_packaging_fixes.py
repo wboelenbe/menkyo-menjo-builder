@@ -2,7 +2,7 @@
 
 --json failures beyond AC-9's list, what counts as a checkout, and the
 xlink:href the inked composite needs for Inkscape 1.2.  Runs use the
-stand-in inkscape / gs and the shipped example only.
+stand-in inkscape and the shipped example only.
 """
 
 import json

@@ -25,11 +25,11 @@ jobs:
 
       - run: uv build
 
-      - name: Install Inkscape, Ghostscript and the crest font
+      - name: Install Inkscape and the crest font
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            inkscape ghostscript poppler-utils fontconfig fonts-noto-cjk
+            inkscape poppler-utils fontconfig fonts-noto-cjk
 
       # The whole suite, with real renders: REQUIRE_RENDER=1 turns a render
       # test that would skip (no Inkscape) into a failure.
@@ -46,7 +46,7 @@ jobs:
           menkyo="$RUNNER_TEMP/venv/bin/menkyo"
           "$menkyo" --version
           "$menkyo" --example-config > example.toml
-          "$menkyo" -c example.toml -a dan -v overlay,overlay-flat --press \
+          "$menkyo" -c example.toml -a dan -v overlay,overlay-flat \
             --json --out out | tee events.jsonl
           tail -n 1 events.jsonl | grep -q '"event": "done"'
           # The flat overlay keeps its text as vectors, so the vendored font

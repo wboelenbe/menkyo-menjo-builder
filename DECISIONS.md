@@ -453,17 +453,45 @@ went.
   shell's PATH. `config.save()` stays as the helper for writing a
   `dojo.toml`.
 
+## 2026-10-28 — Plain white paper only
+
+The certificates print on plain white A3 and nothing else: black text and
+crest, no frame, no background. The drawn border, the paper tint, the award
+colours and the press conversions are gone, and with them the bought-stock
+route. This overrides the cream stock and engraved border of the Brief, "The
+drawn border", the default and `--press` of "Output, and the supersampling
+cap", and the colours of "Purple menkyo, and a precept column"; those
+entries are left as they were written.
+
+- **Three variants: `overlay`, `overlay-flat`, `proof`.** `full`,
+  `full-cream`, `full-flat` and `border.py` are deleted, not deprecated:
+  asking for one is the ordinary "unknown variant" error. What remains
+  renders exactly as before, byte for byte; the crest keeps its unbordered
+  place.
+- **The default is `overlay` alone**, as PDF. It is the certificate; there
+  is no longer a coloured sheet to look at beside it. A Dutch companion
+  sheet is to join it (`## Open`).
+- **No `--press`, so no Ghostscript.** It made `-K` and `-CMYK` files for a
+  commercial printer, and the `-K` ones of the inked overlay were not even
+  K-only. Black on white needs no conversion. The flag is now unknown, the
+  `press` stage leaves the `--json` events, and Inkscape is the only program
+  the package needs on the host.
+- **`colour` in `[[awards]]` is accepted and ignored**, silently, so an
+  existing `dojo.toml` keeps working; the example and `config.save()` no
+  longer write it. With nothing coloured left to draw, a warning would only
+  be noise.
+- **`[paper] border` and `safe_inset` stay**, with their defaults, as
+  margins on the white sheet: `border` kept clear all round, `safe_inset`
+  where the text may begin. The proof draws both. They no longer stand for
+  a bought sheet's printed band.
+- **A change to the portal's contract, made while nothing depends on it.**
+  dojo-portal is not built yet. It should pass `--variants` explicitly, map
+  only the stages `text`, `ink`, `pdf`, `png`, and build
+  `menkyo-0.2.0-py3-none-any.whl`: the version went to 0.2.0 with this
+  change. Its image can drop Ghostscript.
+
 ## Open
 
-- **Source the 賞状用紙.** Still the preferred route: `border` and
-  `safe_inset` under `[paper]` are placeholders (22 mm / 38 mm) until measured
-  against a real sheet. Japanese A3 stock is not easy to buy in Europe —
-  likely an import, and it must be **横型** (landscape); much of what is sold
-  is portrait and the border will not rotate.
-- **Test the drawn border on the actual printer** before committing to it. Its
-  strokes are 0.11–0.22 mm. A laser at 600 dpi holds them; an inkjet on
-  absorbent uncoated stock may thicken them and darken the band. If so, raise
-  `density` — wider spacing — rather than thinning the strokes.
 - **Confirm the katakana transcription of any recipient's name** with the
   recipient before printing.
 - **Paper format: A4 as well as A3.** Let the user choose the sheet size;
@@ -475,15 +503,16 @@ went.
   found a pip-only route the user accepted from the comparison images: glyph
   outlines via fontTools, our own PDF writer, pypdfium2 for the PNG and the
   text layer; Noto Serif JP SemiBold shipped whole for the crest; a missing
-  glyph is an error, not a fallback; PDF text may be outlines.
-- **The `-K` press files of the inked variants are not K-only.** Cairo wraps
-  the page in a transparency group with an RGB colour space, which survives
-  Ghostscript's `/Gray` conversion, so the graded text (a grey image with a
-  soft mask) is composited in RGB and a RIP prints it with some C/M/Y. The
-  flat `-K` files are pure K. Found by the test suite on 2026-10-28; it has
-  been so since `--press` existed. Related: `-dPDFSETTINGS=/prepress`
-  downsamples the 600 dpi text raster to 300 ppi in the press files.
-- **Plain white only (decided 2026-10-28).** Drop the coloured variants
-  (`full`, `full-cream`, `full-flat`), the drawn border, the award colours and
-  `--press`; keep `overlay`, `overlay-flat` and `proof` on plain white paper.
-  This also retires the inked `-K` defect above.
+  glyph is an error, not a fallback; PDF text may be outlines. Its plan
+  must also cover the flat overlay's peak memory (288 MB in the spike against
+  Inkscape's 110 MB), e.g. by rendering the page in greyscale.
+- **An annotated version in Dutch (asked 2026-10-28).** Besides the inked
+  overlay, a default run should also produce a version that explains what
+  the certificate says, in Dutch, for that recipient. The English
+  `docs/*-explained.md` pages are the starting point for the content.
+  Decided so far: a **companion A4 sheet** (a small image of the certificate
+  with numbered columns; per column the Japanese, its reading and its meaning
+  in Dutch; the recipient's own name, grade and date read out), and the
+  dōjō's own parts (art, dōjō, signatory, motto, crest) explained from
+  **optional Dutch text in `dojo.toml`**, falling back to a generic
+  description of the form. It joins the default run once built.

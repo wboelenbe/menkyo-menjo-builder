@@ -67,9 +67,9 @@ def home(isolate_user_files):
 
 
 class FakeTools:
-    """Stand-in inkscape/gs on PATH, their call log, and the captured text layers."""
+    """Stand-in inkscape on PATH, its call log, and the captured text layers."""
 
-    def __init__(self, root, tools=("inkscape", "gs")):
+    def __init__(self, root, tools=("inkscape",)):
         self.bin = support.make_fake_bin(root / "fakebin", tools)
         self.log = root / "fake-tools.jsonl"
         self.capture = root / "captured"
@@ -100,7 +100,7 @@ def fake_tools(tmp_path, monkeypatch):
 
 @pytest.fixture
 def no_tools(tmp_path, monkeypatch):
-    """Neither inkscape nor gs can be found, in-process."""
+    """Inkscape cannot be found, in-process."""
     empty = tmp_path / "emptybin"
     empty.mkdir()
     monkeypatch.setenv("PATH", str(empty))
@@ -118,16 +118,6 @@ def inkscape():
         if REQUIRE_RENDER:
             pytest.fail("REQUIRE_RENDER=1 but Inkscape was not found")
         pytest.skip("Inkscape not installed (set REQUIRE_RENDER=1 to make this fail)")
-    return found
-
-
-@pytest.fixture(scope="session")
-def ghostscript():
-    found = paths.find_tool("gs")
-    if not found:
-        if REQUIRE_RENDER:
-            pytest.fail("REQUIRE_RENDER=1 but Ghostscript was not found")
-        pytest.skip("Ghostscript not installed")
     return found
 
 
