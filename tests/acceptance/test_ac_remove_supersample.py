@@ -202,7 +202,7 @@ def test_ac6_text_layer_exported_at_600_dpi(tmp_path):
     bd.main(["-c", EX, "-a", "all", "-v", "overlay", "-f", "svg", "-d", "",
              f"--out={out}"])
     layers = sorted(out.glob("*-textlayer.png"))
-    assert len(layers) == 3
+    assert len(layers) == 4          # kyu-grades (its OQ-5) appended a fourth award, kyu, to the example
     for png in layers:
         svg = (out / png.name.replace("-textlayer.png", ".svg")).read_text(encoding="utf-8")
         m = re.search(r'<image x="[\d.]+" y="[\d.]+" width="([\d.]+)" height="([\d.]+)"', svg)

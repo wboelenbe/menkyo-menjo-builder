@@ -1,5 +1,5 @@
 """
-Japanese martial-arts certificates: dan grades and teaching licences.
+Japanese martial-arts certificates: dan and kyū grades and teaching licences.
 
 Generates the certificate's text and crest, to be printed on plain white
 paper, landscape: A3, or A4 with ``--paper a4`` (the same layout scaled by
@@ -11,7 +11,8 @@ cleared for a run by passing ``''``.
 
 Which documents exist, and whose name goes on them, is configuration: see
 ``example.toml`` and ``config.py``.  Nothing in this file names a
-school.
+school.  An award counts its grade in dan or in kyū, and may leave out the
+crest and the precept column, as the example's kyū certificate does.
 
 One file per award per variant, written as ``<award>-<variant>-<size>.<ext>``
 (``dan-overlay-a3.pdf``, with any suffix after the size) into ./build from a
@@ -40,6 +41,7 @@ import os
 import re
 import shutil
 import sys
+import unicodedata
 
 from . import __version__, ink, paths
 from . import config as config_mod
@@ -283,24 +285,97 @@ DAN_KANJI = {1: "初段", 2: "二段", 3: "三段", 4: "四段", 5: "五段",
              6: "六段", 7: "七段", 8: "八段", 9: "九段", 10: "十段"}
 DAN_ROMAJI = {"shodan": 1, "nidan": 2, "sandan": 3, "yondan": 4, "godan": 5,
               "rokudan": 6, "nanadan": 7, "shichidan": 7, "hachidan": 8,
-              "kyudan": 9, "kudan": 9, "judan": 10, "juudan": 10}
+              "kyudan": 9, "kudan": 9, "judan": 10}
+
+# Kyū grades count down: 10 is the first a beginner gets, 1 the last before
+# shodan.  ikkyu is 一級 (no 初 on this side).
+KYU_KANJI = {n: k + "級" for n, k in zip(range(1, 11), "一二三四五六七八九十")}
+KYU_ROMAJI = {"ikkyu": 1, "nikyu": 2, "sankyu": 3, "yonkyu": 4, "gokyu": 5,
+              "rokkyu": 6, "nanakyu": 7, "shichikyu": 7, "hachikyu": 8,
+              "hakkyu": 8, "kyukyu": 9, "jukkyu": 10, "jikkyu": 10}
+# The belt a kyū grade wears, as an input form only: nothing prints it.
+BELTS = {"white": 6, "yellow": 5, "orange": 4, "green": 3, "blue": 2,
+         "brown": 1}
+# The children's steps between two belts, 準 ("associate") with the grade
+# they lead to.  Only these three: 準 exists for the in-between belts.
+JUN_STEPS = {"white-yellow": 5, "yellow-orange": 4, "orange-green": 3}
+_JUN = re.compile(r"jun-?(\d+)")
+
+KYU_FORMS = ("1 to 10, the romaji (ikkyu, nikyu … gokyu … jukkyu), a belt "
+             "(" + ", ".join(BELTS) + "), a children's step ("
+             + ", ".join(JUN_STEPS) + ", or jun5, jun4, jun3), "
+             "or the kanji as it should print (三級)")
 
 
-def rank_kanji(value):
+def _kyu_number(key):
+    """A kyū grade read from lower-case, folded ASCII or digits of any width:
+    (n, 準?), or None."""
+    if key.isdecimal():
+        n = int(key)
+        return (n, False) if n in KYU_KANJI else None
+    if key in KYU_ROMAJI:
+        return KYU_ROMAJI[key], False
+    if key in BELTS:
+        return BELTS[key], False
+    if key in JUN_STEPS:
+        return JUN_STEPS[key], True
+    m = _JUN.fullmatch(key)
+    if m and int(m.group(1)) in JUN_STEPS.values():
+        return int(m.group(1)), True
+    return None
+
+
+def _kyu_only(key):
+    """Whether folded ASCII is meant as a kyū grade, valid or not: a belt, a
+    children's step, jun<n>, or a word ending in kyu.  Whole words only, so
+    kyudan is a dan grade."""
+    return (key in BELTS or key in JUN_STEPS or bool(_JUN.fullmatch(key))
+            or bool(re.fullmatch(r"[a-z0-9-]*kyu", key)))
+
+
+def rank_kanji(value, unit="dan", source="--rank", award=None):
     """Turn 2, 'nidan' or '二段' into the kanji that goes on the sheet.
 
-    Anything that is not a dan grade passes through untouched, so the licences
-    can use the same flag: --rank 師範.
+    `unit` is the award's (config.UNITS): on a kyū award 5, 'gokyu' and
+    'yellow' are 五級 and 'white-yellow' or 'jun5' is 準五級.  `source` and
+    `award` (a slug) are for the messages.  ū and uu read as u, so 'jūdan'
+    and 'gokyuu' count, and digits are digits full-width too (５).  Anything else still non-ASCII passes through
+    untouched, so the licences can use the same flag: --rank 師範.  Other
+    ASCII passes through on a dan award (--rank Shihan) unless it is a kyū
+    form, and is refused on a kyū award, which has nothing to print it as.
     """
     key = str(value).strip()
-    n = DAN_ROMAJI.get(key.lower())
-    if n is None and key.isdigit():
-        n = int(key)
+    # NFC first, so a ū typed as u + combining macron folds as well.
+    folded = unicodedata.normalize("NFC", key)
+    folded = folded.replace("ū", "u").replace("Ū", "U")
+    folded = re.sub("uu", "u", folded, flags=re.I).lower()
+    on = f" on [[awards]] {award!r}" if award else ""
+    if unit == "kyu":
+        # Digits are read whatever their width (５), as on a dan award.
+        if not folded.isascii() and not folded.isdecimal():
+            return key                  # literal: 三級, 準五級, 弐級 …
+        got = _kyu_number(folded)
+        if got is None:
+            raise SystemExit(
+                f"{source} {value}: not a kyū grade{on}. Use {KYU_FORMS}.")
+        n, jun = got
+        return ("準" if jun else "") + KYU_KANJI[n]
+    n = DAN_ROMAJI.get(folded)
+    if n is None and folded.isdecimal():
+        n = int(folded)
     if n is None:
+        if folded.isascii() and _kyu_only(folded):
+            raise SystemExit(
+                f"{source} {value}: a kyū grade, but "
+                + (f"[[awards]] {award!r}" if award else "this award")
+                + " counts in dan; give a dan grade (1 to 10, nidan, 二段) "
+                "or the text to print")
         return key                      # literal: 師範, 錬士, 弐段 …
     if n not in DAN_KANJI:
-        raise SystemExit(f"--rank {value}: dan grades run from 1 to 10")
+        raise SystemExit(f"{source} {value}: dan grades run from 1 to 10")
     return DAN_KANJI[n]
+
+
 SZ_VERB = 40.0
 SZ_DATE = 11.5
 SZ_BLOCK = 14.0
@@ -320,6 +395,13 @@ SEAL_R = 11.0
 # Leave it empty and the column simply is not drawn.
 X_MOTTO = 57.0
 SZ_MOTTO = 11.0
+
+# An award without the precept column (`motto = false`, as on a kyū sheet)
+# moves every column and the seal this far left, which centres the printed
+# block on the sheet: 68.75 mm clear on the left, 69 on the right.  The
+# crest stays at the page's centre.  Keyed on the award, never on an empty
+# [motto] text, so a dōjō without a precept keeps the layout it had.
+NO_MOTTO_SHIFT = 10.0
 
 # Blank date: 西暦 ____ 年 __ 月 ___ 日.  The day gets three slots, not two —
 # 二十一 through 三十一 are three characters, which is most of the month.
@@ -357,13 +439,14 @@ def date_column(value):
 
 def document(verb, heading, crest_kind="full", guides=False,
              layer="all", name=None, honorific="殿", rank=None, date=None,
-             rank_column=True, sheet=DEFAULT_PAPER):
+             rank_column=True, sheet=DEFAULT_PAPER, motto_column=True):
     """One certificate. `verb` is the four-character award formula.
 
     Everything below is drawn in the A3 layout's millimetres.  On another
     `sheet` (a key of PAPERS) the root is that sheet and the layout sits
     inside a scale(); an A3 sheet has no wrapper, so its SVG is what it
-    always was.
+    always was.  `crest_kind` None draws no crest; without `motto_column`
+    there is no precept and the columns move NO_MOTTO_SHIFT to the left.
     """
     # `[paper] text_drop` (a fraction of the page height) shifts every printed
     # column's starting point down by the same amount, giving the whole
@@ -372,9 +455,18 @@ def document(verb, heading, crest_kind="full", guides=False,
     # text lines -- and it does not resize anything, so a large value can push
     # a tall column (the blank date grid is the tallest) past `safe_inset`.
     # Check `-v proof` after changing it.
+    # A printed grade always has its column, as build_one() asks for it.
+    rank_column = rank_column or bool(rank)
     drop = CFG.text_drop * PAGE_H
     y_heading, y_rank, y_verb, y_block = (
         Y_HEADING + drop, Y_RANK + drop, Y_VERB + drop, Y_BLOCK + drop)
+    # Every column's x, and the seal's, moved left when there is no precept.
+    dx = 0.0 if motto_column else -NO_MOTTO_SHIFT
+    x_heading, x_verb, x_date = X_HEADING + dx, X_VERB + dx, X_DATE + dx
+    x_awardee, x_rank = right_columns(rank_column)
+    x_awardee += dx
+    x_rank = (x_rank if name else X_RANK) + dx if rank_column else None
+    seal_x = SEAL_C[0] + dx
 
     o = []
     # The chrome layer is the base of an inked composite, whose text arrives
@@ -408,10 +500,9 @@ def document(verb, heading, crest_kind="full", guides=False,
         # guide away and shifts the rank's.
         zones = []
         if rank_column and not rank:
-            x_rank_guide = (right_columns(True)[1] if name else X_RANK)
-            zones.append((x_rank_guide - 16, y_rank - 14, 32, 66, "rank"))
+            zones.append((x_rank - 16, y_rank - 14, 32, 66, "rank"))
         if not name:
-            zones.append((X_NAME_2 - 13, 130, 50, 95, "name"))
+            zones.append((X_NAME_2 + dx - 13, 130, 50, 95, "name"))
         for x, y, w, h, lab in zones:
             o.append(
                 f'<rect x="{x}" y="{y}" width="{w}" height="{h}" fill="none" '
@@ -421,12 +512,12 @@ def document(verb, heading, crest_kind="full", guides=False,
             if ch is None:
                 cy = y_block + i * SZ_DATE
                 o.append(
-                    f'<rect x="{X_DATE-SZ_DATE*0.42:.2f}" y="{cy-SZ_DATE*0.42:.2f}" '
+                    f'<rect x="{x_date-SZ_DATE*0.42:.2f}" y="{cy-SZ_DATE*0.42:.2f}" '
                     f'width="{SZ_DATE*0.84:.2f}" height="{SZ_DATE*0.84:.2f}" fill="none" '
                     f'stroke="#e4b9b9" stroke-width="0.3" stroke-dasharray="1 1.5"/>'
                 )
         o.append(
-            f'<circle cx="{SEAL_C[0]}" cy="{SEAL_C[1]}" r="{SEAL_R}" fill="none" '
+            f'<circle cx="{seal_x}" cy="{SEAL_C[1]}" r="{SEAL_R}" fill="none" '
             f'stroke="#e4b9b9" stroke-width="0.4" stroke-dasharray="2 2"/>'
         )
 
@@ -447,26 +538,30 @@ def document(verb, heading, crest_kind="full", guides=False,
         return "\n".join(o)
 
     # printed columns
-    o.append(vcol(list(heading), X_HEADING, y_heading, SZ_HEADING, W_BOLD)[0])
-    x_awardee, x_rank = right_columns(rank_column)
+    o.append(vcol(list(heading), x_heading, y_heading, SZ_HEADING, W_BOLD)[0])
     if name:
         chars = list(name) + list(honorific or "")
         size = min(SZ_AWARDEE, AWARDEE_MAX_H / max(1, len(chars)))
         o.append(vcol(chars, x_awardee, y_rank, size, W_BOLD)[0])
     if rank:
-        o.append(vcol(list(rank), (x_rank if name else X_RANK),
-                      y_rank, SZ_RANK, W_BOLD)[0])
-    o.append(vcol(list(verb), X_VERB, y_verb, SZ_VERB, W_BOLD)[0])
+        # The column is spaced for two characters (二段, 五級).  A longer
+        # grade (準五級, a literal) shrinks into the same 60 mm, from the
+        # same top, rather than running down into the name's zone.
+        size = min(SZ_RANK, 2 * SZ_RANK / len(rank))
+        y0 = y_rank if size == SZ_RANK else y_rank - (SZ_RANK - size) / 2
+        o.append(vcol(list(rank), x_rank, y0, size, W_BOLD)[0])
+    o.append(vcol(list(verb), x_verb, y_verb, SZ_VERB, W_BOLD)[0])
     # A printed date is set solid; a blank one keeps its slots spaced out so
     # the calligrapher has a grid to write into.
-    o.append(vcol(date or DATE_SLOTS, X_DATE, y_block, SZ_DATE, W_MED)[0])
+    o.append(vcol(date or DATE_SLOTS, x_date, y_block, SZ_DATE, W_MED)[0])
     # Any of these may be empty in the config, in which case vcol draws
     # nothing and the column is simply absent.
-    o.append(vcol(list(CFG.art), X_STYLE, y_block, SZ_BLOCK, W_MED)[0])
-    o.append(vcol(list(CFG.dojo), X_DOJO, y_block, SZ_BLOCK, W_MED)[0])
-    o.append(vcol(list(CFG.signer_title), X_TITLE, y_block, SZ_TITLE, W_MED)[0])
-    o.append(vcol(list(CFG.signer_name), X_SIGNER, y_block, SZ_SIGNER, W_MED)[0])
-    o.append(vcol(list(CFG.motto), X_MOTTO, y_block, SZ_MOTTO, W_MED)[0])
+    o.append(vcol(list(CFG.art), X_STYLE + dx, y_block, SZ_BLOCK, W_MED)[0])
+    o.append(vcol(list(CFG.dojo), X_DOJO + dx, y_block, SZ_BLOCK, W_MED)[0])
+    o.append(vcol(list(CFG.signer_title), X_TITLE + dx, y_block, SZ_TITLE, W_MED)[0])
+    o.append(vcol(list(CFG.signer_name), X_SIGNER + dx, y_block, SZ_SIGNER, W_MED)[0])
+    if motto_column:
+        o.append(vcol(list(CFG.motto), X_MOTTO, y_block, SZ_MOTTO, W_MED)[0])
 
     o.append(end)
     return "\n".join(o)
@@ -615,7 +710,8 @@ def render(svg_path, out_base, formats, dpi=300):
 
 # --------------------------------------------------------------- variants ---
 # The awards themselves come from the config ([[awards]]): slug, heading,
-# formula, and whether the body states a grade.
+# formula, whether the body states a grade and in which unit, and whether
+# the sheet has the crest and the precept.
 # The heading names the document, so several awards read apart at a glance;
 # a grade column is for documents that state a specific grade as well —
 # a dan certificate does, a teaching licence usually does not, since its
@@ -672,10 +768,17 @@ def _stem(slug, variant, sheet, suffix):
 
 def build_one(slug, heading, verb, variant, formats, dpi=300, inked=True,
               work=None, name=None, honorific="殿", rank=None,
-              date=None, suffix="", rank_column=True, sheet=DEFAULT_PAPER):
+              date=None, suffix="", rank_column=True, sheet=DEFAULT_PAPER,
+              crest=True, motto=True):
     kw = dict(VARIANTS[variant])
     kw["rank_column"] = rank_column or bool(rank)
     kw["sheet"] = sheet
+    # The award's sheet keys; left out when true, so document() runs as it
+    # always did for an award that has both.
+    if not crest:
+        kw["crest_kind"] = None
+    if not motto:
+        kw["motto_column"] = False
     if date:
         kw["date"] = date
     if name:
@@ -729,9 +832,13 @@ def _check_glyphs(checks):
 
 
 def _glyph_checks(awards, name, name_src, honorific, honorific_src,
-                  rank, rank_src, sample_rank, date, date_src):
-    """What _check_glyphs looks at for this run: what will be drawn, only."""
+                  ranks, rank_src, date, date_src):
+    """What _check_glyphs looks at for this run: what will be drawn, only.
+
+    `ranks` maps each award to the grade it prints, or None.
+    """
     body, crest = FONT_BODY, FONT_CREST
+    sheets = [CFG.award(slug) for slug in awards]
     out = []
     if name:
         out.append((name, name_src, body, False))
@@ -743,19 +850,22 @@ def _glyph_checks(awards, name, name_src, honorific, honorific_src,
                     body, False))
     for text, key in ((CFG.art, "[art] name"), (CFG.dojo, "[dojo] name"),
                       (CFG.signer_title, "[signer] title"),
-                      (CFG.signer_name, "[signer] name"),
-                      (CFG.motto, "[motto] text")):
+                      (CFG.signer_name, "[signer] name")):
         out.append((text, key, body, False))
-    # the crest ring: the art on the upper arc, crest_ring on the lower
-    out.append((CFG.crest_ring, "[dojo] crest_ring", crest, CFG.crest_traced))
-    out.append((CFG.art, "[art] name, on the crest ring", crest, CFG.crest_traced))
-    for slug in awards:
-        aw = CFG.award(slug)
+    # the precept and the crest only if an award of this run draws them; the
+    # crest ring: the art on the upper arc, crest_ring on the lower
+    if any(aw.motto for aw in sheets):
+        out.append((CFG.motto, "[motto] text", body, False))
+    if any(aw.crest for aw in sheets):
+        out.append((CFG.crest_ring, "[dojo] crest_ring", crest, CFG.crest_traced))
+        out.append((CFG.art, "[art] name, on the crest ring", crest,
+                    CFG.crest_traced))
+    for aw in sheets:
+        slug = aw.slug
         out.append((aw.heading, f"the heading of [[awards]] {slug!r}", body, False))
         out.append((aw.formula, f"the formula of [[awards]] {slug!r}", body, False))
-        # A sample grade is drawn only where there is a grade column.
-        if rank and not (sample_rank and not aw.grade_column):
-            out.append((rank, rank_src, body, False))
+        if ranks[slug]:
+            out.append((ranks[slug], rank_src, body, False))
     return out
 
 
@@ -831,7 +941,8 @@ def main(argv=None, progress=None):
     ap = _Parser(
         prog="menkyo", json_errors=as_json,
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="Generate Japanese dan-grade and teaching-licence artwork.",
+        description="Generate Japanese dan-grade, kyū-grade and "
+                    "teaching-licence artwork.",
         epilog=(
             "By default this writes only what you would actually print: the\n"
             "overlay, on plain white A3 or A4, for every award your config\n"
@@ -886,10 +997,12 @@ def main(argv=None, progress=None):
                          + _sample_help(CFG.sample_name))
     ap.add_argument("-r", "--rank", metavar="GRADE",
                     help="print the grade instead of leaving it for the "
-                         "calligrapher. A number or romaji becomes kanji "
-                         "(2 or nidan -> 二段, 1 -> 初段, up to 10); anything "
-                         "else is printed as given, so the licences can use "
-                         "this too: --rank 師範. "
+                         "calligrapher, counted in the award's unit. On a dan "
+                         "award a number or romaji becomes kanji (2 or nidan "
+                         "-> 二段, 1 -> 初段, up to 10); on a kyū award 5, "
+                         "gokyu or yellow -> 五級, white-yellow or jun5 -> "
+                         "準五級. Kanji are printed as given, so the licences "
+                         "can use this too: --rank 師範. "
                          + _sample_help(CFG.sample_rank))
     ap.add_argument("-d", "--date", metavar="YYYY-MM-DD",
                     help="print the award date in kanji instead of leaving it "
@@ -940,11 +1053,19 @@ def main(argv=None, progress=None):
     raw_date = _fallback(args.date, CFG.sample_date)
     # A sample grade belongs only on the documents that state one. Printing it
     # on a licence would put 五段 on a sheet whose heading has already named
-    # the award -- so the sample is gated on grade_column, while an explicit
-    # --rank still goes on whatever you asked for (--rank 師範).
+    # the award -- so the sample is gated on grade_column (and not even read
+    # where it is not drawn), while an explicit --rank still goes on whatever
+    # you asked for (--rank 師範).  Each award reads the value in its own
+    # unit: -r 3 is 三段 on a dan award and 三級 on a kyū one.  Read for the
+    # whole run before anything is listed or written.
     sample_rank = args.rank is None and bool(raw_rank)
-
-    rank = rank_kanji(raw_rank) if raw_rank else None
+    rank_src = "--rank" if args.rank is not None else "[sample] rank"
+    ranks = {}
+    for slug in awards:
+        aw = CFG.award(slug)
+        drawn = raw_rank and not (sample_rank and not aw.grade_column)
+        ranks[slug] = (rank_kanji(raw_rank, aw.unit, rank_src, slug)
+                       if drawn else None)
     date = date_column(raw_date) if raw_date else None
     honorific = CFG.honorific if args.honorific is None else args.honorific
     # The filename tag: whatever you asked for, else the config's tag for its
@@ -980,8 +1101,8 @@ def main(argv=None, progress=None):
         "--name" if args.name is not None else "[sample] name (no --name given)",
         honorific,
         "--honorific" if args.honorific is not None else "[recipient] honorific",
-        rank, "--rank" if args.rank is not None else "[sample] rank (no --rank given)",
-        sample_rank, date,
+        ranks, "--rank" if args.rank is not None else "[sample] rank (no --rank given)",
+        date,
         "--date" if args.date is not None else "[sample] date (no --date given)"))
 
     if args.clean and os.path.isdir(BUILD):
@@ -1005,15 +1126,13 @@ def main(argv=None, progress=None):
         for slug in awards:
             aw = CFG.award(slug)
             heading, verb = aw.heading, aw.formula
-            rank_column = aw.grade_column
             for variant in variants:
                 written = build_one(slug, heading, verb, variant, formats,
                                     dpi=args.dpi, inked=not args.no_ink,
                                     work=work, name=name, honorific=honorific,
-                                    rank=None if sample_rank and not rank_column
-                                         else rank,
-                                    date=date, suffix=suffix,
-                                    rank_column=rank_column, sheet=sheet)
+                                    rank=ranks[slug], date=date, suffix=suffix,
+                                    rank_column=aw.grade_column, sheet=sheet,
+                                    crest=aw.crest, motto=aw.motto)
                 for w in written:
                     if args.json:
                         _emit("file", path=w)

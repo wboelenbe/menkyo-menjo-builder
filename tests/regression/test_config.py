@@ -28,7 +28,8 @@ def test_defaults_name_nobody():
 
 def test_example_loads():
     c = config_mod.load(str(support.EXAMPLE))
-    assert c.slugs == ["dan", "shihan", "renshi"]
+    # kyu-grades (its OQ-5) appended a fourth award, kyu, to the example
+    assert c.slugs == ["dan", "shihan", "renshi", "kyu"]
     assert (c.art, c.dojo, c.crest_ring, c.signer_name, c.motto) == \
         ("〇〇流柔術", "〇〇道場", "〇〇道場", "山田太郎", "柔能制剛")
     assert c.text_drop == 0.05
@@ -137,4 +138,4 @@ def test_save_defaults_to_the_user_config(home):
     c = config_mod.load(str(support.EXAMPLE))
     path = config_mod.save(c)
     assert path == config_mod.USER_CONFIG
-    assert config_mod.load(path).slugs == ["dan", "shihan", "renshi"]
+    assert config_mod.load(path).slugs == ["dan", "shihan", "renshi", "kyu"]

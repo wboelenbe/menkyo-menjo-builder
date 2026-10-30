@@ -92,7 +92,8 @@ def test_ac4_installed_copy_looks_only_at_itself(tmp_path):
     assert got["user_data_dir"] == str(user_dir(home))
     assert got["default_path"] == str(pkg / "example.toml")
     assert got["fonts"] == str(pkg / "fonts")
-    assert list_awards(site, home, cwd=home) == ["dan", "shihan", "renshi"]
+    # kyu-grades (its OQ-5) appended a fourth award, kyu, to the example
+    assert list_awards(site, home, cwd=home) == ["dan", "shihan", "renshi", "kyu"]
 
     # the per-user configuration is the one an installed copy honours
     user_dir(home).mkdir(parents=True)
@@ -130,7 +131,7 @@ def test_ac4_another_projects_pyproject_is_not_a_checkout(tmp_path):
     got = probe(root / "vendor", home)
     assert got["checkout_root"] is None and got["local_config"] is None
     assert got["default_output_dir"] == str(home / "Documents" / "Menkyo")
-    assert list_awards(root / "vendor", home, cwd=root) == ["dan", "shihan", "renshi"]
+    assert list_awards(root / "vendor", home, cwd=root) == ["dan", "shihan", "renshi", "kyu"]
 
 
 @pytest.mark.render

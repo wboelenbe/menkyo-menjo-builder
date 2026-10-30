@@ -38,6 +38,33 @@ def config_path(root, name):
     return support.DATA / name
 
 
+# The awards the baseline's example defined.  kyu-grades (its AC-14) added a
+# fourth, `kyu`, to the shipped example; the goldens were made without it, so
+# a case on the example runs on a copy holding only these.  Everything else
+# in the example reaches the run unchanged, so the goldens still prove that
+# dan, shihan and renshi draw what they drew.
+BASELINE_AWARDS = ("dan", "shihan", "renshi")
+
+_TABLE = re.compile(r"^\s*\[")
+_SLUG = re.compile(r'^\s*slug\s*=\s*"([^"]*)"', re.M)
+
+
+def baseline_awards_only(text):
+    """`text`, a configuration, without the [[awards]] blocks whose slug is
+    not one of BASELINE_AWARDS: from the block's header to the next table
+    header (or the end).  Nothing else is touched."""
+    lines = text.splitlines(keepends=True)
+    heads = [i for i, l in enumerate(lines) if _TABLE.match(l)] + [len(lines)]
+    drop = set()
+    for start, end in zip(heads, heads[1:]):
+        if lines[start].strip() != "[[awards]]":
+            continue
+        m = _SLUG.search("".join(lines[start:end]))
+        if m and m.group(1) not in BASELINE_AWARDS:
+            drop.update(range(start, end))
+    return "".join(l for i, l in enumerate(lines) if i not in drop)
+
+
 def blob_name(sha):
     return f"{sha[:20]}.svg"
 
@@ -61,9 +88,15 @@ def run_case(root, case, work, python=sys.executable):
     work.mkdir(parents=True, exist_ok=True)
     out, home = work / "out", work / "home"
     capture = work / "captured"
+    config = config_path(root, case["config"])
+    if case["config"] == "example":
+        # kyu-grades: the baseline's three awards only (BASELINE_AWARDS)
+        text = Path(config).read_text(encoding="utf-8")
+        config = work / "example.toml"
+        config.write_text(baseline_awards_only(text), encoding="utf-8")
     spec = {
         "layout": layout_of(root), "src": str(root / "src"),
-        "config": str(config_path(root, case["config"])),
+        "config": str(config),
         "argv": case["argv"], "out": str(out), "result": str(work / "result.json"),
         "capture": str(capture),
     }

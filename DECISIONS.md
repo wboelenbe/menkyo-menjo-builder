@@ -758,12 +758,88 @@ rounds:
 - A flat run costs the same at either size: its floor is the imports and
   the fonts, and the difference in wall time is noise.
 
+## 2026-10-29 – Kyū grades, on a simpler sheet
+
+A new award, `kyu`, certifies the kyū grades, the numbered grades below
+shodan (first dan): from 10 kyū for a beginner up to 1 kyū. The example names
+it 級位認定証 (kyū grade
+certificate) with the formula 右認定ス (the above is hereby recognised); a
+`dojo.toml` sets its own, as for any award. This overrides ‘Purple menkyo,
+and a precept column’ where it puts the precept on every document, and
+‘Printing the three hand slots’ where anything unrecognised passes through
+`--rank`; both entries are left as they were written.
+
+- **A simpler sheet, not the dan sheet.** It keeps the heading, the
+  recipient, the grade, the formula, the date, the art, the dōjō and the
+  signatory's office and name, with the inked look in all three variants. It
+  drops the precept column and the crest (mon) with its rings and lettering,
+  so that the kyū sheet looks distinct from the dan and shihan awards. For
+  now its layout is what sets it apart; a calligraphy of its own is to
+  follow as a separate item (see Open).
+- **Two per-award keys, `crest` and `motto`**, both `true` unless set, so
+  every existing award and `dojo.toml` is unchanged. Two keys rather than
+  one switch, and not tied to the kyū unit: a dōjō may want a kyū sheet
+  with its crest, or a licence without one. Strict booleans: `"no"` or `0`
+  is an error naming the file, the award and the key.
+- **Without the precept the sheet is centred.** On an award with
+  `motto = false`, every column and the seal move 10 mm left
+  (`NO_MOTTO_SHIFT`), so the printed block has 68.75 mm clear on the left
+  and 69 mm on the right; left where they were, it sat 10 mm right of
+  centre (79 against 59 mm). The crest, where there is one, stays at the
+  page's centre, and the crest's place on a kyū sheet is a band of white at
+  the top, as on a plain 賞状. The move hangs off the award's key, never off
+  an empty `[motto] text`, so a dōjō without a precept keeps its layout and
+  every regression golden is unchanged.
+- **The award declares its unit in `grade_column`**: `true` (or `"dan"`) and
+  `false` as before, or `"kyu"`. Case-insensitive; anything else, `1` and
+  `"yes"` included (silently true until now), is an error naming the file,
+  the award, the key and the values. A separate `unit` key would have let
+  `grade_column = false, unit = "kyu"` exist, which means nothing. An
+  explicit `--rank` on a licence still counts in dan. `config.save()` writes
+  `"kyu"` only for a kyū award and `crest`/`motto` only when `false`, so a
+  configuration without a kyū award saves as it did.
+- **The kyū forms.** `1` to `10`; the romaji `ikkyu` … `gokyu` … `jukkyu`
+  (also `shichikyu`, `hakkyu`, `jikkyu`); the belts `white` 六級, `yellow`
+  五級, `orange` 四級, `green` 三級, `blue` 二級, `brown` 一級; and the
+  children's steps between two belts, written with 準 (associate):
+  `white-yellow` or `jun5` 準五級, `yellow-orange` or `jun4` 準四級,
+  `orange-green` or `jun3` 準三級. 準 exists for those three steps and
+  nowhere else, so `jun6` is a mistake, not a grade. Any case; ū and uu read
+  as u, on a dan award too (`jūdan` 十段). `--rank` is normalised to NFC
+  before that folding, so a macron typed as u plus a combining mark, as some
+  macOS text produces, reads the same. Full-width digits are numbers here
+  as on a dan award: ５ is 五級, and ０ and １１ are refused. Kanji pass
+  through as given. The
+  belt is an input form only and is printed nowhere. Belt names are English
+  only; the portal maps its own.
+- **The other unit's forms are refused.** On a kyū award, ASCII that is
+  none of the above (`purple`, `11`, `5kyu`, `nidan`) is an error listing
+  the forms; on a dan award, a kyū form (`yellow`, `jun5`, `gokyu`) is an
+  error naming the award, where it used to print in Latin letters. Other
+  ASCII on a dan award still passes through (`Shihan`). Whole words only:
+  `kyudan` is still 九段. Checked for the whole run before anything is
+  listed, emptied or written, so `-a dan,kyu -r yellow` writes nothing.
+- **Each award reads the value in its own unit**: `-a dan,kyu -r 3` prints
+  三段 and 三級. The `[sample] rank` likewise, so the example's `5` is 五級 on
+  the kyū sheet; a sample that is not a grade in an award's unit is an error
+  naming `[sample] rank`. A licence does not draw the sample, so it does not
+  read it either.
+- **A long grade shrinks.** The grade column is spaced for two characters
+  at 30 mm; 準五級 would run 30 mm into the name's zone. On every award, a
+  grade of n characters is set at `min(30, 60 / n)` mm from the same top,
+  so 準五級 is 20 mm and `-r Shihan` 10 mm. No golden has a longer grade.
+- **The file name carries `--rank` as typed** (`kyu-overlay-a3-yellow.pdf`),
+  as for dan. The example's default run writes four certificates; the
+  goldens run on a copy of it without `kyu`.
+- **What a kyū-only run does not draw is not checked**: neither
+  `[dojo] crest_ring` nor `[motto] text` nor the art on the ring.
+- No new flag, `--json` event, field or progress stage. The version went to
+  0.5.0: a new award in the example and a former literal now refused.
+
 ## Open
 
 - **Confirm the katakana transcription of any recipient's name** with the
   recipient before printing.
-- **Kyū grades.** Certificates for the kyū (coloured-belt) grades below
-  shodan (first dan), alongside the dan grades.
 - **An annotated version in Dutch (asked 28 October 2026).** Besides the inked
   overlay, a default run should also produce a version that explains what
   the certificate says, in Dutch, for that recipient. The English
@@ -783,3 +859,9 @@ rounds:
     (about 234 MB in the spike), and scipy is used only by `ink.py`. The
     test image is 941 MB, much of it uv's wheel cache.
   Measure the portal's image as well, since that is what runs on the NAS.
+- **A second brush font for the simpler sheet (asked 29 October 2026).**
+  Give the kyū sheet a calligraphy of its own, so it looks distinct from the
+  dan and shihan awards in its writing as well as its layout. Pick a free
+  brush font that differs clearly from Yuji Boku (lighter or more cursive,
+  for example), show comparison sheets for the user to choose from, and add
+  a per-award `font` setting. A bundled font adds a few MB to the package.

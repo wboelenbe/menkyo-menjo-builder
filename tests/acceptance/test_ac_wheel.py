@@ -111,8 +111,9 @@ def test_ac3_runs_from_outside_the_checkout(installed, home, tmp_path):
     env = support.isolated_env(home)
     r = support.run_menkyo(["--list", "-v", "overlay"], env, tmp_path, exe=exe)
     assert r.returncode == 0, r.stderr
+    # kyu-grades (its OQ-5) appended a fourth award, kyu, to the example
     assert r.stdout.splitlines() == ["dan-overlay-a3-sample.pdf", "shihan-overlay-a3-sample.pdf",
-                                     "renshi-overlay-a3-sample.pdf"]
+                                     "renshi-overlay-a3-sample.pdf", "kyu-overlay-a3-sample.pdf"]
 
     r = support.run_menkyo(["-a", "dan", "-v", "overlay,overlay-flat", "-d", "",
                             "--json"], env, tmp_path, exe=exe)

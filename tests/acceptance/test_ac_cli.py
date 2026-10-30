@@ -137,7 +137,8 @@ def test_ac17_console_script_and_module_agree(home, tmp_path):
     a = support.run_menkyo(args, support.isolated_env(home), tmp_path, exe=[str(script)])
     b = support.run_menkyo(args, support.isolated_env(home), tmp_path)
     assert a.returncode == b.returncode == 0
-    assert a.stdout == b.stdout and len(a.stdout.splitlines()) == 3 * 3 * 2
+    # kyu-grades (its OQ-5) appended a fourth award, kyu, to the example: four awards
+    assert a.stdout == b.stdout and len(a.stdout.splitlines()) == 4 * 3 * 2
 
 
 def test_ac17_help(home, tmp_path):

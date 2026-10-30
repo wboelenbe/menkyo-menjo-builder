@@ -42,13 +42,27 @@ PAPER_SIZES = ("a3", "a4")
 DEFAULT_PAPER = "a3"
 
 
+# What `grade_column` takes besides true and false: the unit a grade is
+# counted in.  true is "dan", as it was before kyū awards existed.
+UNITS = ("dan", "kyu")
+
+
 @dataclass
 class Award:
-    """One kind of document: its heading, its operative sentence."""
+    """One kind of document: its heading, its operative sentence.
+
+    `unit` is what --rank counts in (a key of UNITS).  An award without a
+    grade column still reads an explicit --rank, in dan.  `crest` and `motto`
+    say whether the sheet draws the crest and the precept column; a kyū
+    certificate draws neither.
+    """
     slug: str
     heading: str
     formula: str
     grade_column: bool = False
+    unit: str = "dan"
+    crest: bool = True
+    motto: bool = True
 
 
 @dataclass
@@ -95,6 +109,12 @@ class Config:
             if a.slug == slug:
                 return a
         raise KeyError(slug)
+
+
+def _shown(value):
+    """A value from the file as TOML would write it, for a message.  A TOML
+    date or time is not JSON, so it is shown as its own text."""
+    return json.dumps(value, ensure_ascii=False, default=str)
 
 
 def default_path():
@@ -158,7 +178,7 @@ def load(path=None):
     size = paper.get("size", Config.paper_size)
     if not isinstance(size, str) or size.lower() not in PAPER_SIZES:
         raise SystemExit(
-            f"{path}: [paper] size = {json.dumps(size, ensure_ascii=False)} is "
+            f"{path}: [paper] size = {_shown(size)} is "
             f"not a paper size; use " + " or ".join(f'"{s}"' for s in PAPER_SIZES))
     cfg.paper_size = size.lower()
     cfg.paper_size_set = "size" in paper
@@ -174,13 +194,36 @@ def load(path=None):
         if a["slug"] in seen:
             raise SystemExit(f"{path}: two awards share the slug '{a['slug']}'")
         seen.add(a["slug"])
+        where = f"{path}: [[awards]] {a['slug']!r}"
+        # true and false as before, or the unit by name ("dan" is true).
+        # Anything else is a mistake: 1 or "yes" read as true until 0.5.0.
+        column = a.get("grade_column", False)
+        if isinstance(column, str) and column.lower() in UNITS:
+            grade_column, unit = True, column.lower()
+        elif isinstance(column, bool):
+            grade_column, unit = column, "dan"
+        else:
+            raise SystemExit(
+                f"{where}: grade_column = {_shown(column)} "
+                f"is not a grade column; use true, false, "
+                + " or ".join(f'"{u}"' for u in UNITS))
+        sheet = {}
+        for key in ("crest", "motto"):
+            value = a.get(key, True)
+            if not isinstance(value, bool):
+                raise SystemExit(
+                    f"{where}: {key} = {_shown(value)} "
+                    f"should be true or false")
+            sheet[key] = value
         # Any other key -- an award colour from before the plain white sheet,
         # say -- is ignored, so an older configuration keeps working.
         cfg.awards.append(Award(
             slug=a["slug"],
             heading=a["heading"],
             formula=a["formula"],
-            grade_column=bool(a.get("grade_column", False)),
+            grade_column=grade_column,
+            unit=unit,
+            **sheet,
         ))
 
     # A crest ring of four characters is what the geometry is spaced for; the
@@ -224,11 +267,18 @@ def save(cfg, path=USER_CONFIG):
         f"text_drop = {cfg.text_drop}", "",
     ]
     for a in cfg.awards:
+        # The new keys only where they say something, so a configuration
+        # without a kyū award saves as it did before them.
+        column = (_q(a.unit) if a.grade_column and a.unit != "dan"
+                  else str(a.grade_column).lower())
         out += ["[[awards]]",
                 f"slug = {_q(a.slug)}",
                 f"heading = {_q(a.heading)}",
                 f"formula = {_q(a.formula)}",
-                f"grade_column = {str(a.grade_column).lower()}", ""]
+                f"grade_column = {column}"]
+        out += [f"{key} = false" for key in ("crest", "motto")
+                if not getattr(a, key)]
+        out += [""]
     os.makedirs(os.path.dirname(path), exist_ok=True)
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:

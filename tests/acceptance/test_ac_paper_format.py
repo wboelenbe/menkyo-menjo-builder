@@ -27,7 +27,8 @@ from menkyo import config as config_mod
 
 EX = str(support.EXAMPLE)
 S = 1 / math.sqrt(2)
-AWARDS = ["dan", "shihan", "renshi"]
+# kyu-grades (its OQ-5) appended a fourth award, kyu, to the example.
+AWARDS = ["dan", "shihan", "renshi", "kyu"]
 PLAIN = ["overlay", "overlay-flat", "proof"]
 
 # OQ-1: where the dōjō's default lives.  `paper = "a4"` at the top level
@@ -635,7 +636,7 @@ def _readme():
 
 # A name of an output file without a size: <award>-<variant> followed by
 # something other than -<size>.  The placeholder spelling counts as a size.
-_UNSIZED = re.compile(r"(?:\b(?:dan|shihan|renshi)|<award>|\*)"
+_UNSIZED = re.compile(r"(?:\b(?:dan|shihan|renshi|kyu)|<award>|\*)"
                       r"-(?:overlay-flat|overlay(?!-flat)|proof|<variant>)"
                       r"(?!-(?:a3|a4)(?!\w)|-<size>)(?=[-.])")
 

@@ -53,7 +53,7 @@ OPTIONS = {"--all", "--awards", "--clean", "--config", "--date", "--dpi",
            "--variants", "--version",
            "--paper"}                     # paper-format added it (its AC-20)
 SHORT = {"-a", "-c", "-d", "-f", "-h", "-n", "-o", "-r", "-v"}
-EXPECTED_VERSION = "0.4.0"                        # AC-37; paper-format OQ-6 bumped it
+EXPECTED_VERSION = "0.5.0"                        # AC-37; kyu-grades OQ-9 bumped it
 
 
 # ----------------------------------------------------------------- helpers ---
@@ -1110,7 +1110,8 @@ def test_ac35_open_item_closed():
     items = re.findall(r"^- \*\*(.+?)\*\*", open_, re.M)
     assert not [i for i in items if "Inkscape" in i], items
     # paper-format closed "Paper format: A4 as well as A3" (its AC-21).
-    for kept in ("Kyū grades", "An annotated version in Dutch"):
+    # kyu-grades closed "Kyū grades" (its AC-16).
+    for kept in ("An annotated version in Dutch",):
         assert [i for i in items if i.startswith(kept)], (kept, items)
     # This item added an Open item for a house-style sweep of the existing
     # docs; house-style-sweep did it and closed it (its AC-12).

@@ -92,8 +92,9 @@ TOTALS = [
     (["-a", "dan,shihan", "-v", "overlay,proof", "-f", "pdf,png,svg"], 12, 2 * (4 + 3)),
     (["-a", "dan", "-v", "overlay-flat", "-f", "svg"], 0, 1),
     (["-a", "dan", "-v", "overlay", "-f", "svg"], 2, 2),
-    (["-a", "all", "-v", "overlay,overlay-flat,proof", "-f", "pdf,png"], 24, 18),
-    (["-a", "all", "-v", "overlay,overlay-flat,proof", "--no-ink"], 9, 9),
+    # kyu-grades (its OQ-5) appended a fourth award, kyu, to the example: four awards
+    (["-a", "all", "-v", "overlay,overlay-flat,proof", "-f", "pdf,png"], 32, 24),
+    (["-a", "all", "-v", "overlay,overlay-flat,proof", "--no-ink"], 12, 12),
     # the defaults, --all and -v all: test_ac_plain_white.py
 ]
 

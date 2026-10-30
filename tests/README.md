@@ -101,3 +101,12 @@ keep the names `823af58` wrote and are compared through
 names, the stdout, the PDF-hash keys and the side raster's name in an inked
 SVG's `xlink:href`. Every other byte is compared as before, so the goldens
 still prove the A3 output unchanged.
+
+Since kyu-grades the shipped example has a fourth award, `kyu`. The goldens
+were made without it, so a case on the example runs on a copy that keeps
+only the baseline's `[[awards]]` (`golden_lib.baseline_awards_only()`).
+Each other block is dropped from its header to the next table header,
+comments in between included; every setting the three awards are drawn
+with stays as the example has it. That item's AC-14 runs the same cases
+on the example as it is and checks that its dan, shihan and renshi files
+still match the goldens.

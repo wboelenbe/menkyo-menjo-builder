@@ -44,7 +44,8 @@ EX = str(support.EXAMPLE)
 BEFORE = "823af58"          # HEAD when the item was planned
 
 PLAIN = ["overlay", "overlay-flat", "proof"]
-AWARDS = ["dan", "shihan", "renshi"]
+# kyu-grades (its OQ-5) appended a fourth award, kyu, to the example.
+AWARDS = ["dan", "shihan", "renshi", "kyu"]
 CHOOSE = "choose from: overlay, overlay-flat, proof (or 'all')"
 
 
@@ -145,7 +146,7 @@ def test_ac1_all_flag_lists_every_award_and_variant(home, tmp_path):
 def test_ac1_all_writes_what_the_explicit_list_writes(tmp_path):
     common = ["-c", EX, "--no-ink", "-f", "svg", "-d", "2026-09-05"]
     bd.main(common + ["--all", f"--out={tmp_path / 'a'}"])
-    bd.main(common + ["-a", "dan,shihan,renshi", "-v", ",".join(PLAIN),
+    bd.main(common + ["-a", ",".join(AWARDS), "-v", ",".join(PLAIN),
                       f"--out={tmp_path / 'b'}"])
     a, b = _tree(tmp_path / "a"), _tree(tmp_path / "b")
     assert sorted(a) == sorted(f"{x}-{v}-a3-sample.svg" for x in AWARDS for v in PLAIN)
@@ -230,7 +231,7 @@ def test_ac4_default_run(home, tmp_path):
     progress = [e for e in ev if e["event"] == "progress"]
     assert [(p["award"], p["variant"], p["stage"]) for p in progress] == [
         (a, "overlay", s) for a in AWARDS for s in ("text", "ink", "pdf")]
-    assert all(p["total"] == 9 for p in progress)
+    assert all(p["total"] == 3 * len(AWARDS) for p in progress)
     assert ev[-1] == {"event": "done", "out": str(out),
                       "files": [str(out / f"{a}-overlay-a3-sample.pdf") for a in AWARDS]}
 
@@ -271,9 +272,9 @@ def test_ac6_stages():
 
 TOTALS = [
     # (flags, expected total, expected number of files)
-    (["--all", "-f", "pdf,png"], 3 * (4 + 2 + 2), 3 * 6),
-    (["--all", "--no-ink"], 3 * 3, 9),
-    (["--all", "-f", "pdf,png,svg"], 3 * (4 + 2 + 2), 3 * (4 + 3 + 3)),
+    (["--all", "-f", "pdf,png"], len(AWARDS) * (4 + 2 + 2), len(AWARDS) * 6),
+    (["--all", "--no-ink"], len(AWARDS) * 3, len(AWARDS) * 3),
+    (["--all", "-f", "pdf,png,svg"], len(AWARDS) * (4 + 2 + 2), len(AWARDS) * (4 + 3 + 3)),
     (["-a", "dan", "-v", "all", "-f", "svg"], 2, 4),
     (["-a", "renshi", "-v", "all", "--no-ink", "-f", "png"], 3, 3),
 ]
@@ -308,7 +309,7 @@ def test_ac7_list_json_is_the_same(home, tmp_path):
                                           json=True)))
     assert [e["file"] for e in js] == plain
     assert all(set(e) == {"event", "file"} and e["event"] == "planned" for e in js)
-    assert len(plain) == 18
+    assert len(plain) == len(AWARDS) * 3 * 2
 
 
 # ------------------------------------------------------------------ AC-9 ----
@@ -320,7 +321,8 @@ def _example_without_colour():
 
 
 def _with_colour(value):
-    return re.sub(r"^(grade_column = \w+.*)$", rf"\1\ncolour = {value}",
+    # every award gets one (kyu-grades: whatever its grade_column says)
+    return re.sub(r"^(grade_column\s*=.*)$", rf"\1\ncolour = {value}",
                   _example_without_colour(), flags=re.M)
 
 
@@ -333,7 +335,7 @@ def test_ac9_colour_is_accepted_and_ignored(value, tmp_path):
     plain.write_text(_example_without_colour(), encoding="utf-8")
     coloured = tmp_path / "coloured.toml"
     coloured.write_text(_with_colour(value), encoding="utf-8")
-    assert coloured.read_text(encoding="utf-8").count("\ncolour = ") == 3
+    assert coloured.read_text(encoding="utf-8").count("\ncolour = ") == len(AWARDS)
 
     a, b = config_mod.load(str(plain)), config_mod.load(str(coloured))
     a.source = b.source = ""
@@ -343,7 +345,7 @@ def test_ac9_colour_is_accepted_and_ignored(value, tmp_path):
         bd.main(["-c", str(cfg), "--all", "--no-ink", "-f", "svg", "-d", "2026-09-05",
                  f"--out={tmp_path / out}"])
     assert _tree(tmp_path / "a") == _tree(tmp_path / "b")
-    assert len(_tree(tmp_path / "a")) == 9
+    assert len(_tree(tmp_path / "a")) == len(AWARDS) * 3
 
 
 @pytest.mark.render
@@ -359,7 +361,9 @@ def test_ac9_colour_draws_no_warning(home, tmp_path):
 
 def test_ac9_an_award_has_no_colour():
     names = [f.name for f in dataclasses.fields(config_mod.Award)]
-    assert names == ["slug", "heading", "formula", "grade_column"]
+    # kyu-grades (its OQ-1/OQ-2) adds the unit and the sheet's keys after these
+    assert names[:4] == ["slug", "heading", "formula", "grade_column"]
+    assert not [n for n in names if "colo" in n], names
 
 
 def test_ac9_save_writes_no_colour(tmp_path):

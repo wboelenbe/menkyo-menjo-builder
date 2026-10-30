@@ -1,7 +1,7 @@
 # Explaining the certificate to the person who receives it
 
 A certificate written entirely in Japanese is, for most recipients, a
-beautiful object they cannot read. These three pages exist to fix that: each
+beautiful object they cannot read. These four pages exist to fix that: each
 one walks through its document column by column, in reading order, glossing
 every phrase with its kanji, its reading and its meaning.
 
@@ -10,6 +10,7 @@ every phrase with its kanji, its reading and its meaning.
 | [dan-explained.md](dan-explained.md) | 段位免状 – dan grade certificate |
 | [shihan-explained.md](shihan-explained.md) | 師範免許状 – shihan (master instructor) teaching licence |
 | [renshi-explained.md](renshi-explained.md) | 錬士免許状 – renshi (polished expert) teaching licence |
+| [kyu-explained.md](kyu-explained.md) | 級位認定証 – kyū grade certificate |
 
 They are written to match the generator's unconfigured output, so everything
 fixed is explained in full: the headings, the award and licence formulas, the
@@ -25,7 +26,8 @@ Those places are marked:
 Replace each with your own account and delete the marker. That elaboration is
 the part worth writing by hand; nobody else can do it for you.
 
-Each file repeats the sections the three have in common – the crest, the date,
-the reading order. That duplication is deliberate: someone handed only a
+Each file repeats the sections the documents have in common – the date, the
+reading order and, on all but the kyū certificate (for the grades below
+first dan), the crest. That duplication is deliberate: someone handed only a
 shihan licence should not need the dan page beside it to read their own
 certificate.

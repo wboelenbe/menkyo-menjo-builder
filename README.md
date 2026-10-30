@@ -1,4 +1,4 @@
-# menkyo-menjo-builder – Japanese dan and menkyo certificates
+# menkyo-menjo-builder – Japanese dan, kyū and menkyo certificates
 
 > [!NOTE]
 > **Vibe coding warning.** Every line of code and documentation in this
@@ -12,14 +12,16 @@
 > issued by an actual dōjō. If you are here for the documents rather than the
 > software, that is the part to trust.
 
-Generates print-ready dan-grade certificates (段位免状) and teaching licences
-(免許状) for a martial-arts dōjō: A3 or A4 landscape, vertical Japanese, in
-the manner of a traditional 賞状 (award certificate). The grade, the recipient
-and the date can each be printed or left blank for a calligrapher to brush in.
+Generates print-ready dan-grade certificates (段位免状), kyū-grade
+certificates (級位認定証, for the grades below first dan) and teaching
+licences (免許状) for a martial-arts dōjō: A3 or A4 landscape, vertical
+Japanese, in the manner of a traditional 賞状 (award certificate). The grade,
+the recipient and the date can each be printed or left blank for a
+calligrapher to brush in.
 
 <p align="center"><img src="docs/three_up.png" alt="the three certificates, unconfigured" width="880"></p>
 
-<p align="center"><em>The three documents as an unconfigured build produces them.</em></p>
+<p align="center"><em>Three of the documents as an unconfigured build produces them.</em></p>
 
 Everything that identifies a school lives in a TOML file. Out of the box the
 generator names nobody: it prints 〇〇流柔術 and 〇〇道場 – the ordinary
@@ -121,10 +123,12 @@ and a failure ends in one line such as
 A character the fonts do not have is a failure too, found before anything
 is written. Only what will be drawn is checked, each string against the
 font it is printed in: the selected awards, the honorific only with a name,
-a `[sample]` grade only where there is a grade column, and the art's name
-against both fonts, since it is also set on the crest ring. The `error`
-event names the character, its code point and where it came from, and asks
-for a replacement, for example
+a `[sample]` grade only where there is a grade column, the precept only on a
+sheet that draws it and, where there is a crest, the art's name against both
+fonts, since it is also set on the crest ring. A run that builds only kyū
+sheets with `crest = false` and `motto = false` checks neither the ring nor
+the precept. The `error` event names the character, its code point and
+where it came from, and asks for a replacement, for example
 `the character 𠮷 (U+20BB7) in --name is not in Yuji Boku, …`. There is
 no fallback face: a kanji from another font among brush strokes would be
 visibly wrong. Ask the dōjō for a variant the font has (吉 for 𠮷).
@@ -181,6 +185,14 @@ slug = "dan"
 heading = "段位免状"         # names the document
 formula = "右授与ス"         # "the above is hereby awarded"
 grade_column = true          # the body also states a grade: 初段, 二段 …
+
+[[awards]]
+slug = "kyu"
+heading = "級位認定証"       # Kyū Grade Certificate
+formula = "右認定ス"         # "the above is hereby recognised"
+grade_column = "kyu"         # a grade counted in kyū: 五級, 準五級 …
+crest = false                # no crest on this sheet
+motto = false                # no precept; the columns move 10 mm left
 ```
 
 Each `[[awards]]` block becomes one `--awards` slug, so a school with a
@@ -188,7 +200,17 @@ different set of documents adds, removes or renames them here and nowhere
 else. `grade_column` is the one subtle key: a dan certificate states a grade
 in the body as well as in the heading, whereas a licence has already named
 its award in the heading and would otherwise leave an empty column behind the
-recipient's name. Setting it `false` closes the layout up.
+recipient's name. Setting it `false` closes the layout up. It also says what
+`--rank` counts in: `true` (or `"dan"`) in dan, `"kyu"` in kyū, so `-r 5` is
+五段 on the one and 五級 on the other. An explicit `--rank` on a licence
+counts in dan.
+
+`crest` and `motto`, both `true` unless set, say whether the sheet draws the
+crest and the precept column. The example's kyū certificate sets both
+`false`: a simpler sheet for the grades below shodan (first dan). Without
+the precept column every column and the seal move 10 mm left, which centres
+the sheet; the crest, where there is one, stays at the centre. An empty
+`[motto] text` moves nothing.
 
 A `colour` key, which earlier versions read for a drawn frame, is still
 accepted and ignored: the certificates print in black on plain white paper.
@@ -233,7 +255,7 @@ constants at the top of `src/menkyo/build_diploma.py`.
 | `-f`, `--formats LIST` | `pdf`, `png`, `svg` (default: `pdf`) |
 | `--no-ink` | solid black instead of graded sumi (brush ink) |
 | `-n`, `--name KATAKANA` | print the recipient's name instead of leaving it blank |
-| `-r`, `--rank GRADE` | print the grade: `2` or `nidan` → 二段, `1` → 初段, or literal text |
+| `-r`, `--rank GRADE` | print the grade: `2` or `nidan` → 二段, `1` → 初段 on a dan award; `5`, `gokyu` or `yellow` → 五級 on a kyū award; or literal text |
 | `-d`, `--date YYYY-MM-DD` | print the award date in kanji; `today` also works |
 | `--honorific TEXT` | appended to a printed name (default from the config; `''` to omit) |
 | `--suffix TEXT` | tag for output filenames (defaults to the name) |
@@ -273,7 +295,26 @@ kanji: `2` or `nidan` becomes 二段, and `1` becomes **初段** – first dan h
 own word, never 一段. Plain numerals are used rather than the formal 弐段; pass
 the literal text if you want the formal forms (`--rank 弐段`). Anything that is
 not a dan grade passes through untouched, so a licence can use the same flag:
-`--rank 師範`.
+`--rank 師範`. The exception is a kyū form (below): on a dan award it is
+refused rather than printed in Latin letters. Either way, ū or uu reads as u
+(`jūdan` → 十段).
+
+The award decides the unit. On a kyū award (`grade_column = "kyu"`) the same
+flag counts in kyū (級), from 10 kyū, the first grade, up to 1 kyū, just below
+shodan:
+
+- `1` to `10`, or the romaji `ikkyu` … `gokyu` … `jukkyu`: `5` and `gokyu`
+  are 五級;
+- the belt: `white` 六級, `yellow` 五級, `orange` 四級, `green` 三級,
+  `blue` 二級, `brown` 一級;
+- the children's steps between two belts, written with 準 (associate):
+  `white-yellow` or `jun5` 準五級, `yellow-orange` or `jun4` 準四級,
+  `orange-green` or `jun3` 準三級;
+- kanji as they should print: `--rank 準五級`, `--rank 三級`.
+
+Anything else is an error that lists these forms, a dan form such as `nidan`
+included. A grade of more than two characters (準五級) is set smaller to fit
+the space two take, on every award.
 
 `--date` takes an ISO date, or `today`, and writes 西暦二〇二六年九月五日: the
 year digit by digit as 西暦 (the Western calendar) requires, month and day as
