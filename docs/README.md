@@ -27,7 +27,7 @@ Replace each with your own account and delete the marker. That elaboration is
 the part worth writing by hand; nobody else can do it for you.
 
 Each file repeats the sections the documents have in common – the date, the
-reading order and, on all but the kyū certificate (for the grades below
-first dan), the crest. That duplication is deliberate: someone handed only a
-shihan licence should not need the dan page beside it to read their own
-certificate.
+reading order and the crest (on the kyū certificate, for the grades below
+first dan, a pale watermark behind the text). That duplication is
+deliberate: someone handed only a shihan licence should not need the dan
+page beside it to read their own certificate.

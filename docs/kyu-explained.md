@@ -4,9 +4,9 @@
 
 This certificate records a kyū grade (one of the numbered grades below the
 first dan) recognised by your dōjō. It is written entirely in Japanese, in
-the traditional manner: each column reads from top to bottom, and the
-columns themselves are read from right to left. This page walks through the
-sheet in that order – starting at the far right and ending at the far left.
+horizontal lines read from left to right and from top to bottom, as a modern
+Japanese document is. This page walks through the sheet in that order, from
+the heading at the top to the signatory at the foot.
 
 ---
 
@@ -23,11 +23,24 @@ This names the kind of document it is, the way a letterhead would.
 
 ---
 
+## Your name
+
+Below the heading stands your name, written in katakana, the Japanese script
+used for foreign names and words. The given name comes first, then the family
+name, the two separated by a centred dot (・). Where the name is left blank,
+it is written in by hand.
+
+It is followed by **殿** (*dono*), a formal honorific used when addressing the
+recipient of an official document – considerably more formal than the
+everyday さん (*san*), and closer in register to ‘The Honourable’.
+
+---
+
 ## Your grade
 
-Immediately below the heading stands the grade itself, in kanji. Kyū grades
-count down: a beginner starts at the highest number, and 1 kyū is the last
-step before the first dan (初段, *shodan*).
+Below your name, in the largest characters on the sheet, stands the grade
+itself, in kanji. Kyū grades count down: a beginner starts at the highest
+number, and 1 kyū is the last step before the first dan (初段, *shodan*).
 
 | | reading | grade |
 |---|---|---|
@@ -44,8 +57,7 @@ step before the first dan (初段, *shodan*).
 
 A grade may be preceded by **準** (*jun*), ‘associate’ or ‘nearly’: 準五級
 (*jun-gokyū*) is the step on the way to fifth kyū, awarded to children
-between two belts. It is written in a smaller hand, so that its three
-characters take the space two would.
+between two belts.
 
 > **If you are adapting this document:** which kyū grades your school
 > awards, the belt that goes with each and where the children's steps fall
@@ -53,29 +65,28 @@ characters take the space two would.
 
 ---
 
-## Your name
+## The recognition
 
-Your name stands beside the grade – either in Latin letters, or written in
-katakana, the Japanese script used for foreign names and words. In katakana,
-the given name comes first, then the family name, the two separated by a
-centred dot (・).
+Two lines below the grade state what the certificate does:
 
-Where the name is in katakana it is followed by **殿** (*dono*), a formal
-honorific used when addressing the recipient of an official document –
-considerably more formal than the everyday さん (*san*), and closer in
-register to ‘The Honourable’.
-
----
-
-## The recognition – 右認定ス
+上記の者は本会所定の審査に合格したので\
+ここに認定します
 
 | | reading | meaning |
 |---|---|---|
-| 右 | migi | literally ‘right’ – but here a fixed formula meaning ‘the above’ (in a document read right column to left, what came before is literally to the right) |
-| 認定 | nintei | to recognise officially, to certify |
-| ス | su | an archaic, highly formal verb ending – the classical ancestor of today's する |
+| 上記の者 | jōki no mono | ‘the above-named person’ – 上記 *jōki*, written above, and 者 *mono*, person |
+| 本会 | honkai | ‘this association’ – the school or dōjō issuing the certificate |
+| 所定の審査 | shotei no shinsa | ‘the prescribed examination’ – 所定 *shotei*, laid down, and 審査 *shinsa*, examination or assessment |
+| 合格した | gōkaku shita | ‘has passed’ |
+| ので | node | ‘and so’, ‘since’ |
+| ここに | koko ni | ‘hereby’ |
+| 認定します | nintei shimasu | ‘recognises’ – 認定 *nintei*, to recognise officially, in the polite form |
 
-**Reads as:** *The above is hereby recognised.*
+**Reads as:** *The above-named, having passed the examination this
+association prescribes, is hereby recognised.*
+
+> **If you are adapting this document:** if your dōjō prints its own wording
+> here, give its reading and meaning instead.
 
 ---
 
@@ -104,8 +115,9 @@ So 西暦二〇二六年九月五日 reads as *5 September 2026*.
 
 ## The art
 
-The first column of the lower block names the art itself. Two elements of
-such a name recur across the Japanese martial arts:
+The first of the three lines at the foot of the sheet, right of centre, names
+the art itself. Two elements of such a name recur across the Japanese martial
+arts:
 
 | | reading | meaning |
 |---|---|---|
@@ -137,15 +149,33 @@ The characters before 道場 are the hall's own name.
 
 ## Who recognised it
 
-The last of the printed columns carries the office of the person who
-recognised the grade, and then their name in katakana.
+The last line carries the office of the person who recognised the grade, and
+then their name.
 
 | | reading | meaning |
 |---|---|---|
 | 師範 | shihan | ‘master instructor’ – 師 ‘teacher, master’ with 範 ‘model, example’: one who teaches by example |
 | 大師範 | dai shihan | the same, prefixed by 大 ‘great, senior’ – a dōjō's most senior teacher |
 
-Below the name, a circle of clear space is left for a seal, pressed by hand
-in vermilion ink. That is why no two copies of this document are identical.
+To the right of the name there is room for a seal, if the dōjō presses one
+by hand.
 
 > **If you are adapting this document:** name your signatory here.
+
+---
+
+## The crest
+
+Behind the text, printed in a pale grey like a watermark, stands the *mon*,
+the crest of the school.
+
+The one printed by default is a **yotsume-bishi** – four lozenges, each
+pierced by a smaller one. It is a traditional Japanese kamon (family crest);
+*yotsume* means ‘four eyes’, and the design has long carried the sense of
+watchfulness against harm from every direction.
+
+Around the crest runs a double ring, carrying the name of the school on the
+lower arc and the name of the art on the upper.
+
+> **If you are adapting this document:** if your school has a crest of its
+> own, this is where to say where it comes from and what it means.

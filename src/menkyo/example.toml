@@ -53,6 +53,7 @@ honorific = "殿"
 [motto]
 # An optional quiet column on the left, outside the ceremonial reading order
 # of heading -> formula -> date -> authority.  A school precept, or nothing.
+# It goes on every vertical sheet, never on the kyū sheet.
 #
 # The stand-in is 柔能制剛, "the soft controls the hard" -- a classical maxim
 # old enough to belong to nobody, not any school's own words.  Put yours here
@@ -62,20 +63,22 @@ text = "柔能制剛"
 [paper]
 # The sheet, landscape: "a3" (420 x 297 mm) or "a4" (297 x 210 mm), which is
 # the same layout scaled down to fit.  This is the dōjō's default; --paper a4
-# or --paper a3 overrides it for one run.
+# or --paper a3 overrides it for one run.  The kyū sheet is A4 portrait
+# whatever this says; --paper a3 makes it A3 portrait too.
 size = "a3"
 
 # Millimetres of the A3 sheet, plain white; on A4 they scale with everything
-# else.  `border` is the margin kept clear all round the sheet; `safe_inset`
-# is where the text is allowed to begin.  Both are drawn on the proof
-# (`menkyo -v proof`), and nothing else prints them.
+# else, the kyū sheet's included.  `border` is the margin kept clear all round
+# the sheet; `safe_inset` is where the text is allowed to begin.  Both are
+# drawn on the proof (`menkyo -v proof`), and nothing else prints them.
 border = 22.0
 safe_inset = 38.0
 
 # Fraction of the page height added to every printed column's starting point,
-# moving the whole reading order down and giving it more air above. 0.05 (a
-# twentieth of the page) is the shipped taste; 0 reproduces the original
-# layout, where the columns begin right under the crest.
+# moving the whole reading order down and giving it more air above.  The kyū
+# sheet, in rows, keeps its own places.  0.05 (a twentieth of the page) is the
+# shipped taste; 0 reproduces the original layout, where the columns begin
+# right under the crest.
 #
 # It shifts everything by the same amount rather than resizing anything, so a
 # large value can push the *blank* date column -- fourteen slots, the tallest
@@ -88,12 +91,17 @@ text_drop = 0.05
 # The documents this dōjō issues.  Each becomes one --awards slug.
 #
 #   heading       names the document, in the manner of a letterhead
-#   formula       the operative sentence: 右 "the above" + verb + ス
+#   formula       the operative sentence: 右 "the above" + verb + ス; a kyū
+#                 award needs none, its sheet prints `body` instead
 #   grade_column  true if the body states a grade as well as the heading;
-#                 "kyu" for one counted in kyū (5 -> 五級), "dan" is true
-#   crest         false leaves the crest off the sheet (default true)
-#   motto         false leaves the precept off, and the columns move 10 mm
-#                 left to centre the sheet without it (default true)
+#                 "kyu" for one counted in kyū (5 -> 五級), "dan" is true.
+#                 A kyū award gets the kyū sheet: horizontal, A4 portrait
+#   crest         false leaves the crest off the sheet, or the watermark off
+#                 the kyū sheet (default true)
+#   body          the kyū sheet's text, one string per printed line, one to
+#                 three lines (default: the two lines of the example)
+#   watermark     the kyū sheet's crest, its grey as a fraction of black,
+#                 above 0 and up to 1 (default 0.08)
 # ---------------------------------------------------------------------------
 
 [[awards]]
@@ -115,15 +123,23 @@ formula = "右免許ス"
 grade_column = false
 
 [[awards]]
-# The kyū grades below shodan, 10 kyū up to 1 kyū, on a simpler sheet: no
-# crest and no precept.  --rank takes 5, gokyu or the belt (yellow -> 五級),
-# and the children's steps between belts (white-yellow or jun5 -> 準五級).
+# The kyū grades below shodan, 10 kyū up to 1 kyū, on a sheet of their own:
+# A4 portrait, read in horizontal rows, set in type rather than inked, with
+# the crest as a light watermark behind the body.  --rank takes 5, gokyu or
+# the belt (yellow -> 五級), and the children's steps between belts
+# (white-yellow or jun5 -> 準五級).
 slug = "kyu"
 heading = "級位認定証"    # Kyū Grade Certificate
-formula = "右認定ス"      # the above is hereby recognised
 grade_column = "kyu"      # 十級 … 一級, 準五級
-crest = false
-motto = false
+# Printed below the grade, one string per line: "the above has passed the
+# examination set by this association, and is hereby recognised".
+body = [
+  "上記の者は本会所定の審査に合格したので",
+  "ここに認定します",
+]
+# The watermark's grey, 8 % of black.  A light grey can vanish or band on a
+# home printer: make a test print and raise or lower it.
+watermark = 0.08
 
 # ---------------------------------------------------------------------------
 # Stand-ins for the three slots a calligrapher would normally fill by hand.

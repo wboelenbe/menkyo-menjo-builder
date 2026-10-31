@@ -53,7 +53,7 @@ OPTIONS = {"--all", "--awards", "--clean", "--config", "--date", "--dpi",
            "--variants", "--version",
            "--paper"}                     # paper-format added it (its AC-20)
 SHORT = {"-a", "-c", "-d", "-f", "-h", "-n", "-o", "-r", "-v"}
-EXPECTED_VERSION = "0.5.0"                        # AC-37; kyu-grades OQ-9 bumped it
+EXPECTED_VERSION = "0.6.0"                        # AC-37; kyu-redesign OQ-12 bumped it
 
 
 # ----------------------------------------------------------------- helpers ---

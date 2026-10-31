@@ -49,6 +49,18 @@ def test_scale_is_one_over_root_two():
     assert bd.DEFAULT_PAPER == config_mod.Config.paper_size == config_mod.DEFAULT_PAPER
 
 
+def test_portrait_pair_beside_the_landscape_one():
+    """The kyū sheet's: its layout is A4's, and A3 is that scaled by √2."""
+    assert bd.PORTRAIT_PAPERS == {"a3": (297.0, 420.0), "a4": (210.0, 297.0)}
+    assert bd.PORTRAIT_SCALE["a3"] == pytest.approx(math.sqrt(2))
+    assert bd.PORTRAIT_SCALE["a4"] == 1.0 and bd.PORTRAIT_PAPER == "a4"
+    assert set(bd.PORTRAIT_PAPERS) == set(bd.PORTRAIT_SCALE) == set(config_mod.PAPER_SIZES)
+    for size, (w, h) in bd.PORTRAIT_PAPERS.items():
+        assert (w, h) == bd.PAPERS[size][::-1]
+        scale = bd.PORTRAIT_SCALE[size]
+        assert abs(bd.PORTRAIT_W * scale - w) < 0.03 and abs(bd.PORTRAIT_H * scale - h) < 0.03
+
+
 @pytest.mark.parametrize("sheet, suffix, stem", [
     ("a3", "", "dan-overlay-a3"),
     ("a4", "sample", "dan-overlay-a4-sample"),

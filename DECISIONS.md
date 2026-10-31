@@ -836,6 +836,93 @@ and a precept column’ where it puts the precept on every document, and
 - No new flag, `--json` event, field or progress stage. The version went to
   0.5.0: a new award in the example and a former literal now refused.
 
+## 2026-10-30 – Kyū grades in horizontal lines, on portrait paper
+
+The kyū certificate is now a sheet of its own: A4 portrait, 210 × 297 mm,
+read in horizontal lines (yokogaki), set in Noto Serif JP SemiBold with the
+dōjō's crest as a light watermark behind the text. The user chose it from
+mock-ups on 30 October 2026. It replaces the vertical simpler sheet of
+‘Kyū grades, on a simpler sheet’, which is removed rather than kept as an
+option, and with it that entry's `motto` key and its 10 mm shift. It
+overrides three entries in part: ‘A4 as well as A3’ where `[paper] size`
+chooses the sheet of every award; ‘Rendered without Inkscape’ where
+`document()` is the one description of the sheet; ‘Calligraphic typeface’
+where every printed character is Yuji Boku. Those entries are left as they
+were written. The version went to 0.6.0: the example's kyū certificate
+looks entirely different and is named `a4`.
+
+- **The unit decides the sheet.** An award with `grade_column = "kyu"`
+  always gets the horizontal sheet; a dan award or a licence always the
+  vertical one. There is no `layout` key: the user did not want two kyū
+  sheets to maintain, nor backwards compatibility with 0.5.0's. A `layout`
+  line is an unknown key and ignored, as `colour` is.
+- **Top to bottom:** the heading 級位認定証, letter-spaced (16 mm, a glyph
+  every 24 mm); the recipient with 殿 (11 and 9 mm), centred; the grade
+  (22 mm, every 28 mm), the largest line; the body; the date, indented a
+  character from the body; then the art, the dōjō and the office with the
+  name, flush left at 96 mm, right of centre. The line centres are as
+  mocked: heading 58 mm, name 104, grade 140, body 180 and 193, date 213,
+  issuer 236, 249 and 264. Every character in #111111, in Noto Serif JP,
+  never inked: nothing on it is rotated or shifted as in a vertical column,
+  and `[paper] text_drop` does not move it.
+- **`body` instead of the formula.** One string per printed line, one to
+  three lines, printed as given; Japanese has no spaces to break a line at,
+  so the dōjō breaks it. Without the key, the approved two lines,
+  上記の者は本会所定の審査に合格したので and ここに認定します (本会, ‘this
+  association’). The lines are flush left in a block centred on the sheet
+  and on y 186.5 mm; a line too long for the width sets the whole block
+  smaller. `formula` is optional on a kyū award and ignored there; still
+  required on any other award.
+- **The watermark.** The crest through the same `crest()`, 120 mm across,
+  centred at 105, 168 mm, drawn first so that the text prints over it, its
+  rings, mon and ring lettering in one grey, `round(255 × (1 − w))` for
+  `watermark = w`: 0.08, 8 % of black, is #ebebeb. Per award, 0 < w ≤ 1, a
+  bool refused. A light grey is a print risk on a home printer (too faint,
+  banding), so the README asks for a test print. `crest = false` keeps its
+  meaning on every award: no crest on a vertical sheet, no watermark on the
+  kyū sheet.
+- **`motto` is removed.** It existed only for the vertical kyū sheet. Since
+  0.5.0's `motto = false` moved every column 10 mm, ignoring it would move a
+  dōjō's columns back without a word, so it is an error on any award, naming
+  the file, the award and the key and saying to delete the line.
+  `NO_MOTTO_SHIFT` is gone; a dan award without a precept leaves the column
+  empty, as before 0.5.0, and the regression goldens are unchanged. The kyū
+  sheet never prints the precept.
+- **Paper (overriding ‘A4 as well as A3’).** The kyū sheet is A4 portrait
+  whatever `[paper] size` says, since that key is chosen for the landscape
+  certificates. An explicit `--paper` applies to every award: `--paper a3`
+  gives A3 portrait, 297 × 420 mm, the A4 layout scaled by √2 in one
+  wrapper, the mechanism the landscape A4 uses. Names carry the real size,
+  `kyu-overlay-a4-sample.pdf` beside `dan-overlay-a3-sample.pdf`. `PAPERS`
+  and `SCALE` stay the landscape tables; a portrait pair sits beside them.
+- **Variants.** All three stay, so `--all` and the portal's
+  `--variants=overlay-flat` keep working: `overlay` and `overlay-flat` are
+  the same drawing, byte for byte, and `--no-ink` changes nothing. `proof`
+  adds the border and safe inset (`border` and `safe_inset` scaled by 1/√2,
+  as for the landscape A4), the zones for a blank name and grade, nine date
+  slots, and a seal circle right of the signatory's name, on the proof only.
+  Room for it, 20 mm, is kept on every variant, so the proof's text is the
+  overlay's. The circle has a stamp's radius, 9 mm. Centred on the
+  signatory's line (264 mm), it would cross the safe inset, so its centre
+  rises until the circle's bottom sits on the inset: 261.1 mm by default.
+- **Long lines.** The grade is never shrunk: 準五級 is set at 五級's size.
+  A long name shrinks to the safe width, still centred. A heading of seven or
+  more characters closes its spacing up before it shrinks. An issuer line
+  too long for the room left of the seal moves the block left; only when
+  that would bring the block's centre within 5 mm of the page's does it
+  shrink.
+- **The glyph check follows the face.** Everything the kyū sheet prints,
+  its heading and body included, is checked against Noto Serif JP: 𠮷 prints
+  on it and is refused on the dan sheet; 한 is refused on both. Not drawn,
+  not checked: the precept and the formula on a kyū-only run, and the ring
+  when `crest = false`.
+- **Progress.** No new flag, `--json` event, field or stage; a kyū sheet has
+  no `text` or `ink` step, so the example's default run is 10 steps where it
+  was 12.
+- **Closes the Open item** ‘A second brush font for the simpler sheet’: the
+  kyū sheet now differs in its face (a mincho, not Yuji Boku) as well as its
+  layout.
+
 ## Open
 
 - **Confirm the katakana transcription of any recipient's name** with the
@@ -850,18 +937,12 @@ and a precept column’ where it puts the precept on every document, and
   dōjō's own parts (art, dōjō, signatory, motto, crest) explained from
   **optional Dutch text in `dojo.toml`**, falling back to a generic
   description of the form. It joins the default run once built.
-- **A smaller footprint: memory and container size (asked 29 October
-  2026).** See whether both can come down further, now that Inkscape is
-  gone. Starting points from 0.3.0:
+- **A smaller footprint: memory and container size (asked 29 October 2026).**
+  See whether both can come down further, now that Inkscape is gone.
+  Starting points from 0.3.0:
   - Memory: a C-1 run peaks at 189 MB, most of it the ink pass; a flat run
     at 64 MB, of which about 25 MB is imports.
   - Container size: numpy, scipy and Pillow are most of an installed image
     (about 234 MB in the spike), and scipy is used only by `ink.py`. The
     test image is 941 MB, much of it uv's wheel cache.
   Measure the portal's image as well, since that is what runs on the NAS.
-- **A second brush font for the simpler sheet (asked 29 October 2026).**
-  Give the kyū sheet a calligraphy of its own, so it looks distinct from the
-  dan and shihan awards in its writing as well as its layout. Pick a free
-  brush font that differs clearly from Yuji Boku (lighter or more cursive,
-  for example), show comparison sheets for the user to choose from, and add
-  a per-award `font` setting. A bundled font adds a few MB to the package.

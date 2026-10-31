@@ -14,9 +14,11 @@
 
 Generates print-ready dan-grade certificates (段位免状), kyū-grade
 certificates (級位認定証, for the grades below first dan) and teaching
-licences (免許状) for a martial-arts dōjō: A3 or A4 landscape, vertical
-Japanese, in the manner of a traditional 賞状 (award certificate). The grade,
-the recipient and the date can each be printed or left blank for a
+licences (免許状) for a martial-arts dōjō. The dan certificates and the
+licences are A3 or A4 landscape, vertical Japanese, in the manner of a
+traditional 賞状 (award certificate); the kyū certificate is a simpler A4
+portrait sheet in horizontal lines, with the crest as a light watermark. The
+grade, the recipient and the date can each be printed or left blank for a
 calligrapher to brush in.
 
 <p align="center"><img src="docs/three_up.png" alt="the three certificates, unconfigured" width="880"></p>
@@ -43,7 +45,8 @@ package. No other program and no system font is used. Without uv,
 
 From a checkout, files land in `build/` as `<award>-<variant>-<size>.<ext>`.
 The size is `a3` or `a4`, and any suffix comes after it, so the example
-writes `dan-overlay-a3-sample.pdf`.
+writes `dan-overlay-a3-sample.pdf` and, for its kyū sheet,
+`kyu-overlay-a4-sample.pdf`.
 
 ## As a package
 
@@ -125,13 +128,15 @@ is written. Only what will be drawn is checked, each string against the
 font it is printed in: the selected awards, the honorific only with a name,
 a `[sample]` grade only where there is a grade column, the precept only on a
 sheet that draws it and, where there is a crest, the art's name against both
-fonts, since it is also set on the crest ring. A run that builds only kyū
-sheets with `crest = false` and `motto = false` checks neither the ring nor
-the precept. The `error` event names the character, its code point and
-where it came from, and asks for a replacement, for example
-`the character 𠮷 (U+20BB7) in --name is not in Yuji Boku, …`. There is
-no fallback face: a kanji from another font among brush strokes would be
-visibly wrong. Ask the dōjō for a variant the font has (吉 for 𠮷).
+fonts, since it is also set on the crest ring. The kyū sheet is set in Noto
+Serif JP, so everything it prints, its body included, is checked against
+Noto Serif JP rather than Yuji Boku. It prints no precept and no formula, so
+a run that builds only kyū sheets checks neither, and with `crest = false`
+it does not check the ring either. The `error` event names the character,
+its code point and where it came from, and asks for a replacement, for
+example `the character 𠮷 (U+20BB7) in --name is not in Yuji Boku, …`.
+There is no fallback face: a kanji from another font among brush strokes
+would be visibly wrong. Ask the dōjō for a variant the font has (吉 for 𠮷).
 
 `stage` is one of `text`, `ink`, `pdf` or `png`, for a caller that
 wants its own wording; `label` says the same in English. `total` is known from
@@ -173,6 +178,7 @@ name = ""                    # the signatory, in katakana
 
 [motto]
 text = ""                    # an optional school precept, in its own column
+                             # (vertical sheets only)
 
 [paper]
 size = "a3"                  # or "a4"; --paper overrides it for a run
@@ -189,10 +195,12 @@ grade_column = true          # the body also states a grade: 初段, 二段 …
 [[awards]]
 slug = "kyu"
 heading = "級位認定証"       # Kyū Grade Certificate
-formula = "右認定ス"         # "the above is hereby recognised"
 grade_column = "kyu"         # a grade counted in kyū: 五級, 準五級 …
-crest = false                # no crest on this sheet
-motto = false                # no precept; the columns move 10 mm left
+body = [                     # the text below the grade, one string per line
+  "上記の者は本会所定の審査に合格したので",
+  "ここに認定します",
+]
+watermark = 0.08             # the crest's grey behind the text, 8 % of black
 ```
 
 Each `[[awards]]` block becomes one `--awards` slug, so a school with a
@@ -205,12 +213,31 @@ recipient's name. Setting it `false` closes the layout up. It also says what
 五段 on the one and 五級 on the other. An explicit `--rank` on a licence
 counts in dan.
 
-`crest` and `motto`, both `true` unless set, say whether the sheet draws the
-crest and the precept column. The example's kyū certificate sets both
-`false`: a simpler sheet for the grades below shodan (first dan). Without
-the precept column every column and the seal move 10 mm left, which centres
-the sheet; the crest, where there is one, stays at the centre. An empty
-`[motto] text` moves nothing.
+The unit also decides the sheet. An award counting in kyū gets the kyū
+sheet, a simpler one for the grades below shodan (first dan): A4 portrait,
+read in horizontal lines, set in Noto Serif JP without the ink grading,
+with the crest as a light watermark behind the text and no precept.
+
+Where a vertical sheet prints its formula, the kyū sheet prints `body`: one
+string per printed line, one to three lines. Japanese has no spaces to
+break a line at, so you choose the breaks. Without the key the sheet prints
+the two lines above. `formula` is not needed on a kyū award and is ignored
+there.
+
+`watermark` is the crest's grey as a fraction of black, above 0 and up to 1.
+The default, `0.08`, is a light grey. At about `0.93` the crest is as dark as
+the text, and above that darker. `body` and `watermark` are checked on every
+award but used only on the kyū sheet.
+
+`crest`, `true` unless set, says whether the sheet draws the crest: `false`
+leaves it off a vertical sheet and leaves the watermark off the kyū sheet.
+The precept prints on every vertical sheet when `[motto] text` has one.
+
+The per-award `motto` key of 0.5.0 is gone. A configuration that still sets
+it is refused with a message naming the file, the award and the key, so a
+0.5.0 kyū block is refused until you delete its `motto` line. Delete its
+`crest = false` as well if you want the watermark; its
+`formula = "右認定ス"` can stay.
 
 A `colour` key, which earlier versions read for a drawn frame, is still
 accepted and ignored: the certificates print in black on plain white paper.
@@ -227,6 +254,9 @@ column past `safe_inset`. The one that matters is the date **left blank**:
 its fourteen slots are the tallest column on the sheet, and at `0.05` it
 still clears `safe_inset` by a few mm. Check with
 `menkyo -v proof -d ''` before raising it further.
+
+The kyū sheet has no columns, and `text_drop` does not move it: its lines
+keep their own places.
 
 ### An optional traced crest
 
@@ -259,7 +289,7 @@ constants at the top of `src/menkyo/build_diploma.py`.
 | `-d`, `--date YYYY-MM-DD` | print the award date in kanji; `today` also works |
 | `--honorific TEXT` | appended to a printed name (default from the config; `''` to omit) |
 | `--suffix TEXT` | tag for output filenames (defaults to the name) |
-| `--paper SIZE` | the sheet, `a3` or `a4`, landscape (default: `[paper] size`, else `a3`) |
+| `--paper SIZE` | the sheet, `a3` or `a4`: landscape (default: `[paper] size`, else `a3`), and portrait for the kyū sheet (default: `a4`); given, it applies to every award |
 | `--dpi N` | resolution for PNG output, 1–2400 (default: 300) |
 | `--all` | shorthand for `--awards all --variants all` |
 | `--clean` | empty `build/` first |
@@ -284,6 +314,12 @@ menkyo --all -f pdf,png            # every variant, PDF and PNG
 Only `overlay` is built by default. All three are the same layout on plain
 white paper. `overlay` and `overlay-flat` are black text and crest, with no
 frame and no background; `proof` adds pale guides.
+
+The kyū sheet is set in type and never graded, so its `overlay` is the
+certificate as it prints, text in black over the pale watermark, and
+`overlay-flat` is the same drawing, byte for byte; `--no-ink` changes
+nothing on it. Its `proof` adds the margins, the zones for a blank name,
+grade or date, and a circle for a seal right of the signatory's name.
 
 ## Filling the document in
 
@@ -313,8 +349,9 @@ shodan:
 - kanji as they should print: `--rank 準五級`, `--rank 三級`.
 
 Anything else is an error that lists these forms, a dan form such as `nidan`
-included. A grade of more than two characters (準五級) is set smaller to fit
-the space two take, on every award.
+included. On a vertical sheet a grade of more than two characters (準五級) is
+set smaller to fit the space two take; on the kyū sheet there is room across
+the page, and it keeps its size.
 
 `--date` takes an ISO date, or `today`, and writes 西暦二〇二六年九月五日: the
 year digit by digit as 西暦 (the Western calendar) requires, month and day as
@@ -323,9 +360,10 @@ grid to brush into – worth considering, since a sheet with the date already on
 it is one you cannot hold back if a grading slips.
 
 `--name` prints the recipient in katakana, in its own column between the
-heading and the award, and moves the brushed rank slot left to make room. The
-filename picks the name up so one recipient's files never overwrite another's.
-Long names shrink to fit.
+heading and the award, and moves the brushed rank slot left to make room; on
+the kyū sheet, on its own line below the heading. The filename picks the name
+up so one recipient's files never overwrite another's. Long names shrink to
+fit.
 
 **How a Western name should be written in katakana is a judgement call.**
 Dutch *Geert* could be ヘールト, ゲールト or フェールト – the hard G has no
@@ -349,6 +387,18 @@ crest and margins, all proportionally smaller, so `border` is 15.6 mm on A4
 and the 12 mm columns are 8.5 mm. Choose it with `--paper a4`, or with
 `size = "a4"` under `[paper]` as the dōjō's default.
 
+The kyū sheet is A4 **portrait**, 210 × 297 mm, whatever `[paper] size`
+says; `--paper a3` makes it A3 portrait, 297 × 420 mm, the same layout scaled
+up by √2. Its margins are those of the landscape A4: `border` and
+`safe_inset` scaled by 1/√2.
+
+**Make a test print of the kyū sheet's watermark.** The crest behind the
+text is a light grey, 8 % of black by default (`watermark = 0.08`). A home
+printer may print a grey that light too faintly to see, or in visible bands
+or speckles. Print the overlay once at 100 % and look: if the crest is hard
+to see, raise `watermark` a little (`0.12`); if it competes with the text,
+lower it.
+
 **Print a `-flat` variant alongside your first real print.** The graded text is
 a greyscale raster; a home laser halftones grey, and some printers mishandle
 its transparency. If the columns come out mottled, the `-flat` files are
@@ -364,7 +414,9 @@ The printed text is set in **Yuji Boku** (佑字 木), a genuinely brush-written
 kaisho (regular script), then graded by `src/menkyo/ink.py` so the ink thins
 towards grey where the brush lifts – a real brush never lays down flat black.
 The crest ring is set in **Noto Serif JP SemiBold**, a mincho (the printed
-serif style), since a mon is a carved seal rather than brushwork.
+serif style), since a mon is a carved seal rather than brushwork. The kyū
+sheet is set entirely in Noto Serif JP, in solid black, with no grading: a
+plainer certificate, distinct from the brushed dan and licence sheets.
 Both fonts ship in
 `src/menkyo/fonts/` and are read from there by file, never looked up by name,
 so nothing needs installing and nothing on your machine changes or is used.

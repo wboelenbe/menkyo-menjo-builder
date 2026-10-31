@@ -46,6 +46,18 @@ BEFORE = "823af58"          # HEAD when the item was planned
 PLAIN = ["overlay", "overlay-flat", "proof"]
 # kyu-grades (its OQ-5) appended a fourth award, kyu, to the example.
 AWARDS = ["dan", "shihan", "renshi", "kyu"]
+# kyu-redesign (its OQ-1, OQ-2, OQ-11): the kyū sheet is A4 portrait whatever
+# [paper] size says, and it is never inked (no text or ink step, no text
+# layer).
+INKED = ["dan", "shihan", "renshi"]
+
+
+def size(award):
+    return "a4" if award == "kyu" else "a3"
+
+
+def stages(award):
+    return ("text", "ink", "pdf") if award in INKED else ("pdf",)
 CHOOSE = "choose from: overlay, overlay-flat, proof (or 'all')"
 
 
@@ -140,7 +152,7 @@ def test_ac1_all_means_the_plain_three(flags, home, tmp_path):
 
 def test_ac1_all_flag_lists_every_award_and_variant(home, tmp_path):
     got = listing(["--all"], home, tmp_path)
-    assert got == [f"{a}-{v}-a3-sample.pdf" for a in AWARDS for v in PLAIN]
+    assert got == [f"{a}-{v}-{size(a)}-sample.pdf" for a in AWARDS for v in PLAIN]
 
 
 def test_ac1_all_writes_what_the_explicit_list_writes(tmp_path):
@@ -149,7 +161,7 @@ def test_ac1_all_writes_what_the_explicit_list_writes(tmp_path):
     bd.main(common + ["-a", ",".join(AWARDS), "-v", ",".join(PLAIN),
                       f"--out={tmp_path / 'b'}"])
     a, b = _tree(tmp_path / "a"), _tree(tmp_path / "b")
-    assert sorted(a) == sorted(f"{x}-{v}-a3-sample.svg" for x in AWARDS for v in PLAIN)
+    assert sorted(a) == sorted(f"{x}-{v}-{size(x)}-sample.svg" for x in AWARDS for v in PLAIN)
     assert a == b
 
 
@@ -218,7 +230,7 @@ def test_ac4_default_variants():
 
 
 def test_ac4_default_list(home, tmp_path):
-    assert listing([], home, tmp_path) == [f"{a}-overlay-a3-sample.pdf" for a in AWARDS]
+    assert listing([], home, tmp_path) == [f"{a}-overlay-{size(a)}-sample.pdf" for a in AWARDS]
 
 
 @pytest.mark.render
@@ -230,10 +242,10 @@ def test_ac4_default_run(home, tmp_path):
     ev = support.events(r.stdout)
     progress = [e for e in ev if e["event"] == "progress"]
     assert [(p["award"], p["variant"], p["stage"]) for p in progress] == [
-        (a, "overlay", s) for a in AWARDS for s in ("text", "ink", "pdf")]
-    assert all(p["total"] == 3 * len(AWARDS) for p in progress)
+        (a, "overlay", s) for a in AWARDS for s in stages(a)]
+    assert all(p["total"] == 3 * len(INKED) + 1 for p in progress)
     assert ev[-1] == {"event": "done", "out": str(out),
-                      "files": [str(out / f"{a}-overlay-a3-sample.pdf") for a in AWARDS]}
+                      "files": [str(out / f"{a}-overlay-{size(a)}-sample.pdf") for a in AWARDS]}
 
 
 # ------------------------------------------------------------------ AC-5 ----
@@ -253,8 +265,9 @@ def test_ac5_a_full_run_needs_no_program(home, tmp_path):
     expected = set()
     for a in AWARDS:
         for v in PLAIN:
-            expected |= {f"{a}-{v}-a3-sample.{e}" for e in ("pdf", "png", "svg")}
-        expected.add(f"{a}-overlay-a3-sample-textlayer.png")
+            expected |= {f"{a}-{v}-{size(a)}-sample.{e}" for e in ("pdf", "png", "svg")}
+        if a in INKED:
+            expected.add(f"{a}-overlay-a3-sample-textlayer.png")
     assert set(names) == expected
 
 
@@ -272,9 +285,10 @@ def test_ac6_stages():
 
 TOTALS = [
     # (flags, expected total, expected number of files)
-    (["--all", "-f", "pdf,png"], len(AWARDS) * (4 + 2 + 2), len(AWARDS) * 6),
+    (["--all", "-f", "pdf,png"], len(INKED) * (4 + 2 + 2) + 6, len(AWARDS) * 6),
     (["--all", "--no-ink"], len(AWARDS) * 3, len(AWARDS) * 3),
-    (["--all", "-f", "pdf,png,svg"], len(AWARDS) * (4 + 2 + 2), len(AWARDS) * (4 + 3 + 3)),
+    (["--all", "-f", "pdf,png,svg"], len(INKED) * (4 + 2 + 2) + 6,
+     len(INKED) * (4 + 3 + 3) + 3 * 3),
     (["-a", "dan", "-v", "all", "-f", "svg"], 2, 4),
     (["-a", "renshi", "-v", "all", "--no-ink", "-f", "png"], 3, 3),
 ]
@@ -299,7 +313,7 @@ def test_ac6_step_totals(flags, total, nfiles, home, tmp_path):
 # ------------------------------------------------------------------ AC-7 ----
 def test_ac7_list_every_format(home, tmp_path):
     got = listing(["--all", "-f", "pdf,png,svg"], home, tmp_path)
-    assert got == [f"{a}-{v}-a3-sample.{e}" for a in AWARDS for v in PLAIN
+    assert got == [f"{a}-{v}-{size(a)}-sample.{e}" for a in AWARDS for v in PLAIN
                    for e in ("pdf", "png", "svg")]
 
 
@@ -620,10 +634,11 @@ def test_ac20_installed_wheel(installed, home, tmp_path):
 
     r = support.run_menkyo(["--list", "--all"], env, tmp_path, exe=exe)
     assert r.returncode == 0, r.stderr
-    assert r.stdout.splitlines() == [f"{a}-{v}-a3-sample.pdf" for a in AWARDS for v in PLAIN]
+    assert r.stdout.splitlines() == [f"{a}-{v}-{size(a)}-sample.pdf"
+                                     for a in AWARDS for v in PLAIN]
 
     r = support.run_menkyo(["--list"], env, tmp_path, exe=exe)
-    assert r.stdout.splitlines() == [f"{a}-overlay-a3-sample.pdf" for a in AWARDS]
+    assert r.stdout.splitlines() == [f"{a}-overlay-{size(a)}-sample.pdf" for a in AWARDS]
 
     r = support.run_menkyo(["-a", "dan", "-v", "full", "--json"], env, tmp_path, exe=exe)
     assert r.returncode == 1

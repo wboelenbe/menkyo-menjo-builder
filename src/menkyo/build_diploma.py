@@ -2,17 +2,20 @@
 Japanese martial-arts certificates: dan and kyū grades and teaching licences.
 
 Generates the certificate's text and crest, to be printed on plain white
-paper, landscape: A3, or A4 with ``--paper a4`` (the same layout scaled by
-1/√2), the configuration's ``[paper] size`` choosing which by default.  The
-three things a calligrapher would brush in — the rank, the recipient, the
-date numerals — can each be printed or left empty; ``--rank``, ``--name`` and ``--date``
-decide, falling back to the ``[sample]`` stand-ins in the configuration and
-cleared for a run by passing ``''``.
+paper.  A dan certificate or a licence is landscape, in vertical columns:
+A3, or A4 with ``--paper a4`` (the same layout scaled by 1/√2), the
+configuration's ``[paper] size`` choosing which by default.  A kyū
+certificate is a sheet of its own, A4 portrait in horizontal rows, with the
+crest as a light watermark (``--paper a3`` scales it up by √2).  The three
+things a calligrapher would brush in — the rank, the recipient, the date
+numerals — can each be printed or left empty; ``--rank``, ``--name`` and
+``--date`` decide, falling back to the ``[sample]`` stand-ins in the
+configuration and cleared for a run by passing ``''``.
 
 Which documents exist, and whose name goes on them, is configuration: see
 ``example.toml`` and ``config.py``.  Nothing in this file names a
-school.  An award counts its grade in dan or in kyū, and may leave out the
-crest and the precept column, as the example's kyū certificate does.
+school.  An award counts its grade in dan or in kyū, which decides its
+sheet, and may leave out the crest.
 
 One file per award per variant, written as ``<award>-<variant>-<size>.<ext>``
 (``dan-overlay-a3.pdf``, with any suffix after the size) into ./build from a
@@ -22,6 +25,9 @@ layout, plus a fallback and a check:
     overlay        the certificate, its text graded like sumi — the one to print
     overlay-flat   solid black instead of graded sumi, pure vector
     proof          safe areas and the zones the calligrapher fills
+
+The kyū sheet is set in type, never inked, so its overlay and overlay-flat
+are the same drawing.
 
 Only ``overlay`` is built by default, as PDF.
 
@@ -67,6 +73,14 @@ PAGE_W, PAGE_H = 420.0, 297.0          # A3 landscape, mm: the layout's own unit
 PAPERS = {"a3": (420.0, 297.0), "a4": (297.0, 210.0)}
 SCALE = {"a3": 1.0, "a4": 1 / math.sqrt(2)}
 DEFAULT_PAPER = config_mod.DEFAULT_PAPER
+
+# The kyū sheet's, portrait.  Its layout is A4's own millimetres, so here A3
+# is the one scaled, by √2; A4 has no wrapper.  It is A4 unless --paper says
+# otherwise: [paper] size is chosen for the landscape certificates.
+PORTRAIT_W, PORTRAIT_H = 210.0, 297.0
+PORTRAIT_PAPERS = {"a3": (297.0, 420.0), "a4": (210.0, 297.0)}
+PORTRAIT_SCALE = {"a3": math.sqrt(2), "a4": 1.0}
+PORTRAIT_PAPER = "a4"
 
 INK = "#111111"                        # near-black, reads as sumi in print
 INK_GREY = int(INK[1:3], 16)           # the same, as a grey level (it is one)
@@ -396,13 +410,6 @@ SEAL_R = 11.0
 X_MOTTO = 57.0
 SZ_MOTTO = 11.0
 
-# An award without the precept column (`motto = false`, as on a kyū sheet)
-# moves every column and the seal this far left, which centres the printed
-# block on the sheet: 68.75 mm clear on the left, 69 on the right.  The
-# crest stays at the page's centre.  Keyed on the award, never on an empty
-# [motto] text, so a dōjō without a precept keeps the layout it had.
-NO_MOTTO_SHIFT = 10.0
-
 # Blank date: 西暦 ____ 年 __ 月 ___ 日.  The day gets three slots, not two —
 # 二十一 through 三十一 are three characters, which is most of the month.
 DATE_SLOTS = ["西", "暦", None, None, None, None, "年",
@@ -439,14 +446,15 @@ def date_column(value):
 
 def document(verb, heading, crest_kind="full", guides=False,
              layer="all", name=None, honorific="殿", rank=None, date=None,
-             rank_column=True, sheet=DEFAULT_PAPER, motto_column=True):
-    """One certificate. `verb` is the four-character award formula.
+             rank_column=True, sheet=DEFAULT_PAPER):
+    """One certificate on the vertical sheet. `verb` is the four-character
+    award formula.
 
     Everything below is drawn in the A3 layout's millimetres.  On another
     `sheet` (a key of PAPERS) the root is that sheet and the layout sits
     inside a scale(); an A3 sheet has no wrapper, so its SVG is what it
-    always was.  `crest_kind` None draws no crest; without `motto_column`
-    there is no precept and the columns move NO_MOTTO_SHIFT to the left.
+    always was.  `crest_kind` None draws no crest.  The kyū sheet is
+    horizontal_document().
     """
     # `[paper] text_drop` (a fraction of the page height) shifts every printed
     # column's starting point down by the same amount, giving the whole
@@ -460,13 +468,8 @@ def document(verb, heading, crest_kind="full", guides=False,
     drop = CFG.text_drop * PAGE_H
     y_heading, y_rank, y_verb, y_block = (
         Y_HEADING + drop, Y_RANK + drop, Y_VERB + drop, Y_BLOCK + drop)
-    # Every column's x, and the seal's, moved left when there is no precept.
-    dx = 0.0 if motto_column else -NO_MOTTO_SHIFT
-    x_heading, x_verb, x_date = X_HEADING + dx, X_VERB + dx, X_DATE + dx
     x_awardee, x_rank = right_columns(rank_column)
-    x_awardee += dx
-    x_rank = (x_rank if name else X_RANK) + dx if rank_column else None
-    seal_x = SEAL_C[0] + dx
+    x_rank = (x_rank if name else X_RANK) if rank_column else None
 
     o = []
     # The chrome layer is the base of an inked composite, whose text arrives
@@ -502,7 +505,7 @@ def document(verb, heading, crest_kind="full", guides=False,
         if rank_column and not rank:
             zones.append((x_rank - 16, y_rank - 14, 32, 66, "rank"))
         if not name:
-            zones.append((X_NAME_2 + dx - 13, 130, 50, 95, "name"))
+            zones.append((X_NAME_2 - 13, 130, 50, 95, "name"))
         for x, y, w, h, lab in zones:
             o.append(
                 f'<rect x="{x}" y="{y}" width="{w}" height="{h}" fill="none" '
@@ -512,12 +515,12 @@ def document(verb, heading, crest_kind="full", guides=False,
             if ch is None:
                 cy = y_block + i * SZ_DATE
                 o.append(
-                    f'<rect x="{x_date-SZ_DATE*0.42:.2f}" y="{cy-SZ_DATE*0.42:.2f}" '
+                    f'<rect x="{X_DATE-SZ_DATE*0.42:.2f}" y="{cy-SZ_DATE*0.42:.2f}" '
                     f'width="{SZ_DATE*0.84:.2f}" height="{SZ_DATE*0.84:.2f}" fill="none" '
                     f'stroke="#e4b9b9" stroke-width="0.3" stroke-dasharray="1 1.5"/>'
                 )
         o.append(
-            f'<circle cx="{seal_x}" cy="{SEAL_C[1]}" r="{SEAL_R}" fill="none" '
+            f'<circle cx="{SEAL_C[0]}" cy="{SEAL_C[1]}" r="{SEAL_R}" fill="none" '
             f'stroke="#e4b9b9" stroke-width="0.4" stroke-dasharray="2 2"/>'
         )
 
@@ -538,7 +541,7 @@ def document(verb, heading, crest_kind="full", guides=False,
         return "\n".join(o)
 
     # printed columns
-    o.append(vcol(list(heading), x_heading, y_heading, SZ_HEADING, W_BOLD)[0])
+    o.append(vcol(list(heading), X_HEADING, y_heading, SZ_HEADING, W_BOLD)[0])
     if name:
         chars = list(name) + list(honorific or "")
         size = min(SZ_AWARDEE, AWARDEE_MAX_H / max(1, len(chars)))
@@ -550,19 +553,240 @@ def document(verb, heading, crest_kind="full", guides=False,
         size = min(SZ_RANK, 2 * SZ_RANK / len(rank))
         y0 = y_rank if size == SZ_RANK else y_rank - (SZ_RANK - size) / 2
         o.append(vcol(list(rank), x_rank, y0, size, W_BOLD)[0])
-    o.append(vcol(list(verb), x_verb, y_verb, SZ_VERB, W_BOLD)[0])
+    o.append(vcol(list(verb), X_VERB, y_verb, SZ_VERB, W_BOLD)[0])
     # A printed date is set solid; a blank one keeps its slots spaced out so
     # the calligrapher has a grid to write into.
-    o.append(vcol(date or DATE_SLOTS, x_date, y_block, SZ_DATE, W_MED)[0])
+    o.append(vcol(date or DATE_SLOTS, X_DATE, y_block, SZ_DATE, W_MED)[0])
     # Any of these may be empty in the config, in which case vcol draws
     # nothing and the column is simply absent.
-    o.append(vcol(list(CFG.art), X_STYLE + dx, y_block, SZ_BLOCK, W_MED)[0])
-    o.append(vcol(list(CFG.dojo), X_DOJO + dx, y_block, SZ_BLOCK, W_MED)[0])
-    o.append(vcol(list(CFG.signer_title), X_TITLE + dx, y_block, SZ_TITLE, W_MED)[0])
-    o.append(vcol(list(CFG.signer_name), X_SIGNER + dx, y_block, SZ_SIGNER, W_MED)[0])
-    if motto_column:
-        o.append(vcol(list(CFG.motto), X_MOTTO, y_block, SZ_MOTTO, W_MED)[0])
+    o.append(vcol(list(CFG.art), X_STYLE, y_block, SZ_BLOCK, W_MED)[0])
+    o.append(vcol(list(CFG.dojo), X_DOJO, y_block, SZ_BLOCK, W_MED)[0])
+    o.append(vcol(list(CFG.signer_title), X_TITLE, y_block, SZ_TITLE, W_MED)[0])
+    o.append(vcol(list(CFG.signer_name), X_SIGNER, y_block, SZ_SIGNER, W_MED)[0])
+    o.append(vcol(list(CFG.motto), X_MOTTO, y_block, SZ_MOTTO, W_MED)[0])
 
+    o.append(end)
+    return "\n".join(o)
+
+
+# --------------------------------------------------------- the kyū sheet ---
+# A kyū certificate is read across, in horizontal rows (yokogaki), on A4
+# portrait: the heading, the recipient, the grade, the body, the date, and
+# the issuer right of centre.  It is set in type, in the crest's mincho
+# (Noto Serif JP SemiBold), and never inked, so nothing on it is turned or
+# shifted the way a vertical column needs.  The dōjō's crest sits behind the
+# body as a light watermark.  Positions and sizes are the approved mock-up's
+# (2026-10-30), in A4 millimetres; every y is a line's centre.
+H_Y_HEADING = 58.0
+H_Y_NAME = 104.0
+H_Y_GRADE = 140.0
+H_Y_BODY = 186.5        # the body's centre: two lines at 180 and 193
+H_Y_DATE = 213.0
+H_Y_ISSUER = (236.0, 249.0, 264.0)      # the art, the dōjō, office and name
+
+H_SZ_HEADING, H_PITCH_HEADING = 16.0, 24.0      # half an em between glyphs
+H_SZ_NAME = 11.0        # shrunk to fit if the name is a long one
+H_SZ_HONORIFIC = 9.0    # 殿, a size down and a little apart from the name
+H_HONORIFIC_GAP = 6.0
+H_SZ_GRADE, H_PITCH_GRADE = 22.0, 28.0          # the largest, and never shrunk
+H_SZ_BODY = 7.4
+H_BODY_LEADING = 13.0
+H_SZ_DATE = 6.6
+H_SZ_ISSUER = 8.2
+H_X_ISSUER = 96.0       # the issuer block's left edge
+H_ISSUER_MID = PORTRAIT_W / 2 + 5.0     # its centre stays right of this
+
+# The proof's seal circle, right of the signatory's name.  Its room is kept
+# on every variant, so the proof's text is the overlay's.  A stamp's 9 mm
+# centred on the name's line would cross the safe inset, so the circle
+# rises until its bottom sits on it (y 261.1 at the default inset).
+H_SEAL_R, H_SEAL_GAP = 9.0, 2.0
+H_SEAL_ROOM = H_SEAL_GAP + 2 * H_SEAL_R
+
+# The watermark: the crest, about 120 mm across, centred behind the body.
+H_CREST_C = (PORTRAIT_W / 2, 168.0)
+H_CREST_R = 60.0
+
+
+def watermark_grey(fraction):
+    """The watermark's grey for a fraction of black: 0.08 is #ebebeb."""
+    v = round(255 * (1 - fraction))
+    return f"#{v:02x}{v:02x}{v:02x}"
+
+
+def _hwidth(s, size):
+    """The advance of `s` at `size` in the kyū sheet's face, as the PDF
+    writer sets it: one glyph per character, no kerning."""
+    f = renderer.face(FONT_CREST)
+    return sum(f.glyph(ch)[1] for ch in s) / f.upem * size
+
+
+def htext(s, x, cy, size, anchor="start"):
+    """One horizontal line of type, centred vertically on cy."""
+    return (f'<text x="{x:.3f}" y="{cy + BASELINE_DROP * size:.3f}" '
+            f'font-family="{FONT_CREST}" font-weight="{W_BOLD}" '
+            f'font-size="{size:.3f}" fill="{INK}" text-anchor="{anchor}">'
+            f'{esc(s)}</text>')
+
+
+def _spaced(s, cy, size, pitch, width):
+    """`s` letter-spaced and centred on the sheet, a glyph every `pitch` mm.
+
+    Too wide for `width`, the spacing closes up first, down to set solid,
+    and only then does the size come down: a long heading keeps its size
+    as long as it can.  Each glyph is taken as an em square.
+    """
+    n = len(s)
+    if n > 1 and size + pitch * (n - 1) > width:
+        pitch = max(size, (width - size) / (n - 1))
+    if n * size > width:
+        size = pitch = width / n
+    x0 = PORTRAIT_W / 2 - (size + pitch * (n - 1)) / 2
+    return [htext(ch, x0 + size / 2 + i * pitch, cy, size, "middle")
+            for i, ch in enumerate(s) if not ch.isspace()]
+
+
+def horizontal_document(heading, body, watermark=config_mod.DEFAULT_WATERMARK,
+                        guides=False, name=None, honorific="殿", rank=None,
+                        date=None, sheet=PORTRAIT_PAPER):
+    """The kyū certificate: A4 portrait, horizontal rows, no ink.
+
+    `body` is one to three lines, printed as given where a vertical sheet
+    has its formula.  `watermark` is the crest's grey as a fraction of
+    black; None draws no crest.  Drawn in A4 millimetres; on another
+    `sheet` (a key of PORTRAIT_PAPERS) the layout sits inside a scale(), as
+    document() does it.  [paper] text_drop does not move it, and there is
+    no precept on it.
+    """
+    # [paper] border and safe_inset are A3 millimetres; this layout is A4's.
+    border = CFG.stock_border * SCALE["a4"]
+    safe = CFG.safe_inset * SCALE["a4"]
+    width = PORTRAIT_W - 2 * safe           # the widest a line may be
+
+    o = []
+    sheet_w, sheet_h = PORTRAIT_PAPERS[sheet]
+    o.append(
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'width="{sheet_w}mm" height="{sheet_h}mm" viewBox="0 0 {sheet_w} {sheet_h}">'
+    )
+    end = "</svg>"
+    if PORTRAIT_SCALE[sheet] != 1.0:
+        o.append(f'<g transform="scale({PORTRAIT_SCALE[sheet]:.10f})">')
+        end = "</g>\n</svg>"
+
+    # First, so that every line prints over it.
+    if watermark is not None:
+        o.append(crest(*H_CREST_C, H_CREST_R, ring_bottom=CFG.crest_ring,
+                       ring_top=CFG.art, fill=watermark_grey(watermark)))
+
+    text = []
+    text += _spaced(heading, H_Y_HEADING, H_SZ_HEADING, H_PITCH_HEADING, width)
+
+    # The recipient and the honorific, centred together.  殿 is set a size
+    # smaller and a touch lower, so the two sit on one line at the foot.
+    # A long name shrinks, all three measures alike.
+    if name:
+        nsz, hsz = H_SZ_NAME, H_SZ_HONORIFIC
+        gap = H_HONORIFIC_GAP if honorific else 0.0
+        name_w = _hwidth(name, nsz)
+        total = name_w + gap + _hwidth(honorific or "", hsz)
+        k = min(1.0, width / total)
+        x0 = PORTRAIT_W / 2 - total * k / 2
+        text.append(htext(name, x0, H_Y_NAME, nsz * k))
+        if honorific:
+            text.append(htext(honorific, x0 + (name_w + gap) * k,
+                              H_Y_NAME + (nsz - hsz) * 0.12 * k, hsz * k))
+
+    # The grade has room across the sheet: 準五級 is set at 五級's size.
+    if rank:
+        text += _spaced(rank, H_Y_GRADE, H_SZ_GRADE, H_PITCH_GRADE, width)
+
+    # The body, flush left as a block that is centred on the sheet, its
+    # lines as the dōjō broke them.  A line too long for the width sets the
+    # whole block smaller.
+    size = H_SZ_BODY
+    widest = max(_hwidth(line, size) for line in body)
+    if widest > width:
+        size, widest = size * width / widest, width
+    left = (PORTRAIT_W - widest) / 2
+    for i, line in enumerate(body):
+        y = H_Y_BODY + (i - (len(body) - 1) / 2) * H_BODY_LEADING
+        text.append(htext(line, left, y, size))
+
+    # The date, indented a character from the body.  A blank one is 西暦,
+    # 年, 月 and 日 alone, with room for four, two and three characters.
+    dsz = H_SZ_DATE
+    x_date = min(left + size, PORTRAIT_W - safe - len(DATE_SLOTS) * dsz)
+    if date:
+        text.append(htext("".join(date), x_date, H_Y_DATE, dsz))
+    else:
+        text += [htext(ch, x_date + (i + 0.5) * dsz, H_Y_DATE, dsz, "middle")
+                 for i, ch in enumerate(DATE_SLOTS) if ch]
+
+    # The issuer: the art, the dōjō, then the office and the name a space
+    # apart, flush left at H_X_ISSUER, the block right of centre.  A line
+    # too long for the room left of the seal moves the block left; only if
+    # that would bring its centre within 5 mm of the page's does it shrink.
+    title, signer = CFG.signer_title, CFG.signer_name
+
+    def sig_width(sz):
+        return _hwidth(title, sz) + (sz if title and signer else 0.0) + _hwidth(signer, sz)
+
+    isz = H_SZ_ISSUER
+    longest = max(_hwidth(CFG.art, isz), _hwidth(CFG.dojo, isz), sig_width(isz))
+    limit = PORTRAIT_W - safe - H_SEAL_ROOM
+    x_issuer = H_X_ISSUER
+    if x_issuer + longest > limit:
+        x_issuer = limit - longest
+        if x_issuer + longest / 2 < H_ISSUER_MID:
+            isz *= 2 * (limit - H_ISSUER_MID) / longest
+            x_issuer = 2 * H_ISSUER_MID - limit
+    y_art, y_dojo, y_sig = H_Y_ISSUER
+    for line, y in ((CFG.art, y_art), (CFG.dojo, y_dojo), (title, y_sig)):
+        if line:
+            text.append(htext(line, x_issuer, y, isz))
+    if signer:
+        x = x_issuer + (_hwidth(title, isz) + isz if title else 0.0)
+        text.append(htext(signer, x, y_sig, isz))
+
+    if guides:
+        o.append(
+            f'<rect x="{border:.3f}" y="{border:.3f}" '
+            f'width="{PORTRAIT_W - 2 * border:.3f}" height="{PORTRAIT_H - 2 * border:.3f}" '
+            f'fill="none" stroke="#d8c9a8" stroke-width="0.4" stroke-dasharray="3 2"/>'
+        )
+        o.append(
+            f'<rect x="{safe:.3f}" y="{safe:.3f}" '
+            f'width="{PORTRAIT_W - 2 * safe:.3f}" height="{PORTRAIT_H - 2 * safe:.3f}" '
+            f'fill="none" stroke="#cddbe8" stroke-width="0.4" stroke-dasharray="1.5 2"/>'
+        )
+        # zones the calligrapher fills; a printed slot takes its own away
+        zones = []
+        if not name:
+            zones.append((PORTRAIT_W / 2 - 50, H_Y_NAME - 10, 100, 20))
+        if not rank:
+            zones.append((PORTRAIT_W / 2 - 40, H_Y_GRADE - 16, 80, 32))
+        for x, y, w, h in zones:
+            o.append(
+                f'<rect x="{x:.2f}" y="{y:.2f}" width="{w}" height="{h}" fill="none" '
+                f'stroke="#e4b9b9" stroke-width="0.4" stroke-dasharray="2 2"/>'
+            )
+        for i, ch in enumerate([] if date else DATE_SLOTS):
+            if ch is None:
+                cx = x_date + (i + 0.5) * dsz
+                o.append(
+                    f'<rect x="{cx-dsz*0.42:.2f}" y="{H_Y_DATE-dsz*0.42:.2f}" '
+                    f'width="{dsz*0.84:.2f}" height="{dsz*0.84:.2f}" fill="none" '
+                    f'stroke="#e4b9b9" stroke-width="0.3" stroke-dasharray="1 1.5"/>'
+                )
+        x_seal = x_issuer + sig_width(isz) + H_SEAL_GAP + H_SEAL_R
+        y_seal = min(y_sig, PORTRAIT_H - safe - H_SEAL_R)
+        o.append(
+            f'<circle cx="{x_seal:.3f}" cy="{y_seal:.3f}" r="{H_SEAL_R}" fill="none" '
+            f'stroke="#e4b9b9" stroke-width="0.4" stroke-dasharray="2 2"/>'
+        )
+
+    o += text
     o.append(end)
     return "\n".join(o)
 
@@ -607,7 +831,8 @@ PROGRESS = _Progress()
 
 
 def _stages(variant, formats, inked):
-    """The slow steps build_one() will report for one variant, in order."""
+    """The slow steps build_one() will report for one variant, in order.
+    `inked` is false for a run without ink and for the kyū sheet."""
     out = []
     if inked and VARIANTS[variant].get("inked"):
         out += ["text", "ink"]
@@ -710,14 +935,16 @@ def render(svg_path, out_base, formats, dpi=300):
 
 # --------------------------------------------------------------- variants ---
 # The awards themselves come from the config ([[awards]]): slug, heading,
-# formula, whether the body states a grade and in which unit, and whether
-# the sheet has the crest and the precept.
+# formula, whether the body states a grade and in which unit (kyū being the
+# horizontal sheet, with its body and watermark), and whether the sheet has
+# the crest.
 # The heading names the document, so several awards read apart at a glance;
 # a grade column is for documents that state a specific grade as well —
 # a dan certificate does, a teaching licence usually does not, since its
 # heading has already named the award.  --rank overrides that either way.
 
-# Every variant prints on plain white paper; see DECISIONS.md.
+# Every variant prints on plain white paper; see DECISIONS.md.  The kyū
+# sheet is never inked: its overlay is overlay-flat's drawing.
 VARIANTS = {
     # the certificate, its text graded like sumi: what you print
     "overlay": dict(inked=True),
@@ -769,16 +996,30 @@ def _stem(slug, variant, sheet, suffix):
 def build_one(slug, heading, verb, variant, formats, dpi=300, inked=True,
               work=None, name=None, honorific="殿", rank=None,
               date=None, suffix="", rank_column=True, sheet=DEFAULT_PAPER,
-              crest=True, motto=True):
+              crest=True, horizontal=False, body=(),
+              watermark=config_mod.DEFAULT_WATERMARK):
+    """One award in one variant, written in `formats`; returns the paths.
+
+    `horizontal` draws the kyū sheet (horizontal_document()), with its
+    `body` and `watermark`, never inked; the rest is document()'s.
+    """
+    stem = _stem(slug, variant, sheet, suffix)
+    svg_path = os.path.join(work, stem + ".svg")
+    PROGRESS.award, PROGRESS.variant = slug, variant
+    if horizontal:
+        svg = horizontal_document(
+            heading, body, watermark if crest else None,
+            guides=VARIANTS[variant].get("guides", False),
+            name=name, honorific=honorific, rank=rank, date=date, sheet=sheet)
+        open(svg_path, "w").write(svg)
+        return render(svg_path, os.path.join(BUILD, stem), formats, dpi=dpi)
+
     kw = dict(VARIANTS[variant])
     kw["rank_column"] = rank_column or bool(rank)
     kw["sheet"] = sheet
-    # The award's sheet keys; left out when true, so document() runs as it
-    # always did for an award that has both.
+    # Left out when true, so document() runs as it always did.
     if not crest:
         kw["crest_kind"] = None
-    if not motto:
-        kw["motto_column"] = False
     if date:
         kw["date"] = date
     if name:
@@ -789,10 +1030,6 @@ def build_one(slug, heading, verb, variant, formats, dpi=300, inked=True,
     if not inked:
         kw.pop("inked", None)
     use_ink = kw.pop("inked", False)
-    PROGRESS.award, PROGRESS.variant = slug, variant
-
-    stem = _stem(slug, variant, sheet, suffix)
-    svg_path = os.path.join(work, stem + ".svg")
     if use_ink:
         img = _inked_text_image(os.path.join(work, stem), verb, heading, kw)
         svg = document(verb, heading, layer="chrome", **kw)
@@ -835,37 +1072,50 @@ def _glyph_checks(awards, name, name_src, honorific, honorific_src,
                   ranks, rank_src, date, date_src):
     """What _check_glyphs looks at for this run: what will be drawn, only.
 
-    `ranks` maps each award to the grade it prints, or None.
+    `ranks` maps each award to the grade it prints, or None.  Each award is
+    checked in the face it prints in: Yuji Boku on the vertical sheet, Noto
+    Serif JP on the kyū sheet, so the recipient, the date and the issuer
+    are checked in both when a run draws both sheets.
     """
-    body, crest = FONT_BODY, FONT_CREST
+    brush, mincho = FONT_BODY, FONT_CREST
     sheets = [CFG.award(slug) for slug in awards]
+    faces = ([brush] if any(not aw.horizontal for aw in sheets) else []) + \
+            ([mincho] if any(aw.horizontal for aw in sheets) else [])
     out = []
-    if name:
-        out.append((name, name_src, body, False))
-        out.append((honorific or "", honorific_src, body, False))
-    if date:
-        out.append(("".join(date), date_src, body, False))
-    else:
-        out.append(("".join(c for c in DATE_SLOTS if c), "the blank date column",
-                    body, False))
-    for text, key in ((CFG.art, "[art] name"), (CFG.dojo, "[dojo] name"),
-                      (CFG.signer_title, "[signer] title"),
-                      (CFG.signer_name, "[signer] name")):
-        out.append((text, key, body, False))
-    # the precept and the crest only if an award of this run draws them; the
-    # crest ring: the art on the upper arc, crest_ring on the lower
-    if any(aw.motto for aw in sheets):
-        out.append((CFG.motto, "[motto] text", body, False))
+    for face in faces:
+        if name:
+            out.append((name, name_src, face, False))
+            out.append((honorific or "", honorific_src, face, False))
+        if date:
+            out.append(("".join(date), date_src, face, False))
+        else:
+            out.append(("".join(c for c in DATE_SLOTS if c),
+                        "the blank date " + ("column" if face == brush else "line"),
+                        face, False))
+        for text, key in ((CFG.art, "[art] name"), (CFG.dojo, "[dojo] name"),
+                          (CFG.signer_title, "[signer] title"),
+                          (CFG.signer_name, "[signer] name")):
+            out.append((text, key, face, False))
+    # the precept and the crest only if an award of this run draws them: the
+    # precept on a vertical sheet only; the crest ring (the art on the upper
+    # arc, crest_ring on the lower) on either, solid or as the watermark
+    if brush in faces:
+        out.append((CFG.motto, "[motto] text", brush, False))
     if any(aw.crest for aw in sheets):
-        out.append((CFG.crest_ring, "[dojo] crest_ring", crest, CFG.crest_traced))
-        out.append((CFG.art, "[art] name, on the crest ring", crest,
+        out.append((CFG.crest_ring, "[dojo] crest_ring", mincho, CFG.crest_traced))
+        out.append((CFG.art, "[art] name, on the crest ring", mincho,
                     CFG.crest_traced))
     for aw in sheets:
         slug = aw.slug
-        out.append((aw.heading, f"the heading of [[awards]] {slug!r}", body, False))
-        out.append((aw.formula, f"the formula of [[awards]] {slug!r}", body, False))
+        face = mincho if aw.horizontal else brush
+        out.append((aw.heading, f"the heading of [[awards]] {slug!r}", face, False))
+        if aw.horizontal:
+            out.append(("".join(aw.body), f"the body of [[awards]] {slug!r}",
+                        face, False))
+        else:
+            out.append((aw.formula, f"the formula of [[awards]] {slug!r}", face, False))
         if ranks[slug]:
-            out.append((ranks[slug], rank_src, body, False))
+            out.append((ranks[slug], rank_src, face, False))
     return out
 
 
@@ -942,7 +1192,9 @@ def main(argv=None, progress=None):
         prog="menkyo", json_errors=as_json,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="Generate Japanese dan-grade, kyū-grade and "
-                    "teaching-licence artwork.",
+                    "teaching-licence artwork: the dan grades and licences "
+                    "in vertical columns on landscape paper, the kyū grades "
+                    "in horizontal rows on A4 portrait.",
         epilog=(
             "By default this writes only what you would actually print: the\n"
             "overlay, on plain white A3 or A4, for every award your config\n"
@@ -987,7 +1239,9 @@ def main(argv=None, progress=None):
                          + ("from [paper] size in the configuration"
                             if CFG.paper_size_set else
                             "as the configuration has no [paper] size")
-                         + ")")
+                         + "). The kyū sheet is portrait and A4 by default; "
+                         "given, this sets its size too, a3 being the A4 "
+                         "layout scaled up")
     ap.add_argument("--dpi", type=int, default=300, metavar="N",
                     help=f"resolution for PNG output, 1-{MAX_DPI} (default: 300)")
     ap.add_argument("-n", "--name", metavar="KATAKANA",
@@ -1080,14 +1334,18 @@ def main(argv=None, progress=None):
         parts = [_suffix_for(args.rank) if args.rank else "",
                  _suffix_for(args.name) if args.name else ""]
         suffix = "-".join(p for p in parts if p)
-    # The flag wins over the configuration's [paper] size.
-    sheet = args.paper or CFG.paper_size
+    # Each award's sheet.  The flag wins, for every award; without it a
+    # landscape sheet is the configuration's [paper] size and the kyū sheet
+    # A4, the size it is drawn for.
+    sheets = {slug: args.paper or (PORTRAIT_PAPER if CFG.award(slug).horizontal
+                                   else CFG.paper_size)
+              for slug in awards}
 
     if args.list:
         for slug in awards:
             for v in variants:
                 for ext in formats:
-                    n = f"{_stem(slug, v, sheet, suffix)}.{ext}"
+                    n = f"{_stem(slug, v, sheets[slug], suffix)}.{ext}"
                     if args.json:
                         _emit("planned", file=n)
                     else:
@@ -1117,8 +1375,9 @@ def main(argv=None, progress=None):
     else:
         report = progress or (_stderr_progress if sys.stderr.isatty() else None)
     PROGRESS = _Progress(
-        sum(len(_stages(v, formats, not args.no_ink)) * len(awards)
-            for v in variants),
+        sum(len(_stages(v, formats,
+                        not args.no_ink and not CFG.award(slug).horizontal))
+            for slug in awards for v in variants),
         report)
 
     total = []
@@ -1131,8 +1390,10 @@ def main(argv=None, progress=None):
                                     dpi=args.dpi, inked=not args.no_ink,
                                     work=work, name=name, honorific=honorific,
                                     rank=ranks[slug], date=date, suffix=suffix,
-                                    rank_column=aw.grade_column, sheet=sheet,
-                                    crest=aw.crest, motto=aw.motto)
+                                    rank_column=aw.grade_column,
+                                    sheet=sheets[slug], crest=aw.crest,
+                                    horizontal=aw.horizontal, body=aw.body,
+                                    watermark=aw.watermark)
                 for w in written:
                     if args.json:
                         _emit("file", path=w)

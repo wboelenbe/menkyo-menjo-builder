@@ -566,7 +566,9 @@ def test_ac15_all_variants_a4(home, tmp_path):
     assert ev[-1]["files"] == [str(out / f"{a}-{v}-a4-sample.pdf")
                                for a in AWARDS for v in PLAIN]
     for f in ev[-1]["files"]:
-        assert page_size_pt(f) == pytest.approx(A4_PT, abs=0.01), f
+        # kyu-redesign (its OQ-1): the kyū sheet is A4 portrait
+        want = A4_PT[::-1] if Path(f).name.startswith("kyu-") else A4_PT
+        assert page_size_pt(f) == pytest.approx(want, abs=0.01), f
 
 
 # ----------------------------------------------------------------- AC-16 ----

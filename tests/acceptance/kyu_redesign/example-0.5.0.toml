@@ -1,0 +1,156 @@
+# Example certificate configuration.
+#
+# Everything here is a placeholder.  Copy this file to dojo.toml
+# (`menkyo --example-config > dojo.toml`) in the repository root or in the
+# per-user Menkyo folder, edit it, and the build will pick it up
+# automatically -- or keep several files and choose between them with --config.
+#
+# 〇〇 is the ordinary Japanese placeholder, "maru-maru".  Left as it is,
+# the build produces a correctly typeset certificate that names no school
+# and grants nothing, which is what you want from an unconfigured tool.
+#
+# Every slot is filled in all the same, with stand-ins -- a grade, a
+# recipient, a date, a signatory, a precept -- so that a first build shows a
+# finished sheet rather than a mostly empty one.  Everything below is meant
+# to be replaced; the [sample] section at the end is meant to be deleted.
+
+schema = 1
+
+[art]
+# The art, printed in its own column and around the upper arc of the crest.
+# Four or five characters sit best on the arc.
+name = "〇〇流柔術"
+
+[dojo]
+# The dōjō issuing the document, printed below the art.
+name = "〇〇道場"
+
+# Four characters laid along the lower arc of the crest, read right to left.
+# Usually the dōjō's name without 道場.  Leave empty for a bare crest.
+crest_ring = "〇〇道場"
+
+# Use your own traced crest lettering from crest/<character>.svg, beside
+# this file, instead of the font.  Off by default, and worth comparing before
+# turning on: display lettering is usually drawn already distorted to fit its
+# arc, and tracing it puts a second arc on top of the first.
+traced_glyphs = false
+
+[signer]
+# The rank or office of the person who signs, then their name -- kanji for a
+# Japanese name, katakana for a Western one.  An empty name leaves the column
+# blank, which is useful if the signatory varies, or while you are still
+# deciding how a Western name should be transcribed.
+#
+# 山田太郎 is the Japanese stand-in name, the John Doe of forms.
+title = "師範"
+name = "山田太郎"
+
+[recipient]
+# Appended to a printed recipient's name.  殿 (dono) is the formal address a
+# 賞状 uses; "" leaves it off.
+honorific = "殿"
+
+[motto]
+# An optional quiet column on the left, outside the ceremonial reading order
+# of heading -> formula -> date -> authority.  A school precept, or nothing.
+#
+# The stand-in is 柔能制剛, "the soft controls the hard" -- a classical maxim
+# old enough to belong to nobody, not any school's own words.  Put yours here
+# or clear the line, and the column simply is not drawn.
+text = "柔能制剛"
+
+[paper]
+# The sheet, landscape: "a3" (420 x 297 mm) or "a4" (297 x 210 mm), which is
+# the same layout scaled down to fit.  This is the dōjō's default; --paper a4
+# or --paper a3 overrides it for one run.
+size = "a3"
+
+# Millimetres of the A3 sheet, plain white; on A4 they scale with everything
+# else.  `border` is the margin kept clear all round the sheet; `safe_inset`
+# is where the text is allowed to begin.  Both are drawn on the proof
+# (`menkyo -v proof`), and nothing else prints them.
+border = 22.0
+safe_inset = 38.0
+
+# Fraction of the page height added to every printed column's starting point,
+# moving the whole reading order down and giving it more air above. 0.05 (a
+# twentieth of the page) is the shipped taste; 0 reproduces the original
+# layout, where the columns begin right under the crest.
+#
+# It shifts everything by the same amount rather than resizing anything, so a
+# large value can push the *blank* date column -- fourteen slots, the tallest
+# column when the date is left for the calligrapher -- past `safe_inset`. At
+# 0.05 that column still clears it by a few mm; check
+# `menkyo -v proof -d ''` if you raise this further.
+text_drop = 0.05
+
+# ---------------------------------------------------------------------------
+# The documents this dōjō issues.  Each becomes one --awards slug.
+#
+#   heading       names the document, in the manner of a letterhead
+#   formula       the operative sentence: 右 "the above" + verb + ス
+#   grade_column  true if the body states a grade as well as the heading;
+#                 "kyu" for one counted in kyū (5 -> 五級), "dan" is true
+#   crest         false leaves the crest off the sheet (default true)
+#   motto         false leaves the precept off, and the columns move 10 mm
+#                 left to centre the sheet without it (default true)
+# ---------------------------------------------------------------------------
+
+[[awards]]
+slug = "dan"
+heading = "段位免状"      # Dan Rank Certificate
+formula = "右授与ス"      # the above is hereby awarded
+grade_column = true       # 初段 / 二段 / 三段 …
+
+[[awards]]
+slug = "shihan"
+heading = "師範免許状"    # Shihan Teaching Licence
+formula = "右免許ス"      # the above is hereby licensed
+grade_column = false      # the heading already names the award
+
+[[awards]]
+slug = "renshi"
+heading = "錬士免許状"    # Renshi Teaching Licence
+formula = "右免許ス"
+grade_column = false
+
+[[awards]]
+# The kyū grades below shodan, 10 kyū up to 1 kyū, on a simpler sheet: no
+# crest and no precept.  --rank takes 5, gokyu or the belt (yellow -> 五級),
+# and the children's steps between belts (white-yellow or jun5 -> 準五級).
+slug = "kyu"
+heading = "級位認定証"    # Kyū Grade Certificate
+formula = "右認定ス"      # the above is hereby recognised
+grade_column = "kyu"      # 十級 … 一級, 準五級
+crest = false
+motto = false
+
+# ---------------------------------------------------------------------------
+# Stand-ins for the three slots a calligrapher would normally fill by hand.
+#
+# These are what --name, --rank and --date fall back to when the flag is not
+# given, so that `menkyo` with no arguments produces a complete sheet you
+# can look at.  They are the one part of this file that is there to be
+# *deleted* rather than edited: clear the section and the grade,
+# the recipient and the date go back to being empty, which is what a dōjō
+# printing real certificates actually wants.
+#
+# A flag passed as '' clears one for a single run: -n '' -r '' -d ''.
+# ---------------------------------------------------------------------------
+
+[sample]
+# The recipient, in katakana.  ジョン・ドウ is John Doe.
+name = "ジョン・ドウ"
+
+# The grade, read in each award's unit.  A number or romaji becomes kanji
+# (5 -> 五段, 1 -> 初段 on a dan award; 5 -> 五級 on a kyū award); it is
+# printed only on awards with a grade_column, since a licence has already
+# named its award in the heading.
+rank = "5"
+
+# "today", or an ISO date like 2026-09-06.
+date = "today"
+
+# Filename tag, so a first build is obviously a set of specimens:
+# dan-overlay-a3-sample.pdf rather than dan-overlay-a3.pdf.
+suffix = "sample"

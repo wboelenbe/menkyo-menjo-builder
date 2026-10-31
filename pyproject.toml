@@ -5,8 +5,8 @@ build-backend = "hatchling.build"
 [project]
 name = "menkyo"
 # The one place the version lives; `menkyo --version` reports it.
-version = "0.5.0"
-description = "Japanese dan-grade, kyū-grade and menkyo certificates: A3 or A4, vertical, print-ready"
+version = "0.6.0"
+description = "Japanese dan-grade, kyū-grade and menkyo certificates: vertical A3 or A4 landscape, kyū horizontal on A4 portrait, print-ready"
 readme = "README.md"
 license = "MIT AND OFL-1.1"
 license-files = ["LICENSE", "NOTICE", "src/menkyo/fonts/OFL.txt",

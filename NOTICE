@@ -21,9 +21,10 @@ any kind – the OFL governs the font file, not what you print with it.
     © 2017-2024 Adobe (http://www.adobe.com/)
     https://github.com/notofonts/noto-cjk
 
-The crest ring's face: NotoSerifJP-SemiBold.otf, the Japanese subset of
-Noto Serif CJK, taken unmodified from noto-cjk release Serif2.003
-(Serif/SubsetOTF/JP/; sha256 116d06c2b11ceba33ccb3f8c9eb1c86aba3d5761a1199fd37f74e83365e7a53d).
+The face of the crest ring and of the kyū sheet: NotoSerifJP-SemiBold.otf,
+the Japanese subset of Noto Serif CJK, taken unmodified from noto-cjk
+release Serif2.003 (Serif/SubsetOTF/JP/; sha256
+116d06c2b11ceba33ccb3f8c9eb1c86aba3d5761a1199fd37f74e83365e7a53d).
 
 Licensed under the SIL Open Font License, Version 1.1, reproduced in full at
 src/menkyo/fonts/OFL-NotoSerifJP.txt. The MIT licence above does not apply

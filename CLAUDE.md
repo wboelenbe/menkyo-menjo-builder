@@ -1,7 +1,8 @@
 # CLAUDE.md
 
-Generator for Japanese dan-grade, kyū-grade and menkyo certificates (A3 or A4
-landscape, vertical text), shipped as the Python package `menkyo` with a `menkyo` CLI.
+Generator for Japanese dan-grade, kyū-grade and menkyo certificates (dan and
+licences: A3 or A4 landscape, vertical text; kyū: A4 portrait, horizontal),
+shipped as the Python package `menkyo` with a `menkyo` CLI.
 Read [README.md](README.md) for usage and [DECISIONS.md](DECISIONS.md) for
 why things are the way they are; its `## Open` section is the todo list.
 
